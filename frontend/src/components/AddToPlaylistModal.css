@@ -1,0 +1,485 @@
+/* AddToPlaylistModal -  Estilo Spotify Premium */
+
+.add-to-playlist-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.add-to-playlist-modal {
+  background: rgba(24, 24, 24, 0.98);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.add-to-playlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.add-to-playlist-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #F5F6F3;
+  margin: 0;
+}
+
+.add-to-playlist-header .close-btn {
+  background: transparent;
+  border: none;
+  color: rgba(245, 246, 243, 0.6);
+  font-size: 20px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.add-to-playlist-header .close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F5F6F3;
+}
+
+.add-to-playlist-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-to-playlist-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-to-playlist-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.add-to-playlist-body::-webkit-scrollbar-thumb {
+  background: rgba(153, 154, 198, 0.4);
+  border-radius: 4px;
+}
+
+.add-to-playlist-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(153, 154, 198, 0.6);
+}
+
+/* Search Box */
+.playlist-search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+}
+
+.playlist-search-box:focus-within {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.playlist-search-box i {
+  color: rgba(245, 246, 243, 0.5);
+  font-size: 16px;
+}
+
+.playlist-search-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 400;
+  outline: none;
+}
+
+.playlist-search-box input::placeholder {
+  color: rgba(245, 246, 243, 0.4);
+}
+
+/* New Playlist Button */
+.new-playlist-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.new-playlist-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(79, 86, 186, 0.4);
+}
+
+.new-playlist-btn i {
+  font-size: 18px;
+  color: #999AC6;
+}
+
+.new-playlist-btn:hover i {
+  color: #FAED5C;
+}
+
+/* Favoritos Create Button */
+.new-playlist-btn.favoritos-create-btn {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.15) 0%, rgba(255, 69, 0, 0.1) 100%);
+  border: 1px solid rgba(255, 20, 147, 0.4);
+}
+
+.new-playlist-btn.favoritos-create-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.25) 0%, rgba(255, 69, 0, 0.15) 100%);
+  border-color: rgba(255, 20, 147, 0.6);
+  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+}
+
+.new-playlist-btn.favoritos-create-btn i {
+  color: #ff1493;
+  animation: heartBeatBtn 1.5s ease-in-out infinite;
+}
+
+@keyframes heartBeatBtn {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.new-playlist-btn.favoritos-create-btn:hover i {
+  color: #ff1493;
+}
+
+/* Create Playlist Form */
+.create-playlist-form {
+  background: rgba(79, 86, 186, 0.1);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+  }
+}
+
+.create-playlist-form .form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.create-playlist-form h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #F5F6F3;
+  margin: 0;
+}
+
+.create-playlist-form .form-header button {
+  background: transparent;
+  border: none;
+  color: rgba(245, 246, 243, 0.6);
+  font-size: 16px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.create-playlist-form .form-header button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F5F6F3;
+}
+
+.create-playlist-form input,
+.create-playlist-form textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  color: #F5F6F3;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+  resize: none;
+}
+
+.create-playlist-form input::placeholder,
+.create-playlist-form textarea::placeholder {
+  color: rgba(245, 246, 243, 0.4);
+}
+
+.create-playlist-form input:focus,
+.create-playlist-form textarea:focus {
+  outline: none;
+  border-color: rgba(79, 86, 186, 0.6);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.create-playlist-form .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.create-playlist-form .form-actions button {
+  flex: 1;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-playlist-form .form-actions button[type="button"] {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(245, 246, 243, 0.8);
+}
+
+.create-playlist-form .form-actions button[type="button"]:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.create-playlist-form .form-actions button[type="submit"] {
+  background: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  color: #F5F6F3;
+}
+
+.create-playlist-form .form-actions button[type="submit"]:hover {
+  box-shadow: 0 4px 16px rgba(79, 86, 186, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Playlists List */
+.playlists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.no-playlists {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(245, 246, 243, 0.5);
+}
+
+.no-playlists i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-playlists p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Playlist Item */
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.playlist-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.playlist-item.in-playlist {
+  background: rgba(79, 86, 186, 0.1);
+}
+
+.playlist-item.in-playlist:hover {
+  background: rgba(79, 86, 186, 0.15);
+}
+
+.playlist-item-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(79, 86, 186, 0.8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.playlist-item-icon i {
+  color: #F5F6F3;
+  font-size: 20px;
+}
+
+.playlist-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.playlist-item-info h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #F5F6F3;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-item-info p {
+  font-size: 13px;
+  color: rgba(245, 246, 243, 0.6);
+  margin: 0;
+}
+
+.playlist-item-check {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playlist-item-check i {
+  color: #1DB954;
+  font-size: 24px;
+}
+
+/* Favoritos Permanent Playlist */
+.playlist-item.favoritos-permanent {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.15) 0%, rgba(255, 69, 0, 0.1) 100%);
+  border: 1px solid rgba(255, 20, 147, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.playlist-item.favoritos-permanent:hover {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.25) 0%, rgba(255, 69, 0, 0.15) 100%);
+  border-color: rgba(255, 20, 147, 0.5);
+  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+}
+
+.playlist-item.favoritos-permanent.in-playlist {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.3) 0%, rgba(255, 69, 0, 0.2) 100%);
+}
+
+.playlist-item.favoritos-permanent.in-playlist:hover {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.4) 0%, rgba(255, 69, 0, 0.25) 100%);
+}
+
+.playlist-item.favoritos-permanent .playlist-item-icon {
+  background: linear-gradient(135deg, #ff1493 0%, #ff4500 100%);
+  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+}
+
+.playlist-item.favoritos-permanent .playlist-item-icon i {
+  animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.playlist-item.favoritos-permanent .playlist-item-info h4 {
+  color: #ff1493;
+  font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .add-to-playlist-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .add-to-playlist-header {
+    padding: 20px;
+  }
+
+  .add-to-playlist-body {
+    padding: 12px 20px 20px 20px;
+  }
+}

@@ -1,0 +1,443 @@
+/* ============================================
+   ESTILOS GLOBALES - ESIMEDIA
+   ============================================ */
+
+/* Variables CSS - Paleta de colores */
+:root {
+  --color-primary: #4F56BA;
+  --color-secondary: #999AC6;
+  --color-accent: #FAED5C;
+  --color-bg-dark: #292B26;
+  --color-bg-darker: #1a1d1f;
+  --color-text-light: #F5F6F3;
+  --color-text-muted: #999AC6;
+  
+  --gradient-primary: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  --gradient-bg: linear-gradient(180deg, #292B26 0%, #1a1d1f 50%, #292B26 100%);
+  
+  --border-radius-sm: 12px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --border-radius-xl: 50px;
+  
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.3s ease;
+}
+
+/* Reset y estilos base */
+* {
+  box-sizing: border-box;
+}
+
+#app {
+  height: 100%;
+}
+
+html,
+body {
+  position: relative;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg-dark);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  color: var(--color-text-light);
+}
+
+/* ============================================
+   COMPONENTES REUTILIZABLES
+   ============================================ */
+
+/* Fondo animado */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(79, 86, 186, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 50%, rgba(153, 154, 198, 0.06) 0%, transparent 50%);
+  z-index: -1;
+  animation: bgPulse 15s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* Contenedor de página */
+.page-container {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--gradient-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+/* Contenedor de formularios */
+.form-container {
+  position: relative;
+  max-width: 700px;
+  width: 100%;
+  background: rgba(26, 29, 31, 0.95);
+  border-radius: var(--border-radius-lg);
+  padding: 50px 60px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+  margin: 0 auto;
+}
+
+/* Títulos con gradiente */
+.page-title {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-text-light);
+  margin-bottom: 40px;
+  text-align: center;
+  letter-spacing: -1.5px;
+  text-shadow: 0 2px 20px rgba(79, 86, 186, 0.5);
+}
+
+.page-title .highlight {
+  background: linear-gradient(135deg, #4F56BA, #FAED5C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Secciones de formulario */
+.form-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid rgba(79, 86, 186, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title::before {
+  content: '';
+  width: 5px;
+  height: 24px;
+  background: linear-gradient(135deg, #4F56BA, #FAED5C);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(250, 237, 92, 0.5);
+}
+
+/* Grid de campos */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-field {
+  margin-bottom: 24px;
+}
+
+/* Labels */
+.form-label {
+  display: block;
+  color: #999AC6;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: #FAED5C;
+  margin-left: 4px;
+}
+
+/* Inputs */
+.form-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--border-radius-sm);
+  color: #F5F6F3;
+  font-size: 16px;
+  transition: var(--transition-smooth);
+  outline: none;
+  font-family: inherit;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.form-input::placeholder {
+  color: rgba(153, 154, 198, 0.6);
+}
+
+.form-input:focus {
+  border-color: #4F56BA;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 0 3px rgba(79, 86, 186, 0.2), 0 0 20px rgba(79, 86, 186, 0.3);
+}
+
+.form-input:hover {
+  border-color: rgba(79, 86, 186, 0.6);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Botones */
+.btn {
+  padding: 16px 28px;
+  border-radius: 25px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  color: #F5F6F3;
+  border-color: rgba(79, 86, 186, 0.3);
+  box-shadow: 0 6px 20px rgba(79, 86, 186, 0.5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 35px rgba(79, 86, 186, 0.7);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(79, 86, 186, 0.3);
+  color: #999AC6;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(79, 86, 186, 0.4);
+  color: #F5F6F3;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Efecto shine en botones */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+/* Mensajes de validación */
+.validation-message {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.validation-message.success {
+  color: #4ade80;
+}
+
+.validation-message.error {
+  color: #f87171;
+}
+
+/* Checkbox personalizado */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 18px 20px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 2px solid rgba(79, 86, 186, 0.3);
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+}
+
+.checkbox-wrapper:hover {
+  background: rgba(79, 86, 186, 0.25);
+  border-color: #4F56BA;
+  box-shadow: 0 0 15px rgba(79, 86, 186, 0.2);
+}
+
+.checkbox-input {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #4F56BA;
+}
+
+.checkbox-label {
+  color: #F5F6F3;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* ============================================
+   SWIPER STYLES
+   ============================================ */
+
+.swiper {
+  width: 100%;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.swiper-slide {
+  background-position: center;
+  background-size: cover;
+  width: 400px;
+  height: 250px;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  box-shadow: 0 8px 24px rgba(79, 86, 186, 0.3);
+  border: 2px solid transparent;
+}
+
+.swiper-slide:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 12px 32px rgba(79, 86, 186, 0.5), 0 0 20px rgba(250, 237, 92, 0.3);
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius-md);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(0.95);
+}
+
+.swiper-slide:hover img {
+  transform: scale(1.08);
+  filter: brightness(1.05);
+}
+
+/* Swiper Pagination */
+.mySwiper .swiper-pagination {
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.mySwiper .swiper-pagination-bullet {
+  background: rgba(153, 154, 198, 0.6);
+  opacity: 1;
+  width: 10px;
+  height: 10px;
+  margin: 0 6px !important;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.mySwiper .swiper-pagination-bullet-active {
+  background: var(--gradient-primary);
+  width: 32px;
+  border-radius: 6px;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 12px rgba(250, 237, 92, 0.5);
+}
+
+.mySwiper .swiper-pagination-bullet:hover {
+  background: rgba(250, 237, 92, 0.8);
+  transform: scale(1.2);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-container {
+    padding: 40px 30px;
+  }
+
+  .page-title {
+    font-size: 36px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+  }
+
+  .swiper-slide {
+    width: 320px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 30px 20px;
+  }
+
+  .page-title {
+    font-size: 32px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+  }
+
+  .swiper-slide {
+    width: 260px;
+    height: 160px;
+  }
+  
+  .swiper {
+    padding-top: 30px;
+    padding-bottom: 30px;
+  }
+}
+

@@ -1,0 +1,658 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import ContentCard from '../../../components/ContentCard';
+import AudioPlayer from '../../../components/AudioPlayer';
+import VideoPlayer from '../../../components/VideoPlayer';
+import VipUpgradeModal from '../../../components/VipUpgradeModal';
+import './PlaylistDetailPage.css';
+import CustomModal from '../../../components/CustomModal';
+import { useModal } from '../../../utils/useModal';
+import { determineCategoryFromTags } from '../../../utils/contentUtils';
+import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
+
+function PlaylistDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
+  const [playlist, setPlaylist] = useState(null);
+  const [contents, setContents] = useState([]);
+  const [allContents, setAllContents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState('addedDate');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedContent, setSelectedContent] = useState(null);
+  const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
+  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
+  const [selectedVipContent, setSelectedVipContent] = useState(null);
+  const [userProfile, setUserProfile] = useState({ vip: false });
+  const [contentCovers, setContentCovers] = useState([]);
+
+  useEffect(() => {
+    fetchAllContents();
+    fetchPlaylistDetails();
+    loadUserProfile();
+  }, [id]);
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const profileData = await response.json();
+        setUserProfile({
+          vip: profileData.vip || false
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar el perfil del usuario:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (playlist && playlist.items && allContents.length > 0) {
+      fetchContents();
+      fetchContentCovers();
+    }
+  }, [playlist, allContents]);
+
+  const fetchContentCovers = () => {
+    if (!playlist?.items || !allContents.length) return;
+
+    const covers = playlist.items
+      .slice(0, 4)
+      .map(item => {
+        const content = allContents.find(c => c.id === item.contentId);
+        return content?.coverFileName ? `/cover/${content.coverFileName}` : '/cover/default.png';
+      });
+    
+    setContentCovers(covers);
+  };
+
+  const fetchAllContents = async () => {
+    try {
+      const response = await fetch('/api/public/contents');
+      if (response.ok) {
+        const data = await response.json();
+        setAllContents(data);
+      }
+    } catch (error) {
+      console.error('Error fetching all contents:', error);
+    }
+  };
+
+  const fetchPlaylistDetails = async () => {
+    try {
+      const response = await fetch(`/api/playlists/${id}`, { credentials: 'include' });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPlaylist(data);
+        setEditName(data.nombre);
+        setEditDescription(data.descripcion || '');
+      } else if (response.status === 403) {
+        showWarning('No tienes permiso para ver esta lista');
+        navigate('/playlists');
+      } else {
+        showError('Error al cargar la lista');
+        navigate('/playlists');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      navigate('/playlists');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getContentImage = (content, isVipUnavailable) => {
+    if (isVipUnavailable) return '/cover/no_disponible_VIP.jpg';
+    return content.coverFileName ? `/cover/${content.coverFileName}` : '/cover/default.png';
+  };
+
+  const getContentTitle = (content, isVipUnavailable) => {
+    return isVipUnavailable ? `${content.title} (Contenido VIP)` : content.title;
+  };
+
+  const getContentDescription = (content, isVipUnavailable) => {
+    if (isVipUnavailable) return 'Este contenido es exclusivo para usuarios VIP. Actualiza tu cuenta para acceder.';
+    return content.description || 'Sin descripción disponible';
+  };
+
+  const transformContentItem = (item, content) => {
+    if (!content) {
+      console.warn('Content not found for id:', item.contentId);
+      return null;
+    }
+
+    const isVipContentUnavailable = content.vipOnly && !userProfile.vip;
+    
+    return {
+      id: content.id,
+      titulo: getContentTitle(content, isVipContentUnavailable),
+      imagen: getContentImage(content, isVipContentUnavailable),
+      categoria: determineCategoryFromTags(content.tags),
+      year: new Date().getFullYear().toString(),
+      duration: content.durationMinutes ? `${content.durationMinutes}m` : 'N/A',
+      rating: content.edadMinima ? `${content.edadMinima}+` : 'TP',
+      description: getContentDescription(content, isVipContentUnavailable),
+      ratingStars: content.ratingStars || 0,
+      videoUrl: content.url,
+      audioFileName: content.audioFileName,
+      type: content.type || 'VIDEO',
+      tags: content.tags || [],
+      addedAt: item.addedAt,
+      vipOnly: content.vipOnly || false,
+      isVipUnavailable: isVipContentUnavailable
+    };
+  };
+
+  const fetchContents = async () => {
+    if (!playlist?.items?.length) {
+      setContents([]);
+      return;
+    }
+
+    try {
+      const playlistContents = playlist.items
+        .map(item => {
+          const content = allContents.find(c => c.id === item.contentId);
+          return transformContentItem(item, content);
+        })
+        .filter(Boolean);
+      
+      setContents(playlistContents);
+    } catch (error) {
+      console.error('Error fetching contents:', error);
+    }
+  };
+
+  const sortByAddedDate = (a, b) => new Date(b.addedAt) - new Date(a.addedAt);
+  const sortByTitle = (a, b) => a.titulo.localeCompare(b.titulo);
+  const sortByDuration = (a, b) => parseDuration(b.duration) - parseDuration(a.duration);
+
+  const SORT_FUNCTIONS = {
+    'addedDate': sortByAddedDate,
+    'title': sortByTitle,
+    'duration': sortByDuration
+  };
+
+  const getSortedContents = () => {
+    const sorted = [...contents];
+    const sortFunction = SORT_FUNCTIONS[sortBy];
+    return sortFunction ? sorted.sort(sortFunction) : sorted;
+  };
+
+  const parseDuration = (duration) => {
+    if (!duration) return 0;
+    const match = duration.match(/(\d+)h?\s*(\d+)?m?/);
+    if (match) {
+      const hours = parseInt(match[1]) || 0;
+      const minutes = parseInt(match[2]) || 0;
+      return hours * 60 + minutes;
+    }
+    return 0;
+  };
+
+  const confirmDeleteLastContent = () => {
+    showConfirm(
+      'Esta es la única canción/vídeo en la lista. Las listas no pueden estar vacías. ¿Deseas eliminar la lista completa?',
+      handleDeletePlaylist,
+      'Última canción/vídeo en la lista',
+      'Eliminar lista completa',
+      'Cancelar'
+    );
+  };
+
+  const removeContentFromPlaylist = async (contentId) => {
+    try {
+      const response = await fetch(`/api/playlists/${id}/content/${contentId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        setContents(contents.filter(c => c.id !== contentId));
+        setPlaylist(await response.json());
+        showSuccess('Contenido eliminado de la lista');
+      } else {
+        showError('Error al eliminar el contenido');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Error al eliminar el contenido');
+    }
+  };
+
+  const handleRemoveContent = (contentId) => {
+    if (contents.length === 1) {
+      confirmDeleteLastContent();
+      return;
+    }
+
+    showConfirm(
+      '¿Estás seguro de que deseas eliminar este contenido de la lista?',
+      () => removeContentFromPlaylist(contentId),
+      'Eliminar contenido',
+      'Eliminar',
+      'Cancelar'
+    );
+  };
+
+  const handleUpdatePlaylist = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(`/api/playlists/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          nombre: editName,
+          descripcion: editDescription
+        })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setPlaylist(updated);
+        setShowEditModal(false);
+        showSuccess('Lista actualizada correctamente');
+      } else {
+        showError('Error al actualizar la lista');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Error al actualizar la lista');
+    }
+  };
+
+  const handleDeletePlaylist = async () => {
+    return new Promise((resolve) => {
+      showConfirm(
+        '¿Estás seguro de que deseas eliminar esta lista? Esta acción no se puede deshacer.',
+        async () => {
+          try {
+            const response = await fetch(`/api/playlists/${id}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+
+            if (response.ok) {
+              showSuccess('Lista eliminada correctamente');
+              navigate('/playlists');
+              resolve(true);
+            } else {
+              showError('Error al eliminar la lista');
+              resolve(false);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            showError('Error al eliminar la lista');
+            resolve(false);
+          }
+        },
+        'Eliminar lista',
+        'Eliminar',
+        'Cancelar'
+      );
+    });
+  };
+
+  const openPlayer = (content) => {
+    setSelectedContent(content);
+    content.type === 'AUDIO' ? setIsAudioPlayerOpen(true) : setIsVideoPlayerOpen(true);
+  };
+
+  const handleContentClick = (content) => {
+    if (content.isVipUnavailable || (content.vipOnly && !userProfile.vip)) {
+      setSelectedVipContent(content);
+      setShowVipModal(true);
+      return;
+    }
+    openPlayer(content);
+  };
+
+  const handleVipUpgrade = () => {
+    setShowVipModal(false);
+    navigate('/suscripcion');
+  };
+
+  const handleClosePlayer = () => {
+    setIsAudioPlayerOpen(false);
+    setIsVideoPlayerOpen(false);
+    setSelectedContent(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="playlist-detail-page">
+        <div className="loading-spinner">
+          <i className="fas fa-spinner fa-spin"></i>
+          <p>Cargando lista...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!playlist) {
+    return null;
+  }
+
+  const isPermanentFavoritos = playlist?.nombre === 'Favoritos' && playlist?.isPermanent;
+  const sortedContents = getSortedContents();
+
+  const editOverlayHandlers = createOverlayKeyboardHandlers(() => setShowEditModal(false));
+  const deleteOverlayHandlers = createOverlayKeyboardHandlers(() => setShowDeleteConfirm(false));
+  const editDialogHandlers = createDialogKeyboardHandlers(() => setShowEditModal(false));
+  const deleteDialogHandlers = createDialogKeyboardHandlers(() => setShowDeleteConfirm(false));
+
+  return (
+    <div className="playlist-detail-page">
+      <button 
+        className="floating-back-button" 
+        onClick={() => navigate('/playlists')}
+        aria-label="Volver a listas de reproducción"
+      >
+        <i className="fas fa-arrow-left"></i>
+      </button>
+
+      <div className="playlist-hero-section">
+        <div className="playlist-hero-background">
+          {contentCovers.length > 0 && (
+            <div 
+              className="hero-cover-blur" 
+              style={{ backgroundImage: `url(${contentCovers[0]})` }}
+            />
+          )}
+        </div>
+        
+        <div className="playlist-hero-content">
+          <div className="playlist-hero-covers">
+            {contentCovers.slice(0, 4).map((cover, index) => (
+              <div 
+                key={index}
+                className={`hero-cover-item cover-position-${index + 1}`}
+                style={{ backgroundImage: `url(${cover})` }}
+              />
+            ))}
+          </div>
+          
+          <div className="playlist-hero-info">
+            <span className="playlist-badge">
+              <i className="fas fa-list"></i> Mi Lista de Reproducción
+            </span>
+            <h1 className="playlist-hero-title">{playlist.nombre}</h1>
+            {playlist.descripcion && (
+              <p className="playlist-hero-description">{playlist.descripcion}</p>
+            )}
+            <div className="playlist-hero-meta">
+              <div className="hero-meta-item">
+                <i className="fas fa-film"></i>
+                <span>{contents.length} {contents.length === 1 ? 'contenido' : 'contenidos'}</span>
+              </div>
+              <div className="hero-meta-separator">•</div>
+              <div className="hero-meta-item">
+                <i className="fas fa-calendar"></i>
+                <span>{new Date(playlist.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
+            </div>
+            <div className="playlist-hero-actions">
+              {!isPermanentFavoritos && (
+                <>
+                  <button 
+                    className="btn-edit" 
+                    onClick={() => setShowEditModal(true)} 
+                    title="Editar lista"
+                    aria-label="Editar lista"
+                  >
+                    <i className="fas fa-edit"></i> Editar
+                  </button>
+                  <button 
+                    className="btn-delete" 
+                    onClick={() => setShowDeleteConfirm(true)} 
+                    title="Eliminar lista"
+                    aria-label="Eliminar lista"
+                  >
+                    <i className="fas fa-trash"></i> Eliminar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="playlist-detail-container">
+        <div className="playlist-content">
+          <div className="playlist-controls">
+            <div className="sort-controls">
+              <label htmlFor="sort-select">Ordenar por:</label>
+              <select 
+                id="sort-select" 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Ordenar contenidos por"
+                className="sort-select"
+              >
+                <option value="addedDate">Fecha de adición</option>
+                <option value="title">Título</option>
+                <option value="duration">Duración</option>
+              </select>
+            </div>
+          </div>
+
+          {sortedContents.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-film" aria-hidden="true"></i>
+              <h2>Esta lista está vacía</h2>
+              <p>Añade contenidos navegando por el catálogo y haciendo clic en el botón "+"</p>
+              <button 
+                className="browse-btn" 
+                onClick={() => navigate('/usuario')}
+                aria-label="Explorar catálogo de contenidos"
+              >
+                <i className="fas fa-search" aria-hidden="true"></i> Explorar Contenidos
+              </button>
+            </div>
+          ) : (
+            <div className="playlist-contents">
+              {sortedContents.map(content => (
+                <ContentCard
+                  key={content.id}
+                  content={content}
+                  onContentClick={handleContentClick}
+                  onRemove={handleRemoveContent}
+                  showRemove={true}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div 
+          className="modal-overlay" 
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowEditModal(false);
+            }
+          }}
+          onKeyDown={editOverlayHandlers.onOverlayKeyDown}
+          onKeyUp={editOverlayHandlers.onOverlayKeyUp}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar modal de edición"
+        >
+          <div 
+            className="modal-content" 
+            onKeyDown={editDialogHandlers.onDialogKeyDown}
+            onKeyUp={editDialogHandlers.onDialogKeyUp}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+            tabIndex={-1}
+          >
+            <div className="modal-header">
+              <h2 id="edit-modal-title">Editar Lista</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowEditModal(false)}
+                aria-label="Cerrar modal de edición"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleUpdatePlaylist}>
+              <div className="form-group">
+                <label htmlFor="edit-name">Nombre *</label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  maxLength={50}
+                  required
+                  aria-required="true"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="edit-description">Descripción *</label>
+                <textarea
+                  id="edit-description"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  maxLength={200}
+                  rows={3}
+                  aria-label="Descripción de la lista"
+                />
+              </div>
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="btn-cancel" 
+                  onClick={() => setShowEditModal(false)}
+                  aria-label="Cancelar edición"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-save"
+                  aria-label="Guardar cambios"
+                >
+                  <i className="fas fa-save" aria-hidden="true"></i> Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div 
+          className="modal-overlay" 
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowDeleteConfirm(false);
+            }
+          }}
+          onKeyDown={deleteOverlayHandlers.onOverlayKeyDown}
+          onKeyUp={deleteOverlayHandlers.onOverlayKeyUp}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar modal de confirmación"
+        >
+          <div 
+            className="modal-content confirm-modal" 
+            onKeyDown={deleteDialogHandlers.onDialogKeyDown}
+            onKeyUp={deleteDialogHandlers.onDialogKeyUp}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            tabIndex={-1}
+          >
+            <div className="modal-header">
+              <h2 id="delete-modal-title">¿Eliminar lista?</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowDeleteConfirm(false)}
+                aria-label="Cerrar modal de confirmación"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <p>Esta acción no se puede deshacer. Se eliminará la lista "{playlist.nombre}" y todos sus contenidos.</p>
+            <div className="modal-actions">
+              <button 
+                className="btn-cancel" 
+                onClick={() => setShowDeleteConfirm(false)}
+                aria-label="Cancelar eliminación"
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-delete" 
+                onClick={handleDeletePlaylist}
+                aria-label="Confirmar eliminación de lista"
+              >
+                <i className="fas fa-trash" aria-hidden="true"></i> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal personalizado */}
+      <CustomModal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+      />
+
+      {/* VIP Upgrade Modal */}
+      <VipUpgradeModal
+        isOpen={showVipModal}
+        onClose={() => setShowVipModal(false)}
+        onConfirm={handleVipUpgrade}
+        contentTitle={selectedVipContent?.titulo}
+      />
+
+      {/* Reproductores */}
+      {isAudioPlayerOpen && selectedContent && (
+        <AudioPlayer
+          audioFileName={selectedContent.videoUrl}
+          onClose={handleClosePlayer}
+          title={selectedContent.titulo}
+          contentId={selectedContent.id}
+        />
+      )}
+
+      {isVideoPlayerOpen && selectedContent && (
+        <VideoPlayer
+          videoUrl={selectedContent.videoUrl}
+          onClose={handleClosePlayer}
+          title={selectedContent.titulo}
+          contentId={selectedContent.id}
+        />
+      )}
+    </div>
+  );
+}
+
+export default PlaylistDetailPage;

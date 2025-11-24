@@ -1,0 +1,379 @@
+/* Validate2FA - Estilos específicos */
+
+/* Wrapper principal con dos paneles */
+.validate2fa-wrapper {
+  display: flex;
+  max-width: 900px;
+  width: 100%;
+  background: rgba(18, 18, 18, 0.5);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  min-height: 550px;
+}
+
+/* Panel informativo lateral */
+.validate2fa-info-panel {
+  flex: 0 0 360px;
+  background: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  padding: 50px 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.validate2fa-info-panel::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(250, 237, 92, 0.15) 0%, transparent 70%);
+  animation: rotateBg 20s linear infinite;
+}
+
+@keyframes rotateBg {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.validate2fa-info-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.validate2fa-info-icon {
+  font-size: 80px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.validate2fa-info-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #F5F6F3;
+  margin-bottom: 18px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  line-height: 1.2;
+}
+
+.validate2fa-info-description {
+  font-size: 15px;
+  color: rgba(245, 246, 243, 0.9);
+  line-height: 1.6;
+}
+
+.validate2fa-info-tips {
+  text-align: left;
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.validate2fa-info-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #F5F6F3;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.validate2fa-info-tip:last-child {
+  margin-bottom: 0;
+}
+
+.validate2fa-tip-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* Panel del contenido principal */
+.validate2fa-content-panel {
+  flex: 1;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.validate2fa-content-panel .page-title {
+  font-size: 36px;
+  margin-bottom: 15px;
+  text-align: left;
+  color: #F5F6F3;
+}
+
+.validate2fa-content-panel .page-subtitle {
+  font-size: 16px;
+  color: #999AC6;
+  margin-bottom: 35px;
+  line-height: 1.5;
+}
+
+/* Campo de formulario */
+.validate2fa-form-field {
+  margin-bottom: 25px;
+}
+
+/* Estilos específicos para labels */
+.validate2fa-wrapper .form-label,
+.validate2fa-wrapper label {
+  display: block !important;
+  color: #999AC6 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  margin-bottom: 10px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.validate2fa-wrapper .form-label.required::after {
+  content: ' *';
+  color: #FAED5C !important;
+  margin-left: 4px;
+}
+
+/* Input del código 2FA */
+.validate2fa-code-input {
+  width: 100% !important;
+  padding: 20px 24px !important;
+  background: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  color: #F5F6F3 !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: 8px !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  outline: none !important;
+  font-family: 'Courier New', monospace !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.validate2fa-code-input::placeholder {
+  color: rgba(153, 154, 198, 0.6) !important;
+  letter-spacing: 4px !important;
+  font-size: 18px !important;
+}
+
+.validate2fa-code-input:focus {
+  border-color: #4F56BA !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  box-shadow: 0 0 0 3px rgba(79, 86, 186, 0.2), 0 0 20px rgba(79, 86, 186, 0.3) !important;
+}
+
+.validate2fa-code-input:hover {
+  border-color: rgba(79, 86, 186, 0.6) !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Botón de validación */
+.validate2fa-submit-btn {
+  width: 100%;
+  padding: 20px 32px;
+  margin-top: 30px;
+  background: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 25px;
+  color: #F5F6F3;
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 30px rgba(79, 86, 186, 0.6);
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.validate2fa-submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transition: left 0.6s;
+}
+
+.validate2fa-submit-btn:hover::before {
+  left: 100%;
+}
+
+.validate2fa-submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(79, 86, 186, 0.8);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.validate2fa-submit-btn:active {
+  transform: translateY(-1px);
+}
+
+/* Mensaje de error */
+.validate2fa-message {
+  margin-top: 25px;
+  padding: 18px 22px;
+  background: rgba(186, 79, 79, 0.15);
+  border: 1px solid rgba(186, 79, 79, 0.3);
+  border-radius: 12px;
+  color: #F5F6F3;
+  font-size: 15px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(186, 79, 79, 0.3);
+  line-height: 1.5;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mensaje informativo */
+.validate2fa-info-box {
+  margin-top: 25px;
+  padding: 18px 22px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  color: #999AC6;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.validate2fa-info-box-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Footer con enlace de regreso */
+.validate2fa-footer {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.validate2fa-link-btn {
+  background: none;
+  border: none;
+  color: #999AC6;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+  padding: 0;
+  display: inline-block;
+}
+
+.validate2fa-link-btn:hover {
+  color: #FAED5C;
+  text-decoration: underline;
+}
+
+/* Indicador de carga en el botón */
+.validate2fa-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: 0 4px 15px rgba(79, 86, 186, 0.3);
+}
+
+/* Responsividad */
+@media (max-width: 968px) {
+  .validate2fa-wrapper {
+    flex-direction: column;
+  }
+
+  .validate2fa-info-panel {
+    flex: 0 0 auto;
+    padding: 40px 30px;
+  }
+
+  .validate2fa-info-title {
+    font-size: 28px;
+  }
+
+  .validate2fa-info-description {
+    font-size: 14px;
+  }
+
+  .validate2fa-info-tips {
+    margin-top: 20px;
+    padding: 15px;
+  }
+
+  .validate2fa-content-panel {
+    padding: 40px 30px;
+  }
+
+  .validate2fa-content-panel .page-title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .validate2fa-wrapper {
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .validate2fa-info-panel {
+    padding: 30px 20px;
+  }
+
+  .validate2fa-info-icon {
+    font-size: 60px;
+  }
+
+  .validate2fa-info-title {
+    font-size: 24px;
+  }
+
+  .validate2fa-content-panel {
+    padding: 30px 20px;
+  }
+
+  .validate2fa-content-panel .page-title {
+    font-size: 26px;
+  }
+
+  .validate2fa-submit-btn {
+    font-size: 17px;
+    padding: 16px 28px;
+  }
+
+  .validate2fa-code-input {
+    font-size: 20px !important;
+    letter-spacing: 6px !important;
+    padding: 18px 20px !important;
+  }
+}

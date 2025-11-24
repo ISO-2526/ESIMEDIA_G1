@@ -1,0 +1,125 @@
+/* Navbar principal - horizontal en la parte superior */
+.user-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 70px;
+}
+
+/* Logo a la izquierda */
+.navbar-logo {
+  flex: 0 0 auto;
+}
+
+.navbar-logo img {
+  height: 45px;
+  width: auto;
+}
+
+/* Bienvenida en el centro */
+.navbar-welcome {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Contenedor del usuario a la derecha */
+.navbar-user {
+  flex: 0 0 auto;
+  position: relative;
+}
+
+/* Icono de usuario */
+.user-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  border: 2px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.user-icon:hover {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+/* Menú desplegable */
+.user-menu {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  min-width: 220px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 2000;
+  overflow: hidden;
+}
+
+/* Items del menú */
+.menu-item {
+  padding: 14px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 400;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background-color: #f8f8f8;
+}
+
+.menu-item span {
+  font-size: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .user-navbar {
+    padding: 10px 20px;
+    height: 60px;
+  }
+
+  .navbar-logo img {
+    height: 35px;
+  }
+
+  .navbar-welcome {
+    font-size: 14px;
+  }
+
+  .user-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-menu {
+    min-width: 180px;
+  }
+}

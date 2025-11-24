@@ -1,0 +1,195 @@
+/* Rating Stats Styles */
+
+.rating-stats-container {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  margin: 0;
+  backdrop-filter: none;
+  border: none;
+}
+
+.rating-stats-loading {
+  text-align: center;
+  padding: 10px;
+  color: #FFD700;
+  font-size: 14px;
+}
+
+/* Summary Section - Estilo compacto YouTube */
+.rating-stats-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.average-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.average-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFD700;
+  text-shadow: none;
+}
+
+.average-stars {
+  display: flex;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.star-gold {
+  color: #FFD700;
+  filter: none;
+}
+
+.star-empty {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.total-ratings {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+}
+
+.total-ratings i {
+  display: none; /* Ocultar icono en vista compacta */
+}
+
+/* Distribution Section */
+.rating-distribution {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
+.distribution-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+  opacity: 0.9;
+}
+
+.distribution-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 40px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.distribution-label {
+  font-size: 12px;
+  color: #ffffff;
+  opacity: 0.8;
+  text-align: right;
+}
+
+.distribution-bar-container {
+  background: rgba(255, 255, 255, 0.1);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.distribution-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 4px;
+  transition: width 0.6s ease-in-out;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.distribution-count {
+  font-size: 12px;
+  color: #ffffff;
+  opacity: 0.7;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rating-stats-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .average-number {
+    font-size: 32px;
+  }
+
+  .average-stars {
+    font-size: 18px;
+  }
+
+  .distribution-row {
+    grid-template-columns: 50px 1fr 35px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-stats-container {
+    padding: 12px 15px;
+  }
+
+  .average-number {
+    font-size: 28px;
+  }
+
+  .average-stars {
+    font-size: 16px;
+    gap: 3px;
+  }
+
+  .total-ratings {
+    font-size: 13px;
+  }
+
+  .distribution-title {
+    font-size: 13px;
+  }
+
+  .distribution-row {
+    grid-template-columns: 45px 1fr 30px;
+    gap: 6px;
+  }
+
+  .distribution-label,
+  .distribution-count {
+    font-size: 11px;
+  }
+
+  .distribution-bar-container {
+    height: 6px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeInStats {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rating-stats-container {
+  animation: fadeInStats 0.4s ease-out;
+}

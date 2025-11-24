@@ -1,0 +1,115 @@
+.vip-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.vip-modal-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 16px;
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  animation: vipModalSlideIn 0.3s ease-out;
+}
+
+@keyframes vipModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vip-modal-header {
+  background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+  padding: 24px;
+  border-radius: 14px 14px 0 0;
+  text-align: center;
+}
+
+.vip-modal-header h2 {
+  margin: 0;
+  color: #1a1a2e;
+  font-size: 28px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vip-modal-body {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.vip-modal-body p {
+  color: #e0e0e0;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.vip-modal-body strong {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.vip-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vip-modal-btn {
+  flex: 1;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vip-modal-btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.vip-modal-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.vip-modal-btn-confirm {
+  background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+  color: #1a1a2e;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+.vip-modal-btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+}
+
+.vip-modal-btn-confirm:active {
+  transform: translateY(0);
+}

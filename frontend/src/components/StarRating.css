@@ -1,0 +1,161 @@
+/* Star Rating Styles */
+
+.star-rating-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  margin-top: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.star-rating {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.star {
+  position: relative;
+  cursor: pointer;
+  font-size: 32px;
+  transition: all 0.2s ease;
+  user-select: none;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.star:hover {
+  transform: scale(1.15);
+}
+
+.star i {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Estrella vacía */
+.star-empty {
+  color: rgba(255, 255, 255, 0.2);
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.star-empty:hover {
+  color: rgba(255, 215, 0, 0.5);
+}
+
+/* Estrella completa */
+.star-full {
+  color: #FFD700;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.star-full:hover {
+  color: #FFA500;
+  filter: drop-shadow(0 0 12px rgba(255, 165, 0, 0.8));
+}
+
+/* Media estrella - usando icono de Font Awesome */
+.star-half {
+  color: #FFD700;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.star-half:hover {
+  color: #FFA500;
+  filter: drop-shadow(0 0 12px rgba(255, 165, 0, 0.8));
+}
+
+/* Valor de la valoración */
+.rating-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Animación al seleccionar */
+@keyframes pulseRating {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star.selected {
+  animation: pulseRating 0.3s ease-in-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .star {
+    font-size: 28px;
+  }
+  
+  .star-rating {
+    gap: 6px;
+  }
+  
+  .star-rating-container {
+    padding: 12px 16px;
+  }
+  
+  .rating-value {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .star {
+    font-size: 24px;
+  }
+  
+  .star-rating {
+    gap: 4px;
+  }
+  
+  .star-rating-container {
+    padding: 10px 14px;
+  }
+  
+  .rating-value {
+    font-size: 12px;
+  }
+}
+
+/* Tooltip opcional para mostrar el valor en hover */
+.star::before {
+  content: attr(data-rating);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFD700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.star:hover::before {
+  opacity: 1;
+}

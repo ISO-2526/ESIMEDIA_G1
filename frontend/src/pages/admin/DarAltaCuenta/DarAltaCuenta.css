@@ -1,0 +1,466 @@
+/* DarAltaCuenta - Formulario de Alta de Cuentas (Dark Mode) */
+
+.dar-alta-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #292B26 0%, #1a1d1f 50%, #292B26 100%);
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  position: relative;
+}
+
+/* Animated Background */
+.dar-alta-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(79, 86, 186, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 50%, rgba(153, 154, 198, 0.06) 0%, transparent 50%);
+  z-index: -1;
+  animation: bgPulse 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* Header */
+.dar-alta-header {
+  background: rgba(18, 18, 18, 0.7);
+  border-bottom: 1px solid var(--admin-border);
+  padding: 16px 32px;
+  box-shadow: var(--admin-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(15px) saturate(150%);
+  -webkit-backdrop-filter: blur(15px) saturate(150%);
+}
+
+.dar-alta-header-content {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dar-alta-back-btn {
+  padding: 8px 16px;
+  background: rgba(79, 86, 186, 0.1);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dar-alta-back-btn:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent-light);
+  background: rgba(79, 86, 186, 0.15);
+  transform: translateX(-2px);
+}
+
+.dar-alta-header-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+/* Main Container */
+.dar-alta-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+/* Type Selector */
+.dar-alta-type-selector {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: var(--admin-shadow);
+}
+
+.dar-alta-type-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0 0 16px 0;
+}
+
+.dar-alta-type-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dar-alta-type-option {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.dar-alta-type-radio {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dar-alta-type-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border: 2px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: rgba(79, 86, 186, 0.05);
+  cursor: pointer;
+  transition: var(--admin-transition);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--admin-text-primary);
+}
+
+.dar-alta-type-label:hover {
+  border-color: var(--admin-accent-light);
+  background: rgba(79, 86, 186, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 86, 186, 0.2);
+}
+
+.dar-alta-type-radio:checked + .dar-alta-type-label {
+  border-color: var(--admin-accent);
+  background: rgba(79, 86, 186, 0.2);
+  color: var(--admin-accent-light);
+  box-shadow: 0 4px 16px rgba(79, 86, 186, 0.3);
+}
+
+.dar-alta-type-icon {
+  font-size: 24px;
+}
+
+/* Form Card */
+.dar-alta-form-card {
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 32px;
+  box-shadow: var(--admin-shadow);
+}
+
+.dar-alta-form-section {
+  margin-bottom: 32px;
+}
+
+.dar-alta-form-section:last-child {
+  margin-bottom: 0;
+}
+
+.dar-alta-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--admin-border-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form Grid */
+.dar-alta-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.dar-alta-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dar-alta-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.dar-alta-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dar-alta-required {
+  color: var(--admin-danger);
+}
+
+.dar-alta-form-input,
+.dar-alta-form-select,
+.dar-alta-form-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  font-size: 14px;
+  color: var(--admin-text-primary);
+  background: var(--admin-bg-tertiary);
+  transition: var(--admin-transition);
+  font-family: inherit;
+}
+
+.dar-alta-form-input::placeholder,
+.dar-alta-form-textarea::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.dar-alta-form-input:focus,
+.dar-alta-form-select:focus,
+.dar-alta-form-textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  background: var(--admin-bg-secondary);
+  box-shadow: 0 0 0 3px rgba(79, 86, 186, 0.2);
+}
+
+.dar-alta-form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.dar-alta-form-help {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+/* Picture Selector */
+.dar-alta-picture-selector {
+  grid-column: 1 / -1;
+}
+
+.dar-alta-picture-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dar-alta-picture-option {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.dar-alta-picture-radio {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dar-alta-picture-label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  position: relative;
+  background: var(--admin-bg-tertiary);
+}
+
+.dar-alta-picture-label:hover {
+  border-color: var(--admin-accent-light);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 86, 186, 0.3);
+}
+
+.dar-alta-picture-radio:checked + .dar-alta-picture-label {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(79, 86, 186, 0.3);
+}
+
+.dar-alta-picture-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dar-alta-picture-radio:checked + .dar-alta-picture-label::after {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: var(--admin-accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Form Actions */
+.dar-alta-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 2px solid var(--admin-border-light);
+  margin-top: 32px;
+}
+
+/* Status Message */
+.dar-alta-status {
+  margin-top: 24px;
+  padding: 14px 18px;
+  border-radius: var(--admin-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dar-alta-status.success {
+  background: rgba(76, 175, 80, 0.15);
+  color: #66bb6a;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.dar-alta-status.error {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ef5350;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.dar-alta-status.loading {
+  background: rgba(79, 86, 186, 0.15);
+  color: var(--admin-accent-light);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dar-alta-main {
+    padding: 24px 20px;
+  }
+  
+  .dar-alta-header {
+    padding: 12px 20px;
+  }
+  
+  .dar-alta-form-card {
+    padding: 24px 20px;
+  }
+  
+  .dar-alta-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dar-alta-type-options {
+    flex-direction: column;
+  }
+  
+  .dar-alta-type-option {
+    width: 100%;
+  }
+  
+  .dar-alta-picture-options {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .dar-alta-main {
+    padding: 20px 16px;
+  }
+  
+  .dar-alta-header-content {
+    gap: 12px;
+  }
+  
+  .dar-alta-header-title {
+    font-size: 18px;
+  }
+  
+  .dar-alta-form-card {
+    padding: 20px 16px;
+  }
+  
+  .dar-alta-form-actions {
+    flex-direction: column;
+  }
+  
+  .dar-alta-form-actions .admin-btn {
+    width: 100%;
+  }
+  
+  .dar-alta-picture-options {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 8px;
+  }
+}
+
+/* Password Input with Toggle (Eye Icon) */
+.dar-alta-form-group .password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.dar-alta-form-group .password-input-wrapper .dar-alta-form-input {
+  flex: 1;
+  padding-right: 45px; /* Espacio para el botón */
+}
+
+.dar-alta-form-group .password-input-wrapper .toggle-password-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--admin-transition);
+  border-radius: 4px;
+}
+
+.dar-alta-form-group .password-input-wrapper .toggle-password-btn:hover {
+  color: var(--admin-accent-light);
+  background: rgba(79, 86, 186, 0.1);
+}
+
+.dar-alta-form-group .password-input-wrapper .toggle-password-btn:focus {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+.dar-alta-form-group .password-input-wrapper .toggle-password-btn svg {
+  width: 20px;
+  height: 20px;
+}

@@ -1,0 +1,53 @@
+trigger:
+  branches:
+    include:
+      - Development
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - checkout: self
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.x'
+      checkLatest: true
+    displayName: 'Use Node 18.x'
+
+  - task: Cache@2
+    displayName: 'Cache npm'
+    inputs:
+      key: 'npm | "$(Agent.OS)" | package-lock.json'
+      restoreKeys: |
+        npm | "$(Agent.OS)"
+      path: ~/.npm
+
+  - script: |
+      cd frontend
+      npm ci
+    displayName: 'Install frontend dependencies'
+
+  - script: |
+      cd frontend
+      echo "Run frontend tests (CI)"
+      CI=true npm test -- --watchAll=false --coverage
+    displayName: 'Run frontend tests (CI)'
+
+  - script: |
+      cd frontend
+      npm run build
+    displayName: 'Build frontend'
+
+  - script: |
+      mkdir -p $(Build.ArtifactStagingDirectory)
+      cp -r frontend/build/* $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy Build Artifacts to $(Build.ArtifactStagingDirectory)'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'frontend'
+      publishLocation: 'Container'
+    displayName: 'Publish Build Artifacts (frontend)'

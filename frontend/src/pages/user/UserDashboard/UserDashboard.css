@@ -1,0 +1,1650 @@
+/* UserDashboard - Estilos siguiendo la paleta de la app */
+
+:root {
+  --bg-primary: #292B26;
+  --bg-secondary: #1a1d1f;
+  --bg-card: #181818;
+  --text-primary: #F5F6F3;
+  --text-secondary: #999AC6;
+  --accent: #4F56BA;
+  --accent-hover: #3a417d;
+  --accent-light: #999AC6;
+  --highlight: #FAED5C;
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-dashboard {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animated Background - Optimizado */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(79, 86, 186, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 50%, rgba(153, 154, 198, 0.06) 0%, transparent 50%);
+  z-index: -1;
+  opacity: 0.7;
+  /* Animación infinita eliminada para mejor rendimiento */
+}
+
+/* Scroll Progress Indicator */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--highlight) 50%, var(--accent) 100%);
+  z-index: 9999;
+  transition: width 0.1s ease-out;
+  box-shadow: 0 0 10px rgba(250, 237, 92, 0.5);
+}
+
+/* Header */
+.dashboard-header {
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 1800px;
+  width: 98%;
+  background: rgba(18, 18, 18, 0.75);
+  padding: 14px 40px;
+  z-index: 999;
+  transition: var(--transition);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 60px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-header.scrolled {
+  background: rgba(18, 18, 18, 0.9);
+  padding: 12px 40px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo-dashboard {
+  width: 140px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(79, 86, 186, 0.4));
+  transition: var(--transition);
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.logo-dashboard:hover {
+  transform: scale(1.05) rotate(-2deg);
+  filter: drop-shadow(0 6px 20px rgba(79, 86, 186, 0.6));
+}
+
+.nav-links-dashboard {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 20px;
+  padding-right: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-link-btn {
+  color: rgba(245, 246, 243, 0.7);
+  background: transparent;
+  border: none;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+  transition: var(--transition);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 25px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nav-link-btn i {
+  font-size: 14px;
+  color: var(--accent-light);
+  transition: var(--transition);
+}
+
+.nav-link-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(79, 86, 186, 0.1) 0%, rgba(153, 154, 198, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 25px;
+}
+
+.nav-link-btn:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.nav-link-btn:hover::before {
+  opacity: 1;
+}
+
+.nav-link-btn:hover i {
+  color: var(--highlight);
+  transform: scale(1.1);
+}
+
+.nav-link-btn.active {
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  box-shadow: 0 4px 12px rgba(79, 86, 186, 0.4);
+}
+
+.nav-link-btn.active i {
+  color: var(--highlight);
+  transform: scale(1.1);
+}
+
+.nav-link-btn.active::before {
+  opacity: 0;
+}
+
+/* Links secundarios (Mis Listas, Me Gusta) */
+.nav-links-secondary {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-right: 20px;
+  padding-right: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-links-secondary a {
+  color: rgba(245, 246, 243, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+  transition: var(--transition);
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-links-secondary a i {
+  font-size: 14px;
+  color: var(--accent);
+  transition: var(--transition);
+}
+
+.nav-links-secondary a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--highlight) 0%, var(--accent) 100%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+.nav-links-secondary a:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.nav-links-secondary a:hover i {
+  color: var(--highlight);
+  transform: scale(1.15);
+}
+
+.nav-links-secondary a:hover::after {
+  width: 100%;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.search-container-dashboard {
+  position: relative;
+  opacity: 0.9;
+  transition: var(--transition);
+}
+
+.search-container-dashboard:hover {
+  opacity: 1;
+}
+
+.search-input-dashboard {
+  background: rgba(18, 18, 18, 0.65);
+  border: 1px solid rgba(79, 86, 186, 0.5);
+  border-radius: 25px;
+  color: var(--text-primary);
+  padding: 10px 40px 10px 20px;
+  outline: none;
+  width: 220px;
+  transition: var(--transition);
+  backdrop-filter: blur(15px) saturate(150%);
+  -webkit-backdrop-filter: blur(15px) saturate(150%);
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.search-input-dashboard::placeholder {
+  color: rgba(245, 246, 243, 0.6);
+}
+
+.search-input-dashboard:focus {
+  width: 280px;
+  border-color: var(--accent);
+  background: rgba(18, 18, 18, 0.8);
+  box-shadow: 0 8px 32px rgba(79, 86, 186, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.search-icon-dashboard {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(245, 246, 243, 0.6);
+  transition: var(--transition);
+  pointer-events: none;
+}
+
+.search-container-dashboard:hover .search-icon-dashboard,
+.search-input-dashboard:focus + .search-icon-dashboard {
+  color: var(--text-primary);
+}
+
+.user-menu-container {
+  position: relative;
+}
+
+.user-avatar-dashboard {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(79, 86, 186, 0.3);
+  color: var(--text-primary);
+  font-size: 18px;
+  overflow: visible;
+  border: 2px solid var(--accent);
+  position: relative;
+}
+
+.user-avatar-dashboard:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 25px rgba(79, 86, 186, 0.5);
+}
+
+.user-dropdown-dashboard {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  background: rgba(18, 18, 18, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--border-radius);
+  padding: 8px;
+  min-width: 240px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: dropdownSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1001;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(245, 246, 243, 0.8);
+  text-decoration: none;
+  padding: 12px 15px;
+  transition: var(--transition);
+  border-radius: 8px;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transform: translateX(5px);
+}
+
+.dropdown-item i {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 8px 0;
+}
+
+.logout-btn {
+  color: #ff4444 !important;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 68, 68, 0.1) !important;
+}
+
+.logout-btn i {
+  color: #ff4444 !important;
+}
+
+/* Hero Section */
+.hero-dashboard {
+  height: 80vh;
+  min-height: 600px;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 50px 120px;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), 
+              background-image 1s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 0;
+  padding-top: 120px;
+  will-change: opacity, background-image;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+}
+
+.hero-dashboard.hero-transition {
+  opacity: 0;
+  transform: scale(1.02);
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0.4) 0%,
+    transparent 25%,
+    transparent 60%,
+    rgba(41, 43, 38, 0.8) 90%,
+    rgba(41, 43, 38, 1) 100%);
+  pointer-events: none;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hero-content-dashboard {
+  max-width: 700px;
+  position: relative;
+  z-index: 1;
+  animation: heroContentFadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.8s ease-in-out, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes heroContentFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-transition .hero-content-dashboard {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.back-btn-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.back-btn-dashboard:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  transform: translateX(-5px);
+}
+
+.hero-title-dashboard {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 0 0 30px rgba(0,0,0,0.8);
+  background: linear-gradient(to right, #ffffff 0%, #b3b3b3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+  animation: titleSlideIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+@keyframes titleSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hero-meta-dashboard {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  flex-wrap: wrap;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-meta-dashboard span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-meta-dashboard span i {
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.hero-rating i {
+  color: var(--highlight) !important;
+}
+
+.hero-description-dashboard {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  color: var(--text-primary);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  max-width: 650px;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
+}
+
+.hero-buttons-dashboard {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+}
+
+.btn-dashboard {
+  padding: 14px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Efecto de brillo simple */
+.btn-dashboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s;
+}
+
+.btn-dashboard:hover::before {
+  left: 100%;
+}
+
+.btn-primary-dashboard {
+  background: linear-gradient(135deg, #4F56BA 0%, #999AC6 100%);
+  color: white;
+  border-color: rgba(79, 86, 186, 0.3);
+  box-shadow: 0 6px 20px rgba(79, 86, 186, 0.4);
+}
+
+.btn-primary-dashboard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(79, 86, 186, 0.6);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.btn-secondary-dashboard {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary-dashboard:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.btn-liked-dashboard {
+  background: rgba(231, 76, 60, 0.15);
+  color: #ff6b6b;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(231, 76, 60, 0.4);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.btn-liked-dashboard:hover {
+  background: rgba(231, 76, 60, 0.25);
+  border-color: rgba(231, 76, 60, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+}
+
+/* Main Content */
+.dashboard-main {
+  padding: 80px 50px 100px;
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Tabs Navigation - Estilos eliminados ya que la navegación está en el header */
+
+/* Secciones de contenido con ID */
+#all-content-section,
+#creators-section,
+#video-section,
+#audio-section {
+  scroll-margin-top: 120px;
+  animation: sectionFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 80px;
+  position: relative;
+}
+
+/* La primera sección (creadores) no tiene margen superior */
+#creators-section {
+  margin-top: 0;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efecto al hacer hover sobre las secciones */
+#all-content-section:hover,
+#creators-section:hover,
+#video-section:hover,
+#audio-section:hover {
+  animation: sectionHighlight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes sectionHighlight {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Scroll to Top Button */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, 
+    rgba(79, 86, 186, 0.7) 0%, 
+    rgba(153, 154, 198, 0.6) 50%,
+    rgba(79, 86, 186, 0.7) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 6px 25px rgba(79, 86, 186, 0.5),
+              inset 0 1px 2px rgba(255, 255, 255, 0.2),
+              0 0 20px rgba(79, 86, 186, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 999;
+  border: 1px solid rgba(250, 237, 92, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeInUp 0.3s ease;
+  overflow: hidden;
+}
+
+.scroll-top-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 100%
+  );
+  transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  transition: transform 0.8s ease;
+}
+
+.scroll-top-btn:hover::before {
+  transform: translateX(100%) translateY(100%) rotate(45deg);
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-top-btn:hover {
+  transform: scale(1.15) rotate(-5deg);
+  box-shadow: 0 10px 35px rgba(79, 86, 186, 0.7),
+              inset 0 1px 2px rgba(255, 255, 255, 0.25),
+              0 0 30px rgba(79, 86, 186, 0.3);
+  border-color: rgba(250, 237, 92, 0.4);
+}
+
+/* Notification Toast */
+.notification-toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  background: white;
+  color: #333;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  z-index: 10000;
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+             slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s forwards;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.notification-toast i {
+  font-size: 1.3rem;
+}
+
+.notification-toast.success {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: white;
+}
+
+.notification-toast.error {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.notification-toast.warning {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.notification-toast.info {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .hero-title-dashboard {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-header {
+    padding: 12px 20px;
+    width: 94%;
+    top: 15px;
+  }
+  
+  .nav-links-dashboard {
+    display: none;
+  }
+  
+  .header-right {
+    gap: 15px;
+  }
+  
+  .hero-dashboard {
+    height: 65vh;
+    padding: 0 30px 80px;
+    padding-top: 70px;
+  }
+  
+  .hero-title-dashboard {
+    font-size: 3rem;
+  }
+  
+  .dashboard-main {
+    padding: 40px 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 10px 15px;
+    width: 95%;
+    top: 10px;
+    border-radius: 40px;
+  }
+  
+  .logo-dashboard {
+    width: 100px;
+  }
+  
+  .header-right {
+    gap: 8px;
+  }
+  
+  .search-container-dashboard {
+    position: relative;
+  }
+  
+  .search-input-dashboard {
+    width: 140px;
+    padding: 8px 35px 8px 12px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+  
+  .search-input-dashboard:focus {
+    width: 160px;
+  }
+  
+  .search-icon-dashboard {
+    right: 12px;
+    font-size: 14px;
+  }
+  
+  .user-avatar-dashboard {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .hero-dashboard {
+    height: 60vh;
+    padding: 0 20px 60px;
+    padding-top: 70px;
+  }
+  
+  .hero-title-dashboard {
+    font-size: 2.5rem;
+  }
+  
+  .hero-description-dashboard {
+    font-size: 1.1rem;
+  }
+  
+  .dashboard-main {
+    padding: 30px 20px;
+  }
+  
+  .scroll-top-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-header {
+    padding: 8px 10px;
+    width: 96%;
+  }
+  
+  .logo-dashboard {
+    width: 85px;
+  }
+  
+  .header-right {
+    gap: 6px;
+  }
+  
+  .search-input-dashboard {
+    width: 110px;
+    padding: 7px 30px 7px 10px;
+    font-size: 12px;
+  }
+  
+  .search-input-dashboard:focus {
+    width: 130px;
+  }
+  
+  .search-icon-dashboard {
+    right: 10px;
+    font-size: 12px;
+  }
+  
+  .user-avatar-dashboard {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .hero-title-dashboard {
+    font-size: 2rem;
+  }
+  
+  .hero-buttons-dashboard {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn-dashboard {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: linear-gradient(135deg, rgba(40, 40, 60, 0.95), rgba(30, 30, 50, 0.95));
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+  color: #e74c3c;
+}
+
+.modal-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.no-playlists {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.no-playlists i {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 16px;
+}
+
+.no-playlists p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+}
+
+.create-playlist-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.create-playlist-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 86, 186, 0.4);
+}
+
+.playlists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.playlist-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.playlist-item-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.playlist-item-icon i {
+  font-size: 20px;
+  color: white;
+}
+
+.playlist-item-info {
+  flex: 1;
+}
+
+.playlist-item-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.playlist-item-info p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.playlist-item > i {
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.playlist-item:hover > i {
+  transform: translateX(4px);
+}
+
+/* Creator Playlists Section */
+.content-section {
+  margin: 60px 0;
+  padding: 0 20px;
+  position: relative;
+}
+
+/* Separador visual entre secciones */
+.content-section::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(79, 86, 186, 0.3) 20%, 
+    rgba(153, 154, 198, 0.5) 50%, 
+    rgba(79, 86, 186, 0.3) 80%, 
+    transparent 100%);
+  opacity: 0.5;
+}
+
+.creator-playlists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 32px;
+  margin-top: 32px;
+  padding: 0 10px;
+}
+
+/* ===== SLIDER ESTILO NETFLIX - PLAYLISTS CREADAS ===== */
+.creator-playlists-section {
+  position: relative;
+  margin: 50px 0;
+  padding: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.creator-playlists-section .section-title-dashboard {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: titleFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.creator-playlists-section .section-title-dashboard i {
+  font-size: 1.6rem;
+  color: #FFD700; /* Dorado para destacar */
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+  /* Animación infinita eliminada para mejor rendimiento */
+}
+
+/* Wrapper principal del slider estilo Netflix */
+.netflix-slider-wrapper {
+  position: relative;
+  padding: 0;
+  width: 100%;
+}
+
+.netflix-slider-container {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Contenedor de scroll horizontal */
+.creator-playlists-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  padding: 20px 0 30px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scroll-padding: 0;
+}
+
+.creator-playlists-slider::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Items individuales del slider - Optimizado */
+.netflix-playlist-item {
+  flex: 0 0 auto;
+  width: 280px;
+  transition: transform 0.2s ease-out;
+  transform-origin: center center;
+  position: relative;
+  will-change: transform;
+}
+
+.netflix-playlist-item:hover {
+  transform: scale(1.03);
+  z-index: 20;
+}
+
+/* Efecto de empuje desactivado para mejor rendimiento */
+.netflix-playlist-item:hover ~ .netflix-playlist-item {
+  transform: none;
+}
+
+/* Botones de navegación circulares - Optimizado */
+.netflix-slider-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 55px;
+  height: 55px;
+  background: rgba(18, 18, 18, 0.9);
+  border: 2px solid rgba(79, 86, 186, 0.5);
+  border-radius: 50%;
+  color: rgba(245, 246, 243, 0.9);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  will-change: transform, opacity;
+}
+
+.netflix-slider-container:hover .netflix-slider-nav {
+  opacity: 1;
+}
+
+.netflix-slider-nav:hover {
+  background: rgba(79, 86, 186, 0.95);
+  border-color: rgba(153, 154, 198, 0.9);
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 6px 20px rgba(79, 86, 186, 0.6);
+}
+
+.netflix-slider-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.netflix-slider-prev {
+  left: 20px;
+}
+
+.netflix-slider-next {
+  right: 20px;
+}
+
+.netflix-slider-nav i {
+  pointer-events: none;
+  transition: none;
+}
+
+/* Efecto de brillo eliminado para mejor rendimiento */
+
+/* Gradientes de fade en los extremos (estilo Netflix) */
+.slider-fade-left,
+.slider-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  pointer-events: none;
+  z-index: 30;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.netflix-slider-container:hover .slider-fade-left,
+.netflix-slider-container:hover .slider-fade-right {
+  opacity: 1;
+}
+
+.slider-fade-left {
+  left: 0;
+  background: linear-gradient(to right, 
+    rgba(41, 43, 38, 1) 0%, 
+    rgba(41, 43, 38, 0.8) 30%,
+    rgba(41, 43, 38, 0.4) 60%,
+    transparent 100%);
+}
+
+.slider-fade-right {
+  right: 0;
+  background: linear-gradient(to left, 
+    rgba(41, 43, 38, 1) 0%, 
+    rgba(41, 43, 38, 0.8) 30%,
+    rgba(41, 43, 38, 0.4) 60%,
+    transparent 100%);
+}
+
+/* Efectos hover optimizados en las tarjetas */
+.netflix-playlist-item .creator-playlist-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.netflix-playlist-item:hover .creator-playlist-card {
+  border-color: rgba(79, 86, 186, 0.6);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== RESPONSIVE DESIGN - SLIDER NETFLIX ===== */
+@media (max-width: 1400px) {
+  .netflix-playlist-item {
+    width: 260px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .creator-playlists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  
+  .netflix-playlist-item {
+    width: 240px;
+  }
+  
+  .netflix-slider-nav {
+    width: 50px;
+    height: 50px;
+    font-size: 1.4rem;
+  }
+  
+  .netflix-slider-prev {
+    left: 15px;
+  }
+  
+  .netflix-slider-next {
+    right: 15px;
+  }
+  
+  .creator-playlists-section .section-title-dashboard {
+    font-size: 1.3rem;
+  }
+}
+
+/* Responsive para navegación en header */
+@media (max-width: 1400px) {
+  .nav-link-btn {
+    font-size: 13px;
+    padding: 9px 14px;
+    gap: 6px;
+  }
+  
+  .nav-link-btn i {
+    font-size: 13px;
+  }
+  
+  .nav-links-secondary {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-header {
+    width: 98%;
+    padding: 12px 30px;
+  }
+  
+  .logo-dashboard {
+    width: 120px;
+    margin-right: 15px;
+  }
+  
+  .nav-links-dashboard {
+    gap: 6px;
+    margin-right: 15px;
+    padding-right: 15px;
+  }
+  
+  .nav-link-btn span {
+    display: none; /* Ocultar texto, solo íconos */
+  }
+  
+  .nav-link-btn {
+    padding: 10px 12px;
+    min-width: 40px;
+    justify-content: center;
+  }
+  
+  .nav-link-btn i {
+    font-size: 16px;
+  }
+  
+  .nav-links-secondary {
+    gap: 12px;
+    margin-right: 15px;
+    padding-right: 15px;
+  }
+  
+  .nav-links-secondary a {
+    font-size: 13px;
+  }
+  
+  .search-input-dashboard {
+    width: 180px;
+  }
+  
+  .search-input-dashboard:focus {
+    width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    top: 10px;
+    width: 96%;
+    padding: 10px 20px;
+    border-radius: 50px;
+  }
+  
+  .logo-dashboard {
+    width: 100px;
+    margin-right: 10px;
+  }
+  
+  .nav-links-dashboard {
+    gap: 4px;
+    margin-right: 10px;
+    padding-right: 10px;
+  }
+  
+  .nav-link-btn {
+    padding: 8px 10px;
+    min-width: 36px;
+  }
+  
+  .nav-link-btn i {
+    font-size: 15px;
+  }
+  
+  .nav-links-secondary {
+    display: none; /* Ocultar en móvil */
+  }
+  
+  .search-input-dashboard {
+    width: 150px;
+    padding: 8px 35px 8px 15px;
+    font-size: 13px;
+  }
+  
+  .search-input-dashboard:focus {
+    width: 180px;
+  }
+  
+  .creator-playlists-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .content-section {
+    padding: 0 10px;
+  }
+  
+  .dashboard-main {
+    padding: 60px 20px;
+  }
+  
+  .creator-playlists-slider {
+    padding: 15px 0 25px;
+  }
+  
+  .netflix-playlist-item {
+    width: 220px;
+  }
+  
+  .netflix-slider-nav {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    opacity: 0.9; /* Más visible en móvil */
+  }
+  
+  .netflix-slider-prev {
+    left: 10px;
+  }
+  
+  .netflix-slider-next {
+    right: 10px;
+  }
+  
+  .slider-fade-left,
+  .slider-fade-right {
+    width: 50px;
+    opacity: 1; /* Siempre visible en móvil */
+  }
+  
+  .creator-playlists-section .section-title-dashboard {
+    font-size: 1.2rem;
+    padding-left: 0;
+  }
+  
+  /* Desactivar efectos pesados en móvil para mejor rendimiento */
+  .netflix-playlist-item {
+    transition: none;
+  }
+  
+  .netflix-playlist-item:hover {
+    transform: none;
+  }
+  
+  .netflix-playlist-item:hover ~ .netflix-playlist-item {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-main {
+    padding: 60px 15px;
+  }
+  
+  .netflix-playlist-item {
+    width: 200px;
+  }
+  
+  .netflix-slider-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+  
+  .netflix-slider-prev {
+    left: 5px;
+  }
+  
+  .netflix-slider-next {
+    right: 5px;
+  }
+  
+  .creator-playlists-slider {
+    gap: 10px;
+    padding: 15px 0 25px;
+  }
+  
+  .slider-fade-left,
+  .slider-fade-right {
+    width: 45px;
+  }
+  
+  .creator-playlists-section .section-title-dashboard {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    padding-left: 0;
+  }
+}

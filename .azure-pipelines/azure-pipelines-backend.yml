@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+      - Development
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - checkout: self
+
+  - task: UseJava@1
+    inputs:
+      versionSpec: '17'
+      jdkArchitectureOption: 'x64'
+    displayName: 'Setup Java 17'
+
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'esimedia/pom.xml'
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '17'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      goals: 'test package'
+    displayName: 'Maven build (esimedia) - run tests and package'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: 'esimedia/target'
+      ArtifactName: 'backend'
+      publishLocation: 'Container'
+    displayName: 'Publish backend artifact'

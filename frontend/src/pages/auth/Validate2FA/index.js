@@ -1,0 +1,158 @@
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import './Validate2FA.css';
+
+const Validate2FA = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const email = location.state?.email || "";
+  const password = location.state?.password || "";
+  const [code, setCode] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleValidate2FA = async () => {
+    if (!code || code.length < 6) {
+      setMessage("Por favor, ingresa un código válido de 6 dígitos");
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const response = await axios.post("/api/auth/login", {
+        email,
+        password,
+        "2fa_code": parseInt(code),
+      }, {
+        withCredentials: true
+      });
+
+      const data = response.data;
+
+      // Verificar si el usuario tiene activado el 3FA
+      if (data.thirdFactorEnabled) {
+        navigate("/validate-3fa", { state: { email, role: data.role } });
+        return;
+      }
+
+      // Redirigir según el rol
+      if (data.role === "admin") {
+        navigate("/adminDashboard");
+      } else if (data.role === "creator") {
+        navigate("/creator");
+      } else {
+        navigate("/usuario");
+      }
+    } catch (error) {
+      if (error.response?.status === 428) {
+        navigate("/validate-3fa", { state: { email, role: error.response.data.role } });
+        return;
+      }
+      const errorMsg = error.response?.data?.error || "Código incorrecto o sesión expirada";
+      setMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleValidate2FA();
+    }
+  };
+
+  return (
+    <div className="page-container">
+      <div className="validate2fa-wrapper">
+        {/* Panel informativo lateral */}
+        <div className="validate2fa-info-panel">
+          <div className="validate2fa-info-content">
+            <div className="validate2fa-info-icon">🔒</div>
+            <h2 className="validate2fa-info-title">Verificación de Seguridad</h2>
+            <p className="validate2fa-info-description">
+              Ingresa el código de 6 dígitos que aparece en tu aplicación Google Authenticator 
+              para completar el inicio de sesión.
+            </p>
+            <div className="validate2fa-info-tips">
+              <div className="validate2fa-info-tip">
+                <span className="validate2fa-tip-icon">📱</span>
+                <span>Abre Google Authenticator en tu dispositivo</span>
+              </div>
+              <div className="validate2fa-info-tip">
+                <span className="validate2fa-tip-icon">🔢</span>
+                <span>Busca el código de ESIMEDIA</span>
+              </div>
+              <div className="validate2fa-info-tip">
+                <span className="validate2fa-tip-icon">⏱️</span>
+                <span>El código cambia cada 30 segundos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel del contenido principal */}
+        <div className="validate2fa-content-panel">
+          <h1 className="page-title">Validar 2FA</h1>
+          <p className="page-subtitle">
+            Introduce el código de verificación de tu autenticador para acceder.
+          </p>
+
+          <div className="validate2fa-form-field">
+            <label htmlFor="validate2fa-code" className="form-label required">
+              Código de Autenticación
+            </label>
+            <input
+              id="validate2fa-code"
+              type="text"
+              className="validate2fa-code-input"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onKeyPress={handleKeyPress}
+              placeholder="000000"
+              maxLength="6"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
+
+          <div className="validate2fa-info-box">
+            <span className="validate2fa-info-box-icon">💡</span>
+            <div>
+              Asegúrate de ingresar el código antes de que expire. 
+              Si el código no funciona, espera a que se genere uno nuevo.
+            </div>
+          </div>
+
+          <button 
+            onClick={handleValidate2FA}
+            disabled={isLoading || code.length < 6}
+            className="validate2fa-submit-btn"
+          >
+            {isLoading ? "Verificando..." : "Validar Código"}
+          </button>
+
+          {message && (
+            <div className="validate2fa-message">
+              {message}
+            </div>
+          )}
+
+          <div className="validate2fa-footer">
+            <button 
+              type="button" 
+              className="validate2fa-link-btn"
+              onClick={() => navigate('/login')}
+            >
+              ← Volver al inicio de sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Validate2FA;
