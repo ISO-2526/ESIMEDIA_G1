@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  esimedia:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=your_mongodb_atlas_uri_here
+      - MAIL_PASSWORD=your_email_password_here

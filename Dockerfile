@@ -26,9 +26,7 @@ WORKDIR /app
 COPY esimedia/ ./esimedia/
 
 # Copy the built frontend to the backend's static resources
-COPY --from=frontend-build /app/frontend/build/* ./esimedia/src/main/resources/static/
-
-# Build the backend
+COPY --from=frontend-build /app/frontend/build/ ./esimedia/src/main/resources/static/
 WORKDIR /app/esimedia
 RUN mvn clean package -DskipTests
 
