@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -323,7 +323,7 @@ const ProfileActions = ({ isEditing, onEdit, onDelete, onSave, onCancel }) => (
 
 /* ---------- Refactor de UserProfilePage (reducción complejidad) ---------- */
 function UserProfilePage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError } = useModal();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -443,7 +443,7 @@ function UserProfilePage() {
       }
 
       showSuccess('Cuenta eliminada. Redirigiendo...');
-      setTimeout(() => logoutWithCookies('/', navigate), 1500);
+      setTimeout(() => logoutWithCookies('/', history), 1500);
     } catch (e) {
       console.error(e);
       showError('Error de red. Intenta de nuevo.');
@@ -493,7 +493,7 @@ function UserProfilePage() {
         vip={userProfile.vip}
         onToggleMenu={() => setShowUserMenu(s => !s)}
         showUserMenu={showUserMenu}
-        logout={() => logoutWithCookies('/login', navigate)}
+        logout={() => logoutWithCookies('/login', history)}
       />
 
       <div className="profile-container">

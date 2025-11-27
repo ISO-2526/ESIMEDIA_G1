@@ -3,7 +3,7 @@ import './RegistroPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import { useHistory } from 'react-router-dom'; // Importar useHistory
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 
 function RegistroPage() {
@@ -41,7 +41,7 @@ function RegistroPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // Hook para redirección
+  const history = useHistory(); // Hook para redirección
 
   // Asegurar que el scroll comience desde arriba
   useEffect(() => {
@@ -164,7 +164,7 @@ function RegistroPage() {
       });
 
       if (response.ok) {
-        navigate('/setup-2fa', { state: { email: form.email } });
+        history.push('/setup-2fa', { state: { email: form.email } });
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
         console.error('Error del servidor:', errorData);

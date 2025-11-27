@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import './ResetPassword.css';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 
@@ -13,7 +13,7 @@ function ResetPassword() {
   const [isValidToken, setIsValidToken] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
+  const history = useHistory();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
@@ -78,7 +78,7 @@ function ResetPassword() {
       const response = await axios.post('/api/auth/reset-password', { token, password });
       setMessage(response.data.message || 'Contraseña restablecida correctamente. Redirigiendo al inicio de sesión...');
       setMessageType('success');
-      setTimeout(() => navigate('/login'), 3000);
+      setTimeout(() => history.push('/login'), 3000);
     } catch (error) {
       console.error('Error al resetear contraseña:', error.response?.data || error.message);
       setMessage('Error al resetear la contraseña. Inténtalo de nuevo.');
@@ -108,7 +108,7 @@ function ResetPassword() {
             </p>
             <button 
               className="reset-submit-btn"
-              onClick={() => navigate('/recover-password')}
+              onClick={() => history.push('/recover-password')}
               style={{ marginTop: '20px' }}
             >
               Solicitar nuevo enlace

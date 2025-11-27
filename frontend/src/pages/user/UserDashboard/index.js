@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import ContentLayout from '../../../layouts/ContentLayout';
 import VideoPlayer from '../../../components/VideoPlayer';
 import AudioPlayer from '../../../components/AudioPlayer';
@@ -248,7 +248,7 @@ function CreatorPlaylistsSlider({ creatorPlaylists, navigate }) {
 }
 
 function UserDashboard() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal } = useModal();
   const { scrolled, scrollProgress } = useScrollInfo();
   const [searchQuery, setSearchQuery] = useState('');
@@ -404,7 +404,7 @@ function UserDashboard() {
   };
 
   // REEMPLAZO: logout unificado
-  const handleLogout = () => logoutCsrf('/login', navigate);
+  const handleLogout = () => logoutCsrf('/login', history);
 
   // Separar contenido por tipo
   const getAudioContent = () => {
@@ -434,7 +434,7 @@ function UserDashboard() {
 
   const handleVipUpgrade = () => {
     setShowVipModal(false);
-    navigate('/suscripcion');
+    history.push('/suscripcion');
   };
 
   const handleShowInfo = (content) => {
@@ -507,7 +507,7 @@ function UserDashboard() {
       <main className="dashboard-main">
         <CreatorPlaylistsSlider
           creatorPlaylists={creatorPlaylists}
-          navigate={navigate}
+          navigate={history}
         />
 
         <ContentLayout

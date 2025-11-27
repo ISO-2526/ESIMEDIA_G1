@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -7,7 +7,7 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +22,7 @@ function LoginPage() {
       });
 
       if (res.status === 428) {
-        navigate('/validate-2fa', { state: { email, password } });
+        history.push('/validate-2fa', { state: { email, password } });
         return;
       }
 
@@ -37,10 +37,10 @@ function LoginPage() {
       const data = await res.json();
       // No guardar token ni session en localStorage: se usa cookie HttpOnly
       const role = data?.role ?? data?.data?.role;
-      if (role === 'admin') navigate('/adminDashboard');
-      else if (role === 'creator') navigate('/creator');
-      else if (role === 'user') navigate('/usuario');
-      else navigate('/');
+      if (role === 'admin') history.push('/adminDashboard');
+      else if (role === 'creator') history.push('/creator');
+      else if (role === 'user') history.push('/usuario');
+      else history.push('/');
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
       setError('Error en el servidor');
@@ -149,7 +149,7 @@ function LoginPage() {
             </button>
 
             <div className="form-footer">
-              <button type="button" className="link-btn" onClick={() => navigate('/recuperar')}>
+              <button type="button" className="link-btn" onClick={() => history.push('/recuperar')}>
                 ¿Olvidaste tu contraseña?
               </button>
               <div className="register-link">

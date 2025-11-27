@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 
 const ProtectedRouteAfterLogin = ({ children }) => {
   const [state, setState] = useState({ loading: true, role: null });
@@ -22,10 +22,10 @@ const ProtectedRouteAfterLogin = ({ children }) => {
 
   if (state.loading) return children;
   if (!state.role) return children;
-  if (state.role === "admin") return <Navigate to="/adminDashboard" replace />;
-  if (state.role === "creator") return <Navigate to="/creator" replace />;
-  if (state.role === "user") return <Navigate to="/usuario" replace />;
-  return <Navigate to="/" replace />;
+  if (state.role === "admin") return <Redirect to="/adminDashboard" />;
+  if (state.role === "creator") return <Redirect to="/creator" />;
+  if (state.role === "user") return <Redirect to="/usuario" />;
+  return <Redirect to="/" />;
 };
 
 export default ProtectedRouteAfterLogin;

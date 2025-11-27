@@ -1,14 +1,14 @@
 //Pagina recuperar contraseña
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import './RecoverPassword.css';
 
 function RecoverPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' o 'error'
-  const navigate = useNavigate();
+  const history = useHistory();
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +76,7 @@ function RecoverPassword() {
             <button 
               type="button" 
               className="recover-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>

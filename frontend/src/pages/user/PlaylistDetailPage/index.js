@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -12,13 +12,12 @@ import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../
 
 function PlaylistDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
   const [allContents, setAllContents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('addedDate');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -30,6 +29,7 @@ function PlaylistDetailPage() {
   const [selectedVipContent, setSelectedVipContent] = useState(null);
   const [userProfile, setUserProfile] = useState({ vip: false });
   const [contentCovers, setContentCovers] = useState([]);
+  const [sortBy, setSortBy] = useState('addedDate');
 
   useEffect(() => {
     fetchAllContents();
@@ -99,14 +99,14 @@ function PlaylistDetailPage() {
         setEditDescription(data.descripcion || '');
       } else if (response.status === 403) {
         showWarning('No tienes permiso para ver esta lista');
-        navigate('/playlists');
+        history.push('/playlists');
       } else {
         showError('Error al cargar la lista');
-        navigate('/playlists');
+        history.push('/playlists');
       }
     } catch (error) {
       console.error('Error:', error);
-      navigate('/playlists');
+      history.push('/playlists');
     } finally {
       setLoading(false);
     }
@@ -287,7 +287,7 @@ function PlaylistDetailPage() {
 
             if (response.ok) {
               showSuccess('Lista eliminada correctamente');
-              navigate('/playlists');
+              history.push('/playlists');
               resolve(true);
             } else {
               showError('Error al eliminar la lista');
@@ -322,7 +322,7 @@ function PlaylistDetailPage() {
 
   const handleVipUpgrade = () => {
     setShowVipModal(false);
-    navigate('/suscripcion');
+    history.push('/suscripcion');
   };
 
   const handleClosePlayer = () => {
@@ -358,7 +358,7 @@ function PlaylistDetailPage() {
     <div className="playlist-detail-page">
       <button 
         className="floating-back-button" 
-        onClick={() => navigate('/playlists')}
+        onClick={() => history.push('/playlists')}
         aria-label="Volver a listas de reproducción"
       >
         <i className="fas fa-arrow-left"></i>
@@ -456,7 +456,7 @@ function PlaylistDetailPage() {
               <p>Añade contenidos navegando por el catálogo y haciendo clic en el botón "+"</p>
               <button 
                 className="browse-btn" 
-                onClick={() => navigate('/usuario')}
+                onClick={() => history.push('/usuario')}
                 aria-label="Explorar catálogo de contenidos"
               >
                 <i className="fas fa-search" aria-hidden="true"></i> Explorar Contenidos

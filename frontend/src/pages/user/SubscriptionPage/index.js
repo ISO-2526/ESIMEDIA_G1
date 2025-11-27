@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import logo from '../../../resources/esimedialogo.png';
 import './SubscriptionPage.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -7,7 +7,7 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 
 function SubscriptionPage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState: notificationModal, closeModal: closeNotificationModal, showSuccess } = useModal();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -27,7 +27,7 @@ function SubscriptionPage() {
   });
 
   const handleLogout = async () => {
-    await logoutCsrf('/login', navigate);
+    await logoutCsrf('/login', history);
   };
   
   React.useEffect(() => {
@@ -179,7 +179,7 @@ function SubscriptionPage() {
         <div className="header-container">
           <div className="header-left">
             <button 
-              onClick={() => navigate('/usuario')}
+              onClick={() => history.push('/usuario')}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
               aria-label="Ir a inicio"
             >

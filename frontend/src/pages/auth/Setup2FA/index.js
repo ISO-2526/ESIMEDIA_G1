@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "axios";
 import './Setup2FA.css';
 
 const Setup2FA = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const history = useHistory();
   const email = location.state?.email || '';
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [secretKey, setSecretKey] = useState('');
@@ -28,7 +28,7 @@ const Setup2FA = () => {
   };
 
   const handleContinue = () => {
-    navigate('/login');
+    history.push('/login');
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import './AdminDashboard.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
@@ -11,7 +11,7 @@ import { useAccountsPanel, useContentPanel, useCurrentEmail } from '../../../mod
 function AdminDashboard() {
   const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
   const [tab, setTab] = useState('accounts');
-  const navigate = useNavigate();
+  const history = useHistory();
   const currentEmail = useCurrentEmail();
 
   const accountsPanel = useAccountsPanel({
@@ -25,7 +25,7 @@ function AdminDashboard() {
 
   const contentsPanel = useContentPanel({ enabled: tab === 'content' });
 
-  const handleLogout = async () => { await logoutCsrf('/login', navigate); };
+  const handleLogout = async () => { await logoutCsrf('/login', history); };
 
   const {
     accounts,
@@ -71,13 +71,13 @@ function AdminDashboard() {
             <div 
               onClick={() => {
                 const state = adminProfile?.email ? { state: { email: adminProfile.email } } : undefined;
-                navigate('/adminDashboard/editProfile', state);
+                history.push('/adminDashboard/editProfile', state);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   const state = adminProfile?.email ? { state: { email: adminProfile.email } } : undefined;
-                  navigate('/adminDashboard/editProfile', state);
+                  history.push('/adminDashboard/editProfile', state);
                 }
               }}
               role="button"

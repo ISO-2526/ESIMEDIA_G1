@@ -18,7 +18,7 @@ export const handleLogout = async (redirect = '/login', navigateFn) => {
       localStorage.removeItem('session');
     } catch {}
     if (navigateFn) {
-      navigateFn(redirect, { replace: true });
+      navigateFn.push(redirect);
     } else {
       window.location.href = redirect;
     }

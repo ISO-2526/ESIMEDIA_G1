@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import './AdminProfile.css';
 
 function AdminProfile() {
     const location = useLocation();
-    const navigate = useNavigate();
+    const history = useHistory();
     const emailFromState = location.state?.email;
 
     const [admin, setAdmin] = useState(null);
@@ -71,7 +71,7 @@ function AdminProfile() {
                 body: JSON.stringify(body)
             });
 
-            if (putRes.status === 401) { navigate('/login'); return; }
+            if (putRes.status === 401) { history.push('/login'); return; }
             if (putRes.ok) {
                 const updated = await putRes.json();
                 setAdmin(updated);
@@ -100,7 +100,7 @@ function AdminProfile() {
 
     const handleUnauthorized = (res) => {
         if (res.status === 401) {
-            navigate('/login');
+            history.push('/login');
             return true;
         }
         return false;
@@ -164,7 +164,7 @@ function AdminProfile() {
             }
         };
         fetchAdmin();
-    }, [emailFromState, navigate]);
+    }, [emailFromState]);
 
     if (loading) return <div className="admin-profile-page"><div className="profile-container"><div style={{ color: '#F5F6F3', textAlign: 'center' }}>Cargando perfil...</div></div></div>;
     if (!admin) return <div className="admin-profile-page"><div className="profile-container"><div style={{ color: '#F5F6F3', textAlign: 'center' }}>No hay perfil para mostrar.</div></div></div>;
@@ -257,7 +257,7 @@ function AdminProfile() {
                         </div>
                     </div>
                     <div className="back-button-container">
-                        <button onClick={() => navigate('/adminDashboard')} className="btn-back">
+                        <button onClick={() => history.push('/adminDashboard')} className="btn-back">
                             Volver al Dashboard
                         </button>
                     </div>

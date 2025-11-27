@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "axios";
 import './Validate2FA.css';
 
 const Validate2FA = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const history = useHistory();
   const email = location.state?.email || "";
   const password = location.state?.password || "";
   const [code, setCode] = useState("");
@@ -34,21 +34,21 @@ const Validate2FA = () => {
 
       // Verificar si el usuario tiene activado el 3FA
       if (data.thirdFactorEnabled) {
-        navigate("/validate-3fa", { state: { email, role: data.role } });
+        history.push("/validate-3fa", { state: { email, role: data.role } });
         return;
       }
 
       // Redirigir según el rol
       if (data.role === "admin") {
-        navigate("/adminDashboard");
+        history.push("/adminDashboard");
       } else if (data.role === "creator") {
-        navigate("/creator");
+        history.push("/creator");
       } else {
-        navigate("/usuario");
+        history.push("/usuario");
       }
     } catch (error) {
       if (error.response?.status === 428) {
-        navigate("/validate-3fa", { state: { email, role: error.response.data.role } });
+        history.push("/validate-3fa", { state: { email, role: error.response.data.role } });
         return;
       }
       const errorMsg = error.response?.data?.error || "Código incorrecto o sesión expirada";
@@ -144,7 +144,7 @@ const Validate2FA = () => {
             <button 
               type="button" 
               className="validate2fa-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>

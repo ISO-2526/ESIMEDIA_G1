@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { handleLogout as logoutCsrf } from '../auth/logout';
 
 const CONFIG = {
@@ -9,7 +9,7 @@ const CONFIG = {
 };
 
 export default function useSessionTimeout(enabled = true) {
-  const navigate = useNavigate();
+  const history = useHistory();
   const absoluteTimer = useRef(null);
   const idleTimer = useRef(null);
   const expired = useRef(false);
@@ -27,7 +27,7 @@ export default function useSessionTimeout(enabled = true) {
       if (expired.current) return;
       expired.current = true;
       // Sin modal/confirmaciones
-      logoutCsrf('/login', navigate);
+      logoutCsrf('/login', history);
     };
 
     const startIdle = () => {
@@ -55,5 +55,5 @@ export default function useSessionTimeout(enabled = true) {
       clearTimeout(idleTimer.current);
       clearTimeout(absoluteTimer.current);
     };
-  }, [navigate, enabled]);
+  }, [history, enabled]);
 }

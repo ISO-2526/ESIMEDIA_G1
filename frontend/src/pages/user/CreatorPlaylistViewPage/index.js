@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -10,7 +10,7 @@ import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../
 
 function CreatorPlaylistViewPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
@@ -85,15 +85,15 @@ function CreatorPlaylistViewPage() {
           setPlaylist(foundPlaylist);
         } else {
           showWarning('Esta lista no está disponible');
-          navigate('/usuario');
+          history.push('/usuario');
         }
       } else {
         showError('Error al cargar la lista');
-        navigate('/usuario');
+        history.push('/usuario');
       }
     } catch (error) {
       console.error('Error:', error);
-      navigate('/usuario');
+      history.push('/usuario');
     } finally {
       setLoading(false);
     }
@@ -247,7 +247,7 @@ function CreatorPlaylistViewPage() {
 
   return (
     <div className="playlist-detail-page">
-      <button className="floating-back-button" onClick={() => navigate('/usuario')}>
+      <button className="floating-back-button" onClick={() => history.push('/usuario')}>
         <i className="fas fa-arrow-left"></i>
       </button>
 

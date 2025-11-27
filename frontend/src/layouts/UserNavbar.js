@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import './UserNavbar.css';
 import logo from './logo.svg';
 
 function UserNavbar({ username }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -16,12 +16,12 @@ function UserNavbar({ username }) {
   const handleProfile = () => {
     console.log('Ir a Mi Perfil');
     setMenuOpen(false);
-    navigate('/perfil');
+    history.push('/perfil');
   };
   const handleDashboard = () => {
     console.log('Ir a Dashboard');
     setMenuOpen(false);
-    navigate('/usuario');   
+    history.push('/usuario');   
   };
 
   const handleSubscription = () => {

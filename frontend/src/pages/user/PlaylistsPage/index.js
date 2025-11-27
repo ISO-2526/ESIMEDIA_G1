@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import PlaylistCard from '../../../components/PlaylistCard';
 import './PlaylistsPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 
 function PlaylistsPage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const location = useLocation();
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [playlists, setPlaylists] = useState([]);
@@ -88,7 +88,7 @@ function PlaylistsPage() {
   };
 
   const handlePlaylistClick = (playlistId) => {
-    navigate(`/playlists/${playlistId}`);
+    history.push(`/playlists/${playlistId}`);
   };
 
   if (loading) {
@@ -106,7 +106,7 @@ function PlaylistsPage() {
     <div className="playlists-page">
       <div className="playlists-header">
         <div className="playlists-header-left">
-          <button className="back-button" onClick={() => navigate('/usuario')}>
+          <button className="back-button" onClick={() => history.push('/usuario')}>
             <i className="fas fa-arrow-left"></i>
           </button>
           <div className="header-content">

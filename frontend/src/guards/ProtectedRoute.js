@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import useSessionTimeout from '../utils/useSessionTimeout';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -39,14 +39,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!isAuthenticated) {
     // Redirigir al inicio de sesión si no está autenticado
-    return <Navigate to="/login" replace />;
+    return <Redirect to="/login" />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     // Redirigir según el rol del usuario si no tiene acceso
-    if (userRole === 'admin') return <Navigate to="/adminDashboard" replace />;
-    if (userRole === 'creator') return <Navigate to="/creator" replace />;
-    if (userRole === 'user') return <Navigate to="/usuario" replace />;
+    if (userRole === 'admin') return <Redirect to="/adminDashboard" />;
+    if (userRole === 'creator') return <Redirect to="/creator" />;
+    if (userRole === 'user') return <Redirect to="/usuario" />;
   }
 
   // Renderizar el contenido protegido si está autenticado y tiene acceso

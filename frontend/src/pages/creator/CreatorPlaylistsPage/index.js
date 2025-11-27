@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import '../../../creator/CreatorDashboard.css';
 import CreatorTabs from '../../../creator/components/CreatorTabs';
 import CreatorTopBar from '../../../creator/components/CreatorTopBar';
@@ -8,7 +8,7 @@ import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 
 function CreatorPlaylistsPage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showError, showWarning, showSuccess } = useModal();
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ function CreatorPlaylistsPage() {
     }
   };
 
-  const handleLogout = () => logoutCsrf('/login', navigate);
+  const handleLogout = () => logoutCsrf('/login', history);
 
   useEffect(() => {
     loadCreatorPhoto();
@@ -103,7 +103,7 @@ function CreatorPlaylistsPage() {
 
   const openDetail = (id) => {
     console.log('Navegando a detalle de lista:', id);
-    navigate(`/creator/playlists/${id}`);
+    history.push(`/creator/playlists/${id}`);
   };
 
   if (loading) {
@@ -126,11 +126,11 @@ function CreatorPlaylistsPage() {
           onLogout={handleLogout}
           onViewProfile={() => {
             setMenuOpen(false);
-            navigate('/creator/profile');
+            history.push('/creator/profile');
           }}
           onEditProfile={() => {
             setMenuOpen(false);
-            navigate('/creator/profile?edit=1');
+            history.push('/creator/profile?edit=1');
           }}
         />
 
