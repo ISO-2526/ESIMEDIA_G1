@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.controller.CreatorContentController.CreateRequest;
-import grupo1.esimedia.Content.controller.CreatorContentController.UpdateRequest;
+import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
+import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
@@ -43,99 +43,99 @@ public class ContentService {
                 .toList();
     }
 
-    public Content create(CreateRequest req, ContentType actorType) {
+    public Content create(CreateContentRequestDTO req, ContentType actorType) {
         var now = Instant.now();
         Content c = new Content();
 
         // Validaciones server-side
         validateCreateRequest(req, actorType);
 
-        c.setType(req.type());
-        c.setTitle(req.title());
-        c.setDescription(req.description());
-        c.setTags(req.tags());
-        c.setDurationMinutes(req.durationMinutes());
-        c.setEdadMinima(req.edadMinima());
-        c.setAvailableUntil(req.availableUntil() != null && !req.availableUntil().isBlank()
-                ? LocalDate.parse(req.availableUntil())
+        c.setType(req.getType());
+        c.setTitle(req.getTitle());
+        c.setDescription(req.getDescription());
+        c.setTags(req.getTags());
+        c.setDurationMinutes(req.getDurationMinutes());
+        c.setEdadMinima(req.getEdadMinima());
+        c.setAvailableUntil(req.getAvailableUntil() != null && !req.getAvailableUntil().isBlank()
+                ? LocalDate.parse(req.getAvailableUntil())
                 : null);
 
-        if (req.type() == ContentType.VIDEO) {
+        if (req.getType() == ContentType.VIDEO) {
             // Validación: resolución 4k sólo para VIP
-            if (req.resolution() != null && String.valueOf(req.resolution()).equalsIgnoreCase("4k")
-                    && (req.vipOnly() == null || !req.vipOnly())) {
+            if (req.getResolution() != null && String.valueOf(req.getResolution()).equalsIgnoreCase("4k")
+                    && (req.getVipOnly() == null || !req.getVipOnly())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "La resolución 4k sólo está disponible para contenidos VIP");
             }
-            c.setUrl(req.url());
-            c.setResolution(req.resolution());
+            c.setUrl(req.getUrl());
+            c.setResolution(req.getResolution());
             c.setAudioFileName(null);
         } else {
             c.setUrl(null);
             c.setResolution(null);
-            c.setAudioFileName(req.audioFileName());
+            c.setAudioFileName(req.getAudioFileName());
         }
 
         // vipOnly flag: default false if not provided
-        if (req.vipOnly() != null) {
-            c.setVipOnly(req.vipOnly());
+        if (req.getVipOnly() != null) {
+            c.setVipOnly(req.getVipOnly());
         } else {
             c.setVipOnly(false);
         }
 
         // Si no se proporciona coverFileName, usar el valor por defecto
-        c.setCoverFileName(req.coverFileName() != null && !req.coverFileName().isBlank()
-                ? req.coverFileName()
+        c.setCoverFileName(req.getCoverFileName() != null && !req.getCoverFileName().isBlank()
+                ? req.getCoverFileName()
                 : DEFAULT_COVER);
         c.setState(ContentState.PRIVADO);
         c.setStateChangedAt(now);
         c.setCreatedAt(now);
         c.setUpdatedAt(now);
-        c.setCreatorAlias(req.creatorAlias());
+        c.setCreatorAlias(req.getCreatorAlias());
 
         return repository.save(c);
     }
 
-    private void applyCoverUpdate(Content existing, UpdateRequest req) {
-        if (req.coverFileName() != null && !req.coverFileName().isBlank()) {
-            existing.setCoverFileName(req.coverFileName());
+    private void applyCoverUpdate(Content existing, UpdateContentRequestDTO req) {
+        if (req.getCoverFileName() != null && !req.getCoverFileName().isBlank()) {
+            existing.setCoverFileName(req.getCoverFileName());
         } else if (existing.getCoverFileName() == null || existing.getCoverFileName().isBlank()) {
             existing.setCoverFileName(DEFAULT_COVER);
         }
     }
 
-    private void validateVipToggle(Content existing, UpdateRequest req) {
-        if (req.vipOnly() != null && !req.vipOnly() && existing.getResolution() != null
+    private void validateVipToggle(Content existing, UpdateContentRequestDTO req) {
+        if (req.getVipOnly() != null && !req.getVipOnly() && existing.getResolution() != null
                 && String.valueOf(existing.getResolution()).equalsIgnoreCase("4k")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "No puedes desactivar VIP en un contenido con resolución 4k");
         }
     }
 
-    private void applyVipUpdate(Content existing, UpdateRequest req) {
-        if (req.vipOnly() != null) {
-            existing.setVipOnly(req.vipOnly());
+    private void applyVipUpdate(Content existing, UpdateContentRequestDTO req) {
+        if (req.getVipOnly() != null) {
+            existing.setVipOnly(req.getVipOnly());
         }
     }
 
-    private void applyStateUpdate(Content existing, UpdateRequest req) {
-        if (req.state() != null && !req.state().isBlank()
-                && !existing.getState().name().equalsIgnoreCase(req.state())) {
-            existing.setState(ContentState.valueOf(req.state().toUpperCase()));
+    private void applyStateUpdate(Content existing, UpdateContentRequestDTO req) {
+        if (req.getState() != null && !req.getState().isBlank()
+                && !existing.getState().name().equalsIgnoreCase(req.getState())) {
+            existing.setState(ContentState.valueOf(req.getState().toUpperCase()));
             existing.setStateChangedAt(Instant.now());
         }
     }
 
     // Validación de create/update
-    private void validateCreateRequest(CreateRequest req, ContentType actorType) {
-        validateTitle(req.title());
-        validateDescription(req.description());
-        validateTags(req.tags());
-        validateDuration(req.durationMinutes());
-        validateEdadMinima(req.edadMinima());
-        validateAvailableUntilIfPresent(req.availableUntil());
+    private void validateCreateRequest(CreateContentRequestDTO req, ContentType actorType) {
+        validateTitle(req.getTitle());
+        validateDescription(req.getDescription());
+        validateTags(req.getTags());
+        validateDuration(req.getDurationMinutes());
+        validateEdadMinima(req.getEdadMinima());
+        validateAvailableUntilIfPresent(req.getAvailableUntil());
         validateContentTypeSpecificFields(req);
-        validateActorTypeAuthorization(actorType, req.type());
+        validateActorTypeAuthorization(actorType, req.getType());
     }
 
     private void validateTitle(String title) {
@@ -177,16 +177,16 @@ public class ContentService {
         }
     }
 
-    private void validateContentTypeSpecificFields(CreateRequest req) {
-        if (req.type() == ContentType.VIDEO) {
+    private void validateContentTypeSpecificFields(CreateContentRequestDTO req) {
+        if (req.getType() == ContentType.VIDEO) {
             validateVideoCreate(req);
         } else {
             validateAudioCreate(req);
         }
     }
 
-    private void validateAudioCreate(CreateRequest req) {
-        if (req.audioFileName() == null || req.audioFileName().isBlank()) {
+    private void validateAudioCreate(CreateContentRequestDTO req) {
+        if (req.getAudioFileName() == null || req.getAudioFileName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fichero de audio requerido");
         }
     }
@@ -198,33 +198,33 @@ public class ContentService {
         }
     }
 
-    private void validateUpdateRequest(UpdateRequest req) {
-        if (req.title() != null && req.title().trim().isEmpty()) {
+    private void validateUpdateRequest(UpdateContentRequestDTO req) {
+        if (req.getTitle() != null && req.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El título es obligatorio");
         }
-        if (req.title() != null && req.title().trim().length() > 200) {
+        if (req.getTitle() != null && req.getTitle().trim().length() > 200) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El título no puede superar 200 caracteres");
         }
-        if (req.description() != null && req.description().length() > 3000) {
+        if (req.getDescription() != null && req.getDescription().length() > 3000) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La descripción es demasiado larga");
         }
-        if (req.durationMinutes() != null && (req.durationMinutes() <= 0 || req.durationMinutes() > 10000)) {
+        if (req.getDurationMinutes() != null && (req.getDurationMinutes() <= 0 || req.getDurationMinutes() > 10000)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duración inválida");
         }
-        if (req.edadMinima() != null && (req.edadMinima() < 0 || req.edadMinima() > 99)) {
+        if (req.getEdadMinima() != null && (req.getEdadMinima() < 0 || req.getEdadMinima() > 99)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Edad mínima debe estar entre 0 y 99");
         }
-        if (req.availableUntil() != null && !req.availableUntil().isBlank()) {
-            validateAvailableUntil(req.availableUntil());
+        if (req.getAvailableUntil() != null && !req.getAvailableUntil().isBlank()) {
+            validateAvailableUntil(req.getAvailableUntil());
         }
     }
 
-    private void validateVideoCreate(CreateRequest req) {
-        if (req.url() == null || req.url().isBlank()) {
+    private void validateVideoCreate(CreateContentRequestDTO req) {
+        if (req.getUrl() == null || req.getUrl().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL de vídeo requerida");
         }
         try {
-            URI uri = new URI(req.url());
+            URI uri = new URI(req.getUrl());
             String scheme = uri.getScheme();
             if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL de vídeo inválida");
@@ -232,10 +232,10 @@ public class ContentService {
         } catch (URISyntaxException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL de vídeo inválida");
         }
-        if (req.resolution() == null || req.resolution().isBlank()) {
+        if (req.getResolution() == null || req.getResolution().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resolución requerida");
         }
-        if (String.valueOf(req.resolution()).equalsIgnoreCase("4k") && (req.vipOnly() == null || !req.vipOnly())) {
+        if (String.valueOf(req.getResolution()).equalsIgnoreCase("4k") && (req.getVipOnly() == null || !req.getVipOnly())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La resolución 4k sólo está disponible para contenidos VIP");
         }
@@ -253,7 +253,7 @@ public class ContentService {
         }
     }
 
-    public Optional<Content> update(String id, UpdateRequest req, ContentType actorType) {
+    public Optional<Content> update(String id, UpdateContentRequestDTO req, ContentType actorType) {
         return repository.findById(id).map(existing -> {
             // Autorizar: derivado del token (actorType) en el controlador
             if (actorType != null && !existing.getType().equals(actorType)) {
@@ -278,19 +278,19 @@ public class ContentService {
         });
     }
 
-    private void applyBasicFieldUpdates(Content existing, UpdateRequest req) {
-        if (req.title() != null)
-            existing.setTitle(req.title());
-        if (req.description() != null)
-            existing.setDescription(req.description());
-        if (req.tags() != null)
-            existing.setTags(req.tags());
-        if (req.durationMinutes() != null)
-            existing.setDurationMinutes(req.durationMinutes());
-        if (req.edadMinima() != null)
-            existing.setEdadMinima(req.edadMinima());
-        if (req.availableUntil() != null && !req.availableUntil().isBlank()) {
-            existing.setAvailableUntil(LocalDate.parse(req.availableUntil()));
+    private void applyBasicFieldUpdates(Content existing, UpdateContentRequestDTO req) {
+        if (req.getTitle() != null)
+            existing.setTitle(req.getTitle());
+        if (req.getDescription() != null)
+            existing.setDescription(req.getDescription());
+        if (req.getTags() != null)
+            existing.setTags(req.getTags());
+        if (req.getDurationMinutes() != null)
+            existing.setDurationMinutes(req.getDurationMinutes());
+        if (req.getEdadMinima() != null)
+            existing.setEdadMinima(req.getEdadMinima());
+        if (req.getAvailableUntil() != null && !req.getAvailableUntil().isBlank()) {
+            existing.setAvailableUntil(LocalDate.parse(req.getAvailableUntil()));
         }
     }
 

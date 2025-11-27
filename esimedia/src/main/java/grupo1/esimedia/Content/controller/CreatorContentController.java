@@ -7,6 +7,8 @@ import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Content.service.ContentService;
+import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
+import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -33,35 +35,6 @@ public class CreatorContentController {
         this.creatorRepository = creatorRepository;
     }
 
-    // DTOs
-    public record CreateRequest(
-            ContentType type,
-            String title,
-            String description,
-            List<String> tags,
-            Boolean vipOnly,
-            Integer durationMinutes,
-            Integer edadMinima,
-            String availableUntil,
-            String url,
-            String resolution,
-            String audioFileName,
-            String coverFileName,
-            String creatorAlias) {
-    }
-
-    public record UpdateRequest(
-            String title,
-            String description,
-            List<String> tags,
-            Boolean vipOnly,
-            Integer durationMinutes,
-            Integer edadMinima,
-            String availableUntil,
-            String coverFileName,
-            String state) {
-    }
-
     @GetMapping
     public List<Content> list() {
         return service.findAll();
@@ -75,7 +48,7 @@ public class CreatorContentController {
     @PostMapping
     public ResponseEntity<Object> create(
             @CookieValue(value = "access_token", required = false) String tokenId,
-            @Valid @RequestBody CreateRequest req) {
+            @Valid @RequestBody CreateContentRequestDTO req) {
         ContentType actorType = resolveContentTypeFromToken(tokenId);
         try {
             Content saved = service.create(req, actorType);
@@ -89,7 +62,7 @@ public class CreatorContentController {
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(@PathVariable String id,
             @CookieValue(value = "access_token", required = false) String tokenId,
-            @Valid @RequestBody UpdateRequest req) {
+            @Valid @RequestBody UpdateContentRequestDTO req) {
         ContentType actorType = resolveContentTypeFromToken(tokenId);
         try {
             var opt = service.update(id, req, actorType);
