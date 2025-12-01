@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.Accounts.dto.request;
 
 import grupo1.esimedia.Accounts.model.ContentType;
 import jakarta.validation.constraints.Email;

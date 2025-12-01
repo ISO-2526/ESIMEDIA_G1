@@ -10,6 +10,9 @@ import grupo1.esimedia.Accounts.repository.PlaylistRepository;
 import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.service.EmailService;
 import grupo1.esimedia.utils.PasswordUtils;
+import grupo1.esimedia.Accounts.dto.request.CreateUserRequestDTO;
+import grupo1.esimedia.Accounts.dto.response.UserResponseDTO;
+import jakarta.validation.Valid;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -30,6 +33,9 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+
+import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/users")
@@ -57,20 +63,20 @@ public class UserController {
     private TokenRepository tokenRepository;
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        if (userRepository.existsById(user.getEmail()) || 
-            contentCreatorRepository.existsById(user.getEmail()) || 
-            adminRepository.existsById(user.getEmail())) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequestDTO dto) {
+        if (userRepository.existsById(dto.getEmail()) || 
+            contentCreatorRepository.existsById(dto.getEmail()) || 
+            adminRepository.existsById(dto.getEmail())) {
             return ResponseEntity.status(400).body("Error al crear cuenta.");
         }
 
         // VALIDAR CONTRASEÑA CON DICCIONARIO + INFORMACIÓN PERSONAL
         List<String> passwordErrors = passwordUtils.validatePasswordPersonalInfo(
-            user.getPassword(),
-            user.getEmail(),
-            user.getName(),
-            user.getSurname(),
-            user.getAlias()
+            dto.getPassword(),
+            dto.getEmail(),
+            dto.getName(),
+            dto.getSurname(),
+            dto.getAlias()
         );
         
         if (!passwordErrors.isEmpty()) {
@@ -80,29 +86,35 @@ public class UserController {
             ));
         }
 
-        // Hashear contraseña
-        user.setPassword(passwordUtils.hashPassword(user.getPassword()));
+        // Crear User desde DTO
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordUtils.hashPassword(dto.getPassword()));
+        user.setName(dto.getName());
+        user.setSurname(dto.getSurname());
+        user.setAlias(dto.getAlias());
+        user.setDateOfBirth(dto.getDateOfBirth().toString());
+        user.setVip(dto.isVip());
+        user.setPicture(dto.getPicture());
 
         // Guardar el usuario en la base de datos
         User saved = userRepository.save(user);
-        
         // Crear automáticamente la lista "Favoritos" para el nuevo usuario
         createFavoritosPlaylist(user.getEmail());
         
-        saved.setPassword(null); // No devolver la contraseña en la respuesta
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toUserResponseDTO(saved));
     }
 
     @GetMapping(path = "", produces = "application/json")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        for (User u : users) { if (u != null) u.setPassword(null); }
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userRepository.findAll().stream()
+            .map(this::toUserResponseDTO)
+            .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
 
     @GetMapping(path = "/{email:.+}", produces = "application/json")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email, @CookieValue(value = "access_token", required = false) String tokenId) {
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email, @CookieValue(value = "access_token", required = false) String tokenId) {
         // permitir solo admin vía token cookie
         Token token = requireValidToken(tokenId);
         if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) {
@@ -114,7 +126,7 @@ public class UserController {
                 if (u.getEmail() != null && u.getEmail().equalsIgnoreCase(email)) { opt = java.util.Optional.of(u); break; }
             }
         }
-        return opt.map(u -> { u.setPassword(null); return ResponseEntity.ok(u); }).orElse(ResponseEntity.status(404).build());
+        return opt.map(u -> ResponseEntity.ok(toUserResponseDTO(u))).orElse(ResponseEntity.status(404).build());
     }
 
     @PutMapping(path = "/{email:.+}/active", consumes = "application/json")
@@ -133,8 +145,7 @@ public class UserController {
         return opt.map(existing -> {
             existing.setActive(active);
             User saved = userRepository.save(existing);
-            saved.setPassword(null);
-            return ResponseEntity.ok(saved);
+            return ResponseEntity.ok(toUserResponseDTO(saved));
         }).orElse(ResponseEntity.status(404).build());
     }
 
@@ -150,8 +161,7 @@ public class UserController {
         return opt.map(existing -> {
             updateUserFields(existing, body);
             User saved = userRepository.save(existing);
-            saved.setPassword(null);
-            return ResponseEntity.ok(saved);
+            return ResponseEntity.ok(toUserResponseDTO(saved));
         }).orElse(ResponseEntity.status(404).build());
     }
 
@@ -279,8 +289,7 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
         }
-        user.setPassword(null); // No devolver la contraseña
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toUserResponseDTO(user));
     }
 
     @PutMapping("/editUser")
@@ -301,8 +310,7 @@ public class UserController {
         user.setPicture(updatedUser.getPicture());
 
         userRepository.save(user);
-        user.setPassword(null); // No devolver la contraseña
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toUserResponseDTO(user));
     }   
 
     @GetMapping("/2fa/setup")
@@ -462,5 +470,21 @@ public class UserController {
         } catch (Exception e) {
             System.err.println("Error creating Favoritos playlist for user " + userEmail + ": " + e.getMessage());
         }
+    }
+
+    // Método helper para convertir User -> UserResponseDTO
+    private UserResponseDTO toUserResponseDTO(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setEmail(user.getEmail());
+        dto.setName(user.getName());
+        dto.setSurname(user.getSurname());
+        dto.setAlias(user.getAlias());
+        dto.setPicture(user.getPicture());
+        dto.setVip(user.isVip());
+        // Convertir String a LocalDate si es necesario
+        if (user.getDateOfBirth() != null) {
+            dto.setDateOfBirth(LocalDate.parse(user.getDateOfBirth()));
+        }
+        return dto;
     }
 }

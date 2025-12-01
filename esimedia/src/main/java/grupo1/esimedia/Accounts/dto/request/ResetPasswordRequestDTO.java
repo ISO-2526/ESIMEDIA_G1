@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.dto;
+package grupo1.esimedia.Accounts.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

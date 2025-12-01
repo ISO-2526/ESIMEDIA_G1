@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.Accounts.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 

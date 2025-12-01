@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import grupo1.esimedia.Accounts.dto.request.CreateAdminRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.CreateCreatorRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.SetActiveRequestDTO;
 import grupo1.esimedia.Accounts.model.Admin;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.repository.AdminRepository;

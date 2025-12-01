@@ -31,6 +31,9 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import grupo1.esimedia.Accounts.dto.*;
+import grupo1.esimedia.Accounts.dto.request.ActivateThirdFactorRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.RecoverPasswordRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.ResetPasswordRequestDTO;
 import grupo1.esimedia.Accounts.dto.response.ErrorResponseDTO;
 import grupo1.esimedia.Accounts.dto.response.LoginResponseDTO;
 import grupo1.esimedia.Accounts.dto.response.ThirdFactorRequiredResponseDTO;
