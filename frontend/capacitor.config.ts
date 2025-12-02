@@ -11,6 +11,11 @@ const config: CapacitorConfig = {
   plugins: {
     CapacitorHttp: {
       enabled: true
+    },
+    Keyboard: {
+      resize: 'body', // Esto hace que la web se encoja al salir el teclado
+      style: 'dark',
+      resizeOnFullScreen: true
     }
   }
 };

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory, Link } from 'react-router-dom';
+import { IonPage, IonContent } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import axios from '../../../api/axiosConfig';
 import './LoginPage.css';
 
@@ -9,6 +11,7 @@ function LoginPage() {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const history = useHistory();
+  const isMobile = Capacitor.isNativePlatform();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,12 +53,14 @@ function LoginPage() {
     }
   };
 
-  return (
-    <div className="page-container">
-      <div className="animated-bg"></div>
+  // Contenido del formulario reutilizable
+  const formContent = (
+    <>
+      <div className="page-container">
+        <div className="animated-bg"></div>
 
-      <div className="login-wrapper">
-        {/* Panel lateral informativo */}
+        <div className="login-wrapper">
+          {/* Panel lateral informativo */}
         <div className="info-panel">
           <div className="info-content">
             <h2 className="info-title">¡Bienvenido de vuelta!</h2>
@@ -162,9 +167,25 @@ function LoginPage() {
             </div>
           </form>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
+
+  // Wrapper condicional basado en la plataforma
+  /* istanbul ignore next */
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent className="ion-padding">
+          {formContent}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  // Version web (escritorio)
+  return formContent;
 }
 
 export default LoginPage;

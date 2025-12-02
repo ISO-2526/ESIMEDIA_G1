@@ -341,3 +341,11 @@
     padding-right: 60px;
   }
 }
+
+/* Ajuste específico para Móvil (Ionic) */
+ion-content .page-container {
+  height: auto !important;
+  min-height: 100%;
+  overflow: visible !important;
+  padding-bottom: 50px; /* Espacio extra para que el botón no quede pegado al teclado */
+}
