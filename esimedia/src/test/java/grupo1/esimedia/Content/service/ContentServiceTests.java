@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,8 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.controller.CreatorContentController.CreateRequest;
-import grupo1.esimedia.Content.controller.CreatorContentController.UpdateRequest;
+import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
+import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
@@ -42,21 +43,18 @@ class ContentServiceTests {
 
     @Test
     void createVideoRejects4kResolutionWithoutVipFlag() {
-        CreateRequest req = new CreateRequest(
-            ContentType.VIDEO,
-            "Video Title",
-            "Desc",
-            List.of("tag"),
-            false,
-            60,
-            12,
-            futureDate(),
-            "https://cdn.example/video.mp4",
-            "4k",
-            null,
-            null,
-            "creator"
-        );
+        CreateContentRequestDTO req = new CreateContentRequestDTO();
+        req.setType(ContentType.VIDEO);
+        req.setTitle("Video Title");
+        req.setDescription("Desc");
+        req.setTags(List.of("tag"));
+        req.setVipOnly(false);
+        req.setDurationMinutes(60);
+        req.setEdadMinima(12);
+        req.setAvailableUntil(futureDate());
+        req.setUrl("https://cdn.example/video.mp4");
+        req.setResolution("4k");
+        req.setCreatorAlias("creator");
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(req, ContentType.VIDEO));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -67,21 +65,16 @@ class ContentServiceTests {
     void createVideoSetsDefaultsWhenOptionalFieldsMissing() {
         when(repository.save(any(Content.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CreateRequest req = new CreateRequest(
-            ContentType.VIDEO,
-            "Valid title",
-            "Desc",
-            List.of("tag"),
-            null,
-            45,
-            13,
-            null,
-            "https://cdn.example/video.mp4",
-            "1080p",
-            null,
-            "",
-            "creator"
-        );
+        CreateContentRequestDTO req = new CreateContentRequestDTO();
+        req.setType(ContentType.VIDEO);
+        req.setTitle("Valid title");
+        req.setDescription("Desc");
+        req.setTags(List.of("tag"));
+        req.setDurationMinutes(45);
+        req.setEdadMinima(13);
+        req.setUrl("https://cdn.example/video.mp4");
+        req.setResolution("1080p");
+        req.setCreatorAlias("creator");
 
         Content saved = service.create(req, ContentType.VIDEO);
 
@@ -98,21 +91,16 @@ class ContentServiceTests {
 
     @Test
     void createAudioRequiresAudioFileName() {
-        CreateRequest req = new CreateRequest(
-            ContentType.AUDIO,
-            "Audio title",
-            "Desc",
-            List.of("tag"),
-            true,
-            30,
-            10,
-            futureDate(),
-            null,
-            null,
-            null,
-            null,
-            "creator"
-        );
+        CreateContentRequestDTO req = new CreateContentRequestDTO();
+        req.setType(ContentType.AUDIO);
+        req.setTitle("Audio title");
+        req.setDescription("Desc");
+        req.setTags(List.of("tag"));
+        req.setVipOnly(true);
+        req.setDurationMinutes(30);
+        req.setEdadMinima(10);
+        req.setAvailableUntil(futureDate());
+        req.setCreatorAlias("creator");
 
         assertThrows(ResponseStatusException.class, () -> service.create(req, ContentType.AUDIO));
         verify(repository, never()).save(any());
@@ -120,42 +108,36 @@ class ContentServiceTests {
 
     @Test
     void createRejectsPastAvailableUntilDate() {
-        CreateRequest req = new CreateRequest(
-            ContentType.VIDEO,
-            "Video",
-            "Desc",
-            List.of("tag"),
-            true,
-            60,
-            12,
-            LocalDate.now().minusDays(1).toString(),
-            "https://cdn.example/video.mp4",
-            "1080p",
-            null,
-            null,
-            "creator"
-        );
+        CreateContentRequestDTO req = new CreateContentRequestDTO();
+        req.setType(ContentType.VIDEO);
+        req.setTitle("Video");
+        req.setDescription("Desc");
+        req.setTags(List.of("tag"));
+        req.setVipOnly(true);
+        req.setDurationMinutes(60);
+        req.setEdadMinima(12);
+        req.setAvailableUntil(LocalDate.now().minusDays(1).toString());
+        req.setUrl("https://cdn.example/video.mp4");
+        req.setResolution("1080p");
+        req.setCreatorAlias("creator");
 
         assertThrows(ResponseStatusException.class, () -> service.create(req, ContentType.VIDEO));
     }
 
     @Test
     void createRejectsActorTypeMismatch() {
-        CreateRequest req = new CreateRequest(
-            ContentType.VIDEO,
-            "Video",
-            "Desc",
-            List.of("tag"),
-            true,
-            60,
-            12,
-            futureDate(),
-            "https://cdn.example/video.mp4",
-            "1080p",
-            null,
-            null,
-            "creator"
-        );
+        CreateContentRequestDTO req = new CreateContentRequestDTO();
+        req.setType(ContentType.VIDEO);
+        req.setTitle("Video");
+        req.setDescription("Desc");
+        req.setTags(List.of("tag"));
+        req.setVipOnly(true);
+        req.setDurationMinutes(60);
+        req.setEdadMinima(12);
+        req.setAvailableUntil(futureDate());
+        req.setUrl("https://cdn.example/video.mp4");
+        req.setResolution("1080p");
+        req.setCreatorAlias("creator");
 
         assertThrows(ResponseStatusException.class, () -> service.create(req, ContentType.AUDIO));
     }
@@ -165,7 +147,7 @@ class ContentServiceTests {
         Content existing = buildContent(ContentType.VIDEO);
         when(repository.findById("content-1")).thenReturn(Optional.of(existing));
 
-        UpdateRequest req = new UpdateRequest(null, null, null, null, null, null, null, null, null);
+        UpdateContentRequestDTO req = new UpdateContentRequestDTO();
 
         assertThrows(ResponseStatusException.class, () -> service.update("content-1", req, ContentType.AUDIO));
         verify(repository, never()).save(any());
@@ -179,17 +161,15 @@ class ContentServiceTests {
         when(repository.findById("content-2")).thenReturn(Optional.of(existing));
         when(repository.save(any(Content.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UpdateRequest req = new UpdateRequest(
-            "New title",
-            "New description",
-            List.of("updated"),
-            true,
-            90,
-            18,
-            futureDate(),
-            "",
-            "PUBLICO"
-        );
+        UpdateContentRequestDTO req = new UpdateContentRequestDTO();
+        req.setTitle("New title");
+        req.setDescription("New description");
+        req.setTags(List.of("updated"));
+        req.setVipOnly(true);
+        req.setDurationMinutes(90);
+        req.setEdadMinima(18);
+        req.setAvailableUntil(futureDate());
+        req.setState("PUBLICO");
 
         Optional<Content> result = service.update("content-2", req, ContentType.VIDEO);
 
@@ -200,7 +180,7 @@ class ContentServiceTests {
         assertEquals(List.of("updated"), updated.getTags());
         assertEquals(90, updated.getDurationMinutes());
         assertEquals(18, updated.getEdadMinima());
-        assertEquals(LocalDate.parse(req.availableUntil()), updated.getAvailableUntil());
+        assertEquals(LocalDate.parse(req.getAvailableUntil()), updated.getAvailableUntil());
         assertEquals("cover3.png", updated.getCoverFileName());
         assertEquals(ContentState.PUBLICO, updated.getState());
         assertTrue(updated.isVipOnly());
@@ -213,7 +193,8 @@ class ContentServiceTests {
         existing.setResolution("4K");
         when(repository.findById("content-3")).thenReturn(Optional.of(existing));
 
-        UpdateRequest req = new UpdateRequest(null, null, null, false, null, null, null, null, null);
+        UpdateContentRequestDTO req = new UpdateContentRequestDTO();
+        req.setVipOnly(false);
 
         assertThrows(ResponseStatusException.class, () -> service.update("content-3", req, ContentType.VIDEO));
     }
@@ -252,6 +233,31 @@ class ContentServiceTests {
         when(repository.findById("unknown")).thenReturn(Optional.empty());
 
         assertEquals(0L, service.getViewCount("unknown"));
+    }
+
+    @Test
+    void testUpdateContent_ValidationFailsForLongTitle() {
+        // Crear contenido
+        CreateContentRequestDTO createReq = new CreateContentRequestDTO();
+        createReq.setType(ContentType.VIDEO);
+        createReq.setTitle("Original");
+        createReq.setTags(Arrays.asList("tag1"));
+        createReq.setDurationMinutes(60);
+        createReq.setEdadMinima(0);
+        createReq.setUrl("https://example.com/video.mp4");
+        createReq.setResolution("1080p");
+        createReq.setCreatorAlias("creator");
+
+        Content created = service.create(createReq, ContentType.VIDEO);
+
+        // Intentar actualizar con título muy largo
+        UpdateContentRequestDTO updateReq = new UpdateContentRequestDTO();
+        updateReq.setTitle("a".repeat(201));
+
+        String contentId = created.getId();
+        assertThrows(ResponseStatusException.class, () -> {
+            service.update(contentId, updateReq, ContentType.VIDEO);
+        });
     }
 
     private Content buildContent(ContentType type) {

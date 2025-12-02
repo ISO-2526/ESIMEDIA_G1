@@ -30,6 +30,15 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import grupo1.esimedia.Accounts.dto.*;
+import grupo1.esimedia.Accounts.dto.request.ActivateThirdFactorRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.RecoverPasswordRequestDTO;
+import grupo1.esimedia.Accounts.dto.request.ResetPasswordRequestDTO;
+import grupo1.esimedia.Accounts.dto.response.ErrorResponseDTO;
+import grupo1.esimedia.Accounts.dto.response.LoginResponseDTO;
+import grupo1.esimedia.Accounts.dto.response.ThirdFactorRequiredResponseDTO;
+import grupo1.esimedia.Accounts.dto.response.TwoFactorRequiredResponseDTO;
+import grupo1.esimedia.Accounts.dto.response.TwoFactorSetupResponseDTO;
 import grupo1.esimedia.Accounts.model.Admin;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.model.Token;
@@ -45,6 +54,7 @@ import grupo1.esimedia.security.LoginAttemptService;
 import grupo1.esimedia.security.RateLimitService;
 import grupo1.esimedia.utils.PasswordUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -87,24 +97,22 @@ public class AuthController {
     }
 
     @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpServletRequest request) {
-        String email = body.get("email");
-        String password = body.get("password");
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletRequest request) {
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
         
         // Validación básica
         if (email == null || password == null) {
-            Map<String, Object> errorResp = new HashMap<>();
-            errorResp.put("error", "Email y contraseña son requeridos");
-            return ResponseEntity.badRequest().body(errorResp);
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email y contraseña son requeridos"));
         }
 
         // Trim inputs
         email = email.trim();
         password = password.trim();
-        String rawTwoFactor = body.get("2fa_code");
+        String rawTwoFactor = loginRequest.getTwoFactorCode();
         boolean hasTwoFactorCode = rawTwoFactor != null && !rawTwoFactor.trim().isEmpty();
         if (hasTwoFactorCode) {
-            body.put("2fa_code", rawTwoFactor.trim());
+            loginRequest.setTwoFactorCode(rawTwoFactor.trim());
         }
         
         String clientIp = getClientIp(request);
@@ -128,13 +136,12 @@ public class AuthController {
             
             log.warn("[SECURITY] Login blocked for: {} from IP: {} - Account locked", email, clientIp);
             
-            Map<String, Object> lockedResp = new HashMap<>();
-            lockedResp.put("error", message);
-            lockedResp.put("locked", true);
-            lockedResp.put("lockoutTime", lockoutTime);
+            ErrorResponseDTO errorResponse = new ErrorResponseDTO(message);
+            errorResponse.setLocked(true);
+            errorResponse.setLockoutTime(lockoutTime);
             return ResponseEntity
                 .status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(lockedResp);
+                .body(errorResponse);
         }
 
         // DETECTAR ATAQUE DISTRIBUIDO
@@ -147,15 +154,15 @@ public class AuthController {
         String dummyHash = "$2a$12$dummyHashParaEvitarTimingAttacks1234567890ABC";
 
         // Try admin login
-        ResponseEntity<?> adminResponse = tryAdminLogin(email, password, body, clientIp, dummyHash);
+        ResponseEntity<?> adminResponse = tryAdminLogin(email, password, loginRequest, clientIp, dummyHash);
         if (adminResponse != null) return adminResponse;
 
         // Try creator login
-        ResponseEntity<?> creatorResponse = tryCreatorLogin(email, password, body, clientIp, dummyHash);
+        ResponseEntity<?> creatorResponse = tryCreatorLogin(email, password, loginRequest, clientIp, dummyHash);
         if (creatorResponse != null) return creatorResponse;
 
         // Try user login
-        ResponseEntity<?> userResponse = tryUserLogin(email, password, body, clientIp, dummyHash);
+        ResponseEntity<?> userResponse = tryUserLogin(email, password, loginRequest, clientIp, dummyHash);
         if (userResponse != null) return userResponse;
 
         // USUARIO NO ENCONTRADO
@@ -167,17 +174,16 @@ public class AuthController {
         log.warn("[AUTH] Failed login - user not found: {} from IP: {} - Remaining attempts: {}", 
                  email, clientIp, remaining);
         
-        Map<String, Object> errorResp = new HashMap<>();
-        errorResp.put("error", "Credenciales inválidas");
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO("Credenciales inválidas");
         if (remaining > 0) {
-            errorResp.put("remainingAttempts", remaining);
+            errorResponse.setRemainingAttempts(remaining);
         }
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
-            .body(errorResp);
+            .body(errorResponse);
     }
 
-    private ResponseEntity<?> tryAdminLogin(String email, String password, Map<String, String> body, String clientIp, String dummyHash) {
+    private ResponseEntity<?> tryAdminLogin(String email, String password, LoginRequestDTO loginRequest, String clientIp, String dummyHash) {
         var adminOpt = findAdminByEmailIgnoreCase(email);
         if (adminOpt.isEmpty()) return null;
 
@@ -192,7 +198,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, "admin");
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), body, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), "admin");
@@ -202,7 +208,7 @@ public class AuthController {
         return buildLoginSuccessResponseForAdmin(admin, email, clientIp);
     }
 
-    private ResponseEntity<?> tryCreatorLogin(String email, String password, Map<String, String> body, String clientIp, String dummyHash) {
+    private ResponseEntity<?> tryCreatorLogin(String email, String password, LoginRequestDTO loginRequest, String clientIp, String dummyHash) {
         var creatorOpt = findCreatorByEmailIgnoreCase(email);
         if (creatorOpt.isEmpty()) return null;
 
@@ -217,7 +223,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, "creator");
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), body, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), "creator");
@@ -227,7 +233,7 @@ public class AuthController {
         return buildLoginSuccessResponseForCreator(creator, email, clientIp);
     }
 
-    private ResponseEntity<?> tryUserLogin(String email, String password, Map<String, String> body, String clientIp, String dummyHash) {
+    private ResponseEntity<?> tryUserLogin(String email, String password, LoginRequestDTO loginRequest, String clientIp, String dummyHash) {
         var userOpt = findUserByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) return null;
 
@@ -238,7 +244,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, "user");
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(user.getEmail(), "user", user.getTwoFactorSecretKey(), body, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(user.getEmail(), "user", user.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         if (!user.isActive()) {
@@ -269,8 +275,8 @@ public class AuthController {
 
     // Recover password
     @PostMapping(path = "/recover", consumes = "application/json")
-    public ResponseEntity<?> recoverPassword(@RequestBody java.util.Map<String, String> body) {
-        String email = body.get("email");
+    public ResponseEntity<?> recoverPassword(@Valid @RequestBody RecoverPasswordRequestDTO request) {
+        String email = request.getEmail();
         
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("Email es requerido");
@@ -314,12 +320,10 @@ public class AuthController {
                     "Saludos,\nEl equipo de ESIMEDIA";
             
             emailService.sendEmail(user.getEmail(), subject, bodyEmail);
-
-
-            return ResponseEntity.ok("Se ha enviado un correo de recuperación a " + email);
-        } else {
-            return ResponseEntity.status(404).body("Error: Usuario no encontrado.");
         }
+
+        // ✅ SIEMPRE devolver 200 OK con mensaje genérico (para no revelar si el usuario existe)
+        return ResponseEntity.ok("Si el correo está registrado, recibirás un enlace de recuperación");
     }
 
     // Validate reset token
@@ -397,7 +401,7 @@ public class AuthController {
     }
 
     @GetMapping("/2fa/setup")
-    public ResponseEntity<Map<String, String>> setupTwoFactorAuth(@RequestParam String email) {
+    public ResponseEntity<?> setupTwoFactorAuth(@RequestParam String email) {
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
@@ -415,7 +419,7 @@ public class AuthController {
             appName, email, secretKey, appName
         );
 
-        return ResponseEntity.ok(Map.of("qrCodeUrl", qrCodeUrl, "secretKey", secretKey));
+        return ResponseEntity.ok(new TwoFactorSetupResponseDTO(qrCodeUrl, secretKey));
     }
 
     public String generateQRCode(String qrCodeUrl) throws WriterException {
@@ -435,9 +439,9 @@ public class AuthController {
     }
 
     @PostMapping("/activate-3fa")
-    public ResponseEntity<?> activateThirdFactor(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        boolean activate = Boolean.parseBoolean(body.get("activate"));
+    public ResponseEntity<?> activateThirdFactor(@Valid @RequestBody ActivateThirdFactorRequestDTO request) {
+        String email = request.getEmail();
+        boolean activate = request.isActivate();
 
         var adminOpt = adminRepository.findById(email);
         if (adminOpt.isPresent()) {
@@ -463,8 +467,8 @@ public class AuthController {
     }
 
     @PostMapping("/send-3fa-code")
-    public ResponseEntity<?> sendThirdFactorCode(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
+    public ResponseEntity<?> sendThirdFactorCode(@Valid @RequestBody SendThirdFactorCodeRequestDTO request) {
+        String email = request.getEmail();
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("El correo electrónico es obligatorio.");
         }
@@ -492,9 +496,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-3fa-code")
-    public ResponseEntity<?> verifyThirdFactorCode(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String code = body.get("code");
+    public ResponseEntity<?> verifyThirdFactorCode(@Valid @RequestBody VerifyThirdFactorCodeRequestDTO request) {
+        String email = request.getEmail();
+        String code = request.getCode();
 
         if (email == null || code == null) {
             return ResponseEntity.badRequest().body("El correo y el código son obligatorios.");
@@ -527,9 +531,9 @@ public class AuthController {
     }
 
     @PostMapping(path = "/reset-password", consumes = "application/json")
-    public ResponseEntity<?> resetPassword(@RequestBody java.util.Map<String, Object> body) {
-        String token = (String) body.get("token");
-        String password = (String) body.get("password");
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
+        String token = request.getToken();
+        String password = request.getPassword();
         LocalDateTime now = LocalDateTime.now();
 
         // 1. User
@@ -598,9 +602,7 @@ public class AuthController {
     }
 
     private ResponseEntity<?> inactiveAccountResponse() {
-        Map<String, Object> errorResp = new HashMap<>();
-        errorResp.put("error", "Cuenta inactiva");
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResp);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponseDTO("Cuenta inactiva"));
     }
 
     private ResponseEntity<?> invalidCredentialsResponse(String email, String clientIp, String role) {
@@ -608,48 +610,35 @@ public class AuthController {
         int remaining = loginAttemptService.getRemainingAttempts(email, clientIp);
         log.warn("[AUTH] Failed login for {}: {} from IP: {} - Remaining attempts: {}", role, email, clientIp, remaining);
 
-        Map<String, Object> errorResp = new HashMap<>();
-        errorResp.put("error", "Credenciales inválidas");
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO("Credenciales inválidas");
         if (remaining > 0) {
-            errorResp.put("remainingAttempts", remaining);
+            errorResponse.setRemainingAttempts(remaining);
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResp);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
-    private ResponseEntity<?> enforceTwoFactorIfNeeded(String accountEmail, String role, String secretKey, Map<String, String> body, String clientIp) {
+    private ResponseEntity<?> enforceTwoFactorIfNeeded(String accountEmail, String role, String secretKey, LoginRequestDTO loginRequest, String clientIp) {
         if (secretKey == null) return null;
 
-        String codeStr = body.get("2fa_code");
+        String codeStr = loginRequest.getTwoFactorCode();
         if (codeStr == null) {
-            Map<String, Object> twoFactorResp = new HashMap<>();
-            twoFactorResp.put("requiresTwoFactor", true);
-            twoFactorResp.put("email", accountEmail);
-            twoFactorResp.put("role", role);
-            return ResponseEntity.status(428).body(twoFactorResp);
+            return ResponseEntity.status(428).body(new TwoFactorRequiredResponseDTO(accountEmail, role));
         }
         try {
             int code = Integer.parseInt(codeStr);
             if (!twoFactorAuthService.validateCode(secretKey, code)) {
                 loginAttemptService.recordFailedAttempt(accountEmail, clientIp);
-                Map<String, Object> errorResp = new HashMap<>();
-                errorResp.put("error", "Código 2FA inválido");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResp);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponseDTO("Código 2FA inválido"));
             }
         } catch (NumberFormatException e) {
-            Map<String, Object> errorResp = new HashMap<>();
-            errorResp.put("error", "Formato de código 2FA inválido");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResp);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponseDTO("Formato de código 2FA inválido"));
         }
         return null;
     }
 
     private ResponseEntity<?> enforceThirdFactorIfEnabled(boolean enabled, String email, String role) {
         if (!enabled) return null;
-        Map<String, Object> thirdFactorResp = new HashMap<>();
-        thirdFactorResp.put("thirdFactorRequired", true);
-        thirdFactorResp.put("email", email);
-        thirdFactorResp.put("role", role);
-        return ResponseEntity.status(428).body(thirdFactorResp);
+        return ResponseEntity.status(428).body(new ThirdFactorRequiredResponseDTO(email, role));
     }
 
     private static final class TokenResult {
@@ -680,94 +669,91 @@ public class AuthController {
 
     private ResponseEntity<?> buildLoginSuccessResponseForAdmin(Admin admin, String email, String clientIp) {
         TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("role", "admin");
-        resp.put("email", admin.getEmail());
-        resp.put("picture", admin.getPicture());
-        resp.put("thirdFactorEnabled", admin.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("admin");
+        response.setEmail(admin.getEmail());
+        response.setPicture(admin.getPicture());
+        response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
 
         log.info("[AUTH] ✓ Login successful for admin: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForCreator(ContentCreator creator, String email, String clientIp) {
         TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("role", "creator");
-        resp.put("email", creator.getEmail());
-        resp.put("alias", creator.getAlias());
-        resp.put("picture", creator.getPicture());
-        resp.put("thirdFactorEnabled", creator.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("creator");
+        response.setEmail(creator.getEmail());
+        response.setAlias(creator.getAlias());
+        response.setPicture(creator.getPicture());
+        response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
 
         log.info("[AUTH] ✓ Login successful for creator: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForUser(User user, String email, String clientIp) {
         TokenResult tr = createTokenAndCookies(user.getEmail(), "user");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("role", "user");
-        resp.put("email", user.getEmail());
-        resp.put("picture", user.getPicture());
-        resp.put("thirdFactorEnabled", user.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("user");
+        response.setEmail(user.getEmail());
+        response.setPicture(user.getPicture());
+        response.setThirdFactorEnabled(user.isThirdFactorEnabled());
 
         log.info("[AUTH] ✓ Login successful for user: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> build3FASuccessResponseForAdmin(Admin admin) {
         TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("token", tr.tokenId);
-        resp.put("role", "admin");
-        resp.put("email", admin.getEmail());
-        resp.put("picture", admin.getPicture());
-        resp.put("thirdFactorEnabled", admin.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("admin");
+        response.setEmail(admin.getEmail());
+        response.setPicture(admin.getPicture());
+        response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> build3FASuccessResponseForCreator(ContentCreator creator) {
         TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("token", tr.tokenId);
-        resp.put("role", "creator");
-        resp.put("email", creator.getEmail());
-        resp.put("alias", creator.getAlias());
-        resp.put("picture", creator.getPicture());
-        resp.put("thirdFactorEnabled", creator.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("creator");
+        response.setEmail(creator.getEmail());
+        response.setAlias(creator.getAlias());
+        response.setPicture(creator.getPicture());
+        response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> build3FASuccessResponseForUser(User user) {
         TokenResult tr = createTokenAndCookies(user.getEmail(), "user");
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("token", tr.tokenId);
-        resp.put("role", "user");
-        resp.put("email", user.getEmail());
-        resp.put("picture", user.getPicture());
-        resp.put("thirdFactorEnabled", user.isThirdFactorEnabled());
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setRole("user");
+        response.setEmail(user.getEmail());
+        response.setPicture(user.getPicture());
+        response.setThirdFactorEnabled(user.isThirdFactorEnabled());
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
             .header(HttpHeaders.SET_COOKIE, tr.csrfCookie.toString())
-            .body(resp);
+            .body(response);
     }
 
     private ResponseEntity<?> handlePasswordResetForUser(User user, String password, LocalDateTime now) {
