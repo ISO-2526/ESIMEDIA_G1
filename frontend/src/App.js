@@ -3,6 +3,7 @@ import { HashRouter as Router, Switch, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Capacitor } from '@capacitor/core';
+import BackButtonHandler from './components/BackButtonHandler';
 import './App.css';
 import './styles.css';
 
@@ -52,6 +53,7 @@ function App() {
     return (
       <IonApp>
         <IonReactRouter>
+          <BackButtonHandler />
           <IonRouterOutlet>
             {/* Rutas públicas */}
             <Route exact path="/" render={() => (
