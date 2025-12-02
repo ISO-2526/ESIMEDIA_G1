@@ -1,6 +1,6 @@
 //Pagina recuperar contraseña
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../../api/axiosConfig';
 import { useHistory } from 'react-router-dom';
 import './RecoverPassword.css';
 
@@ -16,7 +16,7 @@ function RecoverPassword() {
     
     
     try {
-      await axios.post('/api/auth/recover', { email });
+      await api.post('/api/auth/recover', { email });
     } catch (error) {
         // Simular delay de 2 segundos
         await new Promise(resolve => setTimeout(resolve, 2000));

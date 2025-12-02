@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './RegistroPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
-import axios from 'axios';
+import api from '../../../api/axiosConfig';
 import { useHistory } from 'react-router-dom'; // Importar useHistory
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 

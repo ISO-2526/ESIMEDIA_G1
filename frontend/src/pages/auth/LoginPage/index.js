@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory, Link } from 'react-router-dom';
+import axios from '../../../api/axiosConfig';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -14,11 +15,12 @@ function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // <-- cookies
-        body: JSON.stringify({ email, password }),
+      // Logs de depuración
+      console.log('Base URL configurada:', axios.defaults.baseURL);
+      console.log('URL completa a la que se va a hacer la petición:', '/api/auth/login');
+
+      const res = await axios.post('/api/auth/login', { email, password }, {
+        withCredentials: true
       });
 
       if (res.status === 428) {
@@ -26,7 +28,7 @@ function LoginPage() {
         return;
       }
 
-      if (!res.ok) {
+      if (res.status !== 200) {
         if (res.status === 403) { setError('Usuario bloqueado. Contacta con soporte.'); return; }
         if (res.status === 401) { setError('Credenciales inválidas'); return; }
         if (res.status === 429) { setError('Demasiados intentos. Por favor, espera antes de intentar de nuevo.'); return; }
@@ -34,7 +36,7 @@ function LoginPage() {
         return;
       }
 
-      const data = await res.json();
+      const data = res.data;
       // No guardar token ni session en localStorage: se usa cookie HttpOnly
       const role = data?.role ?? data?.data?.role;
       if (role === 'admin') history.push('/adminDashboard');
@@ -43,6 +45,7 @@ function LoginPage() {
       else history.push('/');
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
+      console.log('Error response:', err.response);
       setError('Error en el servidor');
     }
   };

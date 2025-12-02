@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../api/axiosConfig';
 import { useHistory, useLocation } from 'react-router-dom';
 import './ResetPassword.css';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
@@ -27,7 +27,7 @@ function ResetPassword() {
 
       try {
         // ✅ Hacemos GET con el token en la query, como espera tu backend
-        const response = await axios.get(`/api/auth/validate-reset-token?token=${(token)}`);
+        const response = await api.get(`/api/auth/validate-reset-token?token=${(token)}`);
         
         // ✅ Usamos el valor devuelto por el backend
         if (response.data?.valid === true) {
@@ -75,7 +75,7 @@ function ResetPassword() {
     }
 
     try {
-      const response = await axios.post('/api/auth/reset-password', { token, password });
+      const response = await api.post('/api/auth/reset-password', { token, password });
       setMessage(response.data.message || 'Contraseña restablecida correctamente. Redirigiendo al inicio de sesión...');
       setMessageType('success');
       setTimeout(() => history.push('/login'), 3000);

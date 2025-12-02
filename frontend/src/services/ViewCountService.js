@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 
-const API_BASE_URL = 'http://localhost:8080/api/views';
+const API_BASE_URL = '/api/views';
 
 /**
  * Servicio para gestionar las reproducciones de contenido.

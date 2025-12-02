@@ -45,6 +45,7 @@ import ProtectedRouteAfterLogin from './guards/ProtectedRouteAfterLogin';
 function App() {
   const isMobile = Capacitor.isNativePlatform(); // Detecta si es app móvil
   console.log('Running in:', isMobile ? 'mobile app' : 'web app');
+  console.log('App component rendered');
 
   if (isMobile) {
     // App móvil: Solo rutas de usuario
@@ -53,70 +54,70 @@ function App() {
         <IonReactRouter>
           <IonRouterOutlet>
             {/* Rutas públicas */}
-            <Route path="/" element={
+            <Route exact path="/" render={() => (
               <ProtectedRouteAfterLogin>
                 <HomePage />
               </ProtectedRouteAfterLogin>
-            } />
-            <Route path="/login" element={
+            )} />
+            <Route path="/login" render={() => (
               <ProtectedRouteAfterLogin>
                 <LoginPage />
               </ProtectedRouteAfterLogin>
-            } />
-            <Route path="/registro" element={
+            )} />
+            <Route path="/registro" render={() => (
               <ProtectedRouteAfterLogin>
                 <RegistroPage />
               </ProtectedRouteAfterLogin>
-            } />
-            <Route path="/recuperar" element={<RecoverPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/setup-2fa" element={
+            )} />
+            <Route path="/recuperar" component={RecoverPassword} />
+            <Route path="/reset-password" component={ResetPassword} />
+            <Route path="/setup-2fa" render={() => (
               <ProtectedRouteAfterLogin>
                 <Setup2FA />
               </ProtectedRouteAfterLogin>
-            } />
-            <Route path="/validate-2fa" element={
+            )} />
+            <Route path="/validate-2fa" render={() => (
               <ProtectedRouteAfterLogin>
                 <Validate2FA />
               </ProtectedRouteAfterLogin>
-            } />
-            <Route path="/validate-3fa" element={
+            )} />
+            <Route path="/validate-3fa" render={() => (
               <ProtectedRouteAfterLogin>
                 <Validate3FA />
               </ProtectedRouteAfterLogin>
-            } />
+            )} />
 
             {/* Rutas de Usuario */}
-            <Route path="/usuario" element={
+            <Route path="/usuario" render={() => (
               <ProtectedRoute allowedRoles={['user']}>
                 <UserDashboard />
               </ProtectedRoute>
-            } />
-            <Route path="/perfil" element={
+            )} />
+            <Route path="/perfil" render={() => (
               <ProtectedRoute>
                 <UserProfilePage />
               </ProtectedRoute>
-            } />
-            <Route path="/suscripcion" element={
+            )} />
+            <Route path="/suscripcion" render={() => (
               <ProtectedRoute>
                 <SubscriptionPage />
               </ProtectedRoute>
-            } />
-            <Route path="/playlists" element={
+            )} />
+            <Route exact path="/playlists" render={() => (
               <ProtectedRoute>
                 <PlaylistsPage />
               </ProtectedRoute>
-            } />
-            <Route path="/playlists/:id" element={
+            )} />
+            <Route path="/playlists/:id" render={() => (
               <ProtectedRoute>
                 <PlaylistDetailPage />
               </ProtectedRoute>
-            } />
-            <Route path="/creator-playlists/:id" element={
+            )} />
+            <Route path="/creator-playlists/:id" render={() => (
               <ProtectedRoute>
                 <CreatorPlaylistViewPage />
               </ProtectedRoute>
-            } />
+            )} />
           </IonRouterOutlet>
         </IonReactRouter>
       </IonApp>
