@@ -15,38 +15,67 @@ function LoginPage() {
     setError(null);
 
     try {
-      // Logs de depuración
       console.log('Base URL configurada:', axios.defaults.baseURL);
       console.log('URL completa a la que se va a hacer la petición:', '/api/auth/login');
 
-      const res = await axios.post('/api/auth/login', { email, password }, {
+      const res = await axios.post('/api/auth/login', { 
+        email, 
+        password 
+      }, {
         withCredentials: true
       });
 
-      if (res.status === 428) {
-        history.push('/validate-2fa', { state: { email, password } });
-        return;
-      }
+      console.log('✅ Login exitoso:', res.data);
 
-      if (res.status !== 200) {
-        if (res.status === 403) { setError('Usuario bloqueado. Contacta con soporte.'); return; }
-        if (res.status === 401) { setError('Credenciales inválidas'); return; }
-        if (res.status === 429) { setError('Demasiados intentos. Por favor, espera antes de intentar de nuevo.'); return; }
-        setError('Error desconocido al iniciar sesión.');
-        return;
-      }
-
+      // Login exitoso sin 2FA/3FA requerido
       const data = res.data;
-      // No guardar token ni session en localStorage: se usa cookie HttpOnly
       const role = data?.role ?? data?.data?.role;
+      
       if (role === 'admin') history.push('/adminDashboard');
       else if (role === 'creator') history.push('/creator');
       else if (role === 'user') history.push('/usuario');
       else history.push('/');
+
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
       console.log('Error response:', err.response);
-      setError('Error en el servidor');
+
+      // ✅ Manejar código 428: Requiere 2FA o 3FA
+      if (err.response?.status === 428) {
+        const responseData = err.response.data;
+        
+        console.log('🔐 Requiere 2FA/3FA - Data recibida:', responseData);
+        
+        // Verificar si tiene los datos necesarios
+        if (responseData && (responseData.email || responseData.role)) {
+          // ✅ CORRECTO: Pasar state dentro de un objeto
+          history.push({
+            pathname: '/validate-2fa',
+            state: {
+              email: responseData.email || email, 
+              password: password,
+              role: responseData.role
+            }
+          });
+          return;
+        }
+      }
+
+      // Manejar otros errores HTTP
+      if (err.response?.status === 403) {
+        setError('Usuario bloqueado. Contacta con soporte.');
+      } else if (err.response?.status === 401) {
+        const errorData = err.response.data;
+        if (errorData && errorData.remainingAttempts !== undefined) {
+          setError(`Credenciales inválidas. Intentos restantes: ${errorData.remainingAttempts}`);
+        } else {
+          setError('Credenciales inválidas');
+        }
+      } else if (err.response?.status === 429) {
+        setError('Demasiados intentos. Por favor, espera antes de intentar de nuevo.');
+      } else {
+        setError(err.response?.data?.message || err.response?.data?.error || 'Error en el servidor');
+      }
     }
   };
 
