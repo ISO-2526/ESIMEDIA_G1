@@ -15,6 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -343,19 +346,14 @@ public class AuthController {
     }
 
     @GetMapping("/protected-resource")
-    public ResponseEntity<?> getProtectedResource(
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
-        }
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
-        }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getProtectedResource() {
+
         return ResponseEntity.ok("Recurso protegido accedido correctamente");
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logout(
             @CookieValue(value = "access_token", required = false) String tokenId,
             @CookieValue(value = "csrf_token", required = false) String csrfCookie,
@@ -382,21 +380,24 @@ public class AuthController {
     }
 
     @GetMapping("/validate-token")
-    public ResponseEntity<?> validateToken(
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> validateToken() {
+        // ❌ ELIMINAR @CookieValue - obtener info del SecurityContext
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
         }
-        System.out.println("Validating token (cookie): " + tokenId);
 
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
-        }
+        String email = auth.getName(); // El email está en el principal
+        String role = auth.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
+                .orElse("user");
 
         Map<String, Object> response = new HashMap<>();
-        response.put("role", token.getRole());
-        response.put("email", token.getAccountId());
+        response.put("role", role);
+        response.put("email", email);
         return ResponseEntity.ok(response);
     }
 
@@ -439,23 +440,35 @@ public class AuthController {
     }
 
     @PostMapping("/activate-3fa")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> activateThirdFactor(@Valid @RequestBody ActivateThirdFactorRequestDTO request) {
-        String email = request.getEmail();
-        boolean activate = request.isActivate();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = auth.getName();
+        
+        String requestEmail = request.getEmail();
+        
+        // Permitir si es el mismo usuario O si es admin
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!authenticatedEmail.equals(requestEmail) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("No tienes permiso para modificar esta cuenta");
+        }        boolean activate = request.isActivate();
 
-        var adminOpt = adminRepository.findById(email);
+        var adminOpt = adminRepository.findById(requestEmail);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             admin.setThirdFactorEnabled(activate);
             adminRepository.save(admin);
         }
-        var creatorOpt = contentCreatorRepository.findById(email);
+        var creatorOpt = contentCreatorRepository.findById(requestEmail);
         if (creatorOpt.isPresent()) {
             ContentCreator creator = creatorOpt.get();
             creator.setThirdFactorEnabled(activate);
             contentCreatorRepository.save(creator);
         }
-        var userOpt = userRepository.findById(email);
+        var userOpt = userRepository.findById(requestEmail);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             user.setThirdFactorEnabled(activate);
