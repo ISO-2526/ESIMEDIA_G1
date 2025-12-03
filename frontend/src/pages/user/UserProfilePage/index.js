@@ -5,6 +5,7 @@ import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutWithCookies } from '../../../auth/logout';
+import { TAGS } from '../../../creator/components/constants';
 
 const isActivationKey = (key) => key === 'Enter' || key === ' ' || key === 'Spacebar';
 
@@ -139,8 +140,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
-        <button 
-          onClick={() => window.location.href='/usuario'}
+        <button
+          onClick={() => window.location.href = '/usuario'}
           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           aria-label="Ir a inicio"
         >
@@ -154,8 +155,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
       </nav>
       <div className="header-right">
         <div className="user-menu-container">
-          <div 
-            className="user-avatar-profile" 
+          <div
+            className="user-avatar-profile"
             onClick={onToggleMenu}
             onKeyDown={(event) => handleKeyboardActivation(event, onToggleMenu)}
             role="button"
@@ -334,12 +335,12 @@ function UserProfilePage() {
   const [userProfile, setUserProfile] = useState({ vip: false });
 
   const availableAvatars = [
-    '/pfp/avatar1.png','/pfp/avatar2.png','/pfp/avatar3.png','/pfp/avatar4.png','/pfp/avatar5.png',
-    '/pfp/avatar6.png','/pfp/avatar7.png','/pfp/avatar8.png','/pfp/avatar9.png','/pfp/avatar10.png'
+    '/pfp/avatar1.png', '/pfp/avatar2.png', '/pfp/avatar3.png', '/pfp/avatar4.png', '/pfp/avatar5.png',
+    '/pfp/avatar6.png', '/pfp/avatar7.png', '/pfp/avatar8.png', '/pfp/avatar9.png', '/pfp/avatar10.png'
   ];
 
   const [profileData, setProfileData] = useState({
-    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: ''
+    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', preferences: []
   });
   const [tempData, setTempData] = useState({ ...profileData });
   const [previewImage, setPreviewImage] = useState(null);
@@ -389,7 +390,8 @@ function UserProfilePage() {
           surname: tempData.surname,
           alias: tempData.alias,
           dateOfBirth: tempData.dateOfBirth,
-          picture: tempData.picture
+          picture: tempData.picture,
+          preferences: tempData.preferences
         })
       });
       if (!response.ok) {
@@ -410,6 +412,11 @@ function UserProfilePage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTempData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTagsChange = (e) => {
+    const values = Array.from(e.target.selectedOptions, o => o.value);
+    setTempData(prev => ({ ...prev, preferences: values }));
   };
 
   const handleAvatarSelect = (avatarPath) => {
@@ -437,7 +444,7 @@ function UserProfilePage() {
 
       if (!res.ok) {
         let txt = '';
-        try { txt = await res.text(); } catch {}
+        try { txt = await res.text(); } catch { }
         showError(txt || 'Error al eliminar cuenta');
         return;
       }
@@ -462,7 +469,7 @@ function UserProfilePage() {
 
       if (!response.ok) {
         let errText = '';
-        try { errText = await response.text(); } catch {}
+        try { errText = await response.text(); } catch { }
         showError(errText || 'No se pudo cambiar el estado del 3FA');
         setStatusMessage(errText || 'No se pudo cambiar el estado del 3FA');
         return;
@@ -500,16 +507,16 @@ function UserProfilePage() {
         <div className="profile-box">
           <h1>Mi Perfil</h1>
 
-            <ProfilePhotoSection
-              isEditing={isEditing}
-              previewImage={previewImage}
-              profilePicture={profileData.picture}
-              showAvatarSelector={showAvatarSelector}
-              onToggleSelector={() => setShowAvatarSelector(s => !s)}
-              availableAvatars={availableAvatars}
-              tempData={tempData}
-              handleAvatarSelect={handleAvatarSelect}
-            />
+          <ProfilePhotoSection
+            isEditing={isEditing}
+            previewImage={previewImage}
+            profilePicture={profileData.picture}
+            showAvatarSelector={showAvatarSelector}
+            onToggleSelector={() => setShowAvatarSelector(s => !s)}
+            availableAvatars={availableAvatars}
+            tempData={tempData}
+            handleAvatarSelect={handleAvatarSelect}
+          />
 
           <div className="profile-form">
             {renderFormField('Nombre *', 'name', profileData.name, isEditing, tempData.name, handleInputChange)}
@@ -517,6 +524,31 @@ function UserProfilePage() {
             {renderFormField('Email', 'email', profileData.email, false, '', handleInputChange, true)}
             {renderFormField('Alias *', 'alias', profileData.alias, isEditing, tempData.alias, handleInputChange)}
             {renderFormField('Fecha de Nacimiento', 'dateOfBirth', profileData.dateOfBirth, false, '', handleInputChange, true)}
+
+            <div className="form-row">
+              <label>Mis Gustos (Tags)</label>
+              {isEditing ? (
+                <>
+                  <select
+                    multiple
+                    value={tempData.preferences || []}
+                    onChange={handleTagsChange}
+                    style={{ width: '100%', padding: '8px', minHeight: '100px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  >
+                    {TAGS.map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                  <small style={{ display: 'block', marginTop: '4px', color: '#666' }}>Mantén Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+                </>
+              ) : (
+                <div className="field-value">
+                  {profileData.preferences && profileData.preferences.length > 0
+                    ? profileData.preferences.join(', ')
+                    : 'Sin preferencias definidas'}
+                </div>
+              )}
+            </div>
 
             <Security3FASection
               isEditing={isEditing}

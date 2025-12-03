@@ -31,12 +31,16 @@ import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.Accounts.service.NotificationService;
 
 @ExtendWith(MockitoExtension.class)
 class ContentServiceTests {
 
     @Mock
     private CreatorContentRepository repository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private ContentService service;
@@ -56,7 +60,8 @@ class ContentServiceTests {
         req.setResolution("4k");
         req.setCreatorAlias("creator");
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(req, ContentType.VIDEO));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.create(req, ContentType.VIDEO));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(repository, never()).save(any());
     }
@@ -87,6 +92,8 @@ class ContentServiceTests {
         assertEquals("1080p", saved.getResolution());
         assertEquals("https://cdn.example/video.mp4", saved.getUrl());
         assertEquals(null, saved.getAvailableUntil());
+
+        verify(notificationService).notifyUsersInterestedIn(saved);
     }
 
     @Test

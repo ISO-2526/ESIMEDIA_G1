@@ -38,6 +38,8 @@ public class CreateUserRequestDTO {
 
     private String picture;
 
+    private java.util.List<String> preferences;
+
     // Getters y Setters
 
     public String getName() {
@@ -102,5 +104,13 @@ public class CreateUserRequestDTO {
 
     public void setPicture(String picture) {
         this.picture = picture;
+    }
+
+    public java.util.List<String> getPreferences() {
+        return preferences;
+    }
+
+    public void setPreferences(java.util.List<String> preferences) {
+        this.preferences = preferences;
     }
 }

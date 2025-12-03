@@ -5,6 +5,7 @@ import { useModal } from '../../../utils/useModal';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
+import { TAGS } from '../../../creator/components/constants';
 
 function RegistroPage() {
   const { modalState, closeModal, showSuccess, showError, showInfo } = useModal();
@@ -30,7 +31,9 @@ function RegistroPage() {
     alias: '',
     dateOfBirth: '',
     vip: false,
-    picture: imagenes[0]
+    vip: false,
+    picture: imagenes[0],
+    preferences: []
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -66,11 +69,11 @@ function RegistroPage() {
 
   const getPasswordMsg = (value) => {
     const errors = validatePasswordStrength(value);
-    
+
     if (errors.length === 0) {
       return 'Contraseña segura.';
     }
-    
+
     return errors[0]; // Mostrar el primer error
   };
 
@@ -79,6 +82,11 @@ function RegistroPage() {
     if (e.target.checked) {
       showInfo('¡Has seleccionado la opción VIP!\nAhora podrás acceder a las siguientes ventajas: contenido exclusivo, soporte prioritario y mucho más.\n¡Disfruta de tu experiencia VIP!', 'Bienvenido a VIP');
     }
+  };
+
+  const handleTagsChange = (e) => {
+    const values = Array.from(e.target.selectedOptions, o => o.value);
+    setForm(prev => ({ ...prev, preferences: values }));
   };
 
   const handleShowPassword = () => {
@@ -134,6 +142,7 @@ function RegistroPage() {
     dateOfBirth: form.dateOfBirth || null,
     vip: form.vip || false,
     picture: form.picture || null,
+    preferences: form.preferences || [],
     isActive: true,
   });
 
@@ -179,7 +188,7 @@ function RegistroPage() {
   return (
     <div className="page-container">
       <div className="animated-bg"></div>
-      
+
       <div className="registro-wrapper">
         {/* Panel lateral informativo */}
         <div className="info-panel">
@@ -210,221 +219,239 @@ function RegistroPage() {
           <h2 className="page-title">
             <span className="highlight">Crear Cuenta</span>
           </h2>
-          
+
           <form onSubmit={handleSubmit}>
-          
-          {/* Sección: Datos Personales */}
-          <div className="form-section">
-            <h3 className="section-title">Datos Personales</h3>
-            
-            <div className="form-grid">
-              <div className="form-field">
-                <label htmlFor="registro-name" className="form-label required">Nombre</label>
-                <input 
-                  id="registro-name"
-                  type="text" 
-                  name="name" 
-                  placeholder="Nombre" 
-                  required 
-                  value={form.name} 
-                  onChange={handleChange} 
-                  maxLength={12} 
-                  className="form-input"
-                />
-              </div>
 
-              <div className="form-field">
-                <label htmlFor="registro-surname" className="form-label required">Apellidos</label>
-                <input 
-                  id="registro-surname"
-                  type="text" 
-                  name="surname" 
-                  placeholder="Apellidos" 
-                  required 
-                  value={form.surname} 
-                  onChange={handleChange} 
-                  maxLength={12}
-                  className="form-input"
-                />
-              </div>
-            </div>
+            {/* Sección: Datos Personales */}
+            <div className="form-section">
+              <h3 className="section-title">Datos Personales</h3>
 
-            <div className="form-field">
-              <label htmlFor="registro-email" className="form-label required">Email</label>
-              <input 
-                id="registro-email"
-                type="email" 
-                name="email" 
-                placeholder="Email" 
-                required 
-                value={form.email} 
-                onChange={handleChange}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="registro-alias" className="form-label">Alias (opcional)</label>
-              <input 
-                id="registro-alias"
-                type="text" 
-                name="alias" 
-                placeholder="Alias" 
-                value={form.alias} 
-                onChange={handleChange}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="registro-dateOfBirth" className="form-label required">Fecha de nacimiento</label>
-              <input 
-                id="registro-dateOfBirth"
-                type="date" 
-                name="dateOfBirth" 
-                required 
-                value={form.dateOfBirth} 
-                onChange={handleChange}
-                className="form-input"
-              />
-              {ageError && <div className="validation-message error">{ageError}</div>}
-            </div>
-          </div>
-
-          {/* Sección: Seguridad */}
-          <div className="form-section">
-            <h3 className="section-title">Seguridad</h3>
-            
-            <div className="form-field">
-              <label htmlFor="registro-password" className="form-label required">Contraseña</label>
-              <div className="password-input-wrapper">
-                <input 
-                  id="registro-password"
-                  type={showPassword ? "text" : "password"} 
-                  name="password" 
-                  placeholder="Contraseña" 
-                  required 
-                  value={form.password} 
-                  onChange={handleChange}
-                  className="form-input"
-                />
-                <button 
-                  type="button" 
-                  onClick={handleShowPassword} 
-                  className="toggle-password-btn"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                >
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
-              </div>
-              {form.password && (
-                <div className={`validation-message ${passwordMsg === 'Contraseña segura.' ? 'success' : 'error'}`}>
-                  {passwordMsg}
+              <div className="form-grid">
+                <div className="form-field">
+                  <label htmlFor="registro-name" className="form-label required">Nombre</label>
+                  <input
+                    id="registro-name"
+                    type="text"
+                    name="name"
+                    placeholder="Nombre"
+                    required
+                    value={form.name}
+                    onChange={handleChange}
+                    maxLength={12}
+                    className="form-input"
+                  />
                 </div>
-              )}
-            </div>
 
-            <div className="form-field">
-              <label htmlFor="registro-repeatPassword" className="form-label required">Repetir contraseña</label>
-              <div className="password-input-wrapper">
-                <input 
-                  id="registro-repeatPassword"
-                  type={showRepeatPassword ? "text" : "password"} 
-                  name="repetirPassword" 
-                  placeholder="Repetir contraseña" 
-                  required 
-                  value={form.repetirPassword} 
+                <div className="form-field">
+                  <label htmlFor="registro-surname" className="form-label required">Apellidos</label>
+                  <input
+                    id="registro-surname"
+                    type="text"
+                    name="surname"
+                    placeholder="Apellidos"
+                    required
+                    value={form.surname}
+                    onChange={handleChange}
+                    maxLength={12}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="registro-email" className="form-label required">Email</label>
+                <input
+                  id="registro-email"
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  required
+                  value={form.email}
                   onChange={handleChange}
                   className="form-input"
                 />
-                <button 
-                  type="button" 
-                  onClick={handleShowRepeatPassword} 
-                  className="toggle-password-btn"
-                  aria-label={showRepeatPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                >
-                  {showRepeatPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
               </div>
-              {repeatError && <div className="validation-message error">{repeatError}</div>}
-            </div>
-          </div>
 
-          {/* Sección: Personalización */}
-          <div className="form-section">
-            <h3 className="section-title">Personalización</h3>
-
-            <div className="form-field">
-              <label className="checkbox-wrapper">
-                <input 
-                  type="checkbox" 
-                  name="vip" 
-                  checked={form.vip} 
-                  onChange={handleVIPChange}
-                  className="checkbox-input"
+              <div className="form-field">
+                <label htmlFor="registro-alias" className="form-label">Alias (opcional)</label>
+                <input
+                  id="registro-alias"
+                  type="text"
+                  name="alias"
+                  placeholder="Alias"
+                  value={form.alias}
+                  onChange={handleChange}
+                  className="form-input"
                 />
-                <span className="checkbox-label">¿Quieres una cuenta VIP?</span>
-              </label>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="registro-dateOfBirth" className="form-label required">Fecha de nacimiento</label>
+                <input
+                  id="registro-dateOfBirth"
+                  type="date"
+                  name="dateOfBirth"
+                  required
+                  value={form.dateOfBirth}
+                  onChange={handleChange}
+                  className="form-input"
+                />
+                {ageError && <div className="validation-message error">{ageError}</div>}
+              </div>
             </div>
 
-            <div className="form-field avatar-selector">
-              <label className="form-label" htmlFor="avatar-toggle-btn">Foto de perfil</label>
-              <button
-                id="avatar-toggle-btn"
-                type="button"
-                onClick={() => setShowAvatars((prev) => !prev)}
-                className="avatar-toggle-btn"
-              >
-                {showAvatars ? 'Ocultar selección' : 'Elegir foto de perfil'}
-              </button>
-              {showAvatars && (
-                <div className="avatar-grid">
-                  {imagenes.map((img, idx) => (
-                    <label key={img} className="avatar-option">
-                      <input
-                        type="radio"
-                        name="picture"
-                        value={img}
-                        checked={form.picture === img}
-                        onChange={handleChange}
-                        className="avatar-radio"
-                      />
-                      <img
-                        src={img}
-                        alt={`avatar${idx+1}`}
-                        className="avatar-img"
-                      />
-                    </label>
+            {/* Sección: Seguridad */}
+            <div className="form-section">
+              <h3 className="section-title">Seguridad</h3>
+
+              <div className="form-field">
+                <label htmlFor="registro-password" className="form-label required">Contraseña</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="registro-password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Contraseña"
+                    required
+                    value={form.password}
+                    onChange={handleChange}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleShowPassword}
+                    className="toggle-password-btn"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {form.password && (
+                  <div className={`validation-message ${passwordMsg === 'Contraseña segura.' ? 'success' : 'error'}`}>
+                    {passwordMsg}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="registro-repeatPassword" className="form-label required">Repetir contraseña</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="registro-repeatPassword"
+                    type={showRepeatPassword ? "text" : "password"}
+                    name="repetirPassword"
+                    placeholder="Repetir contraseña"
+                    required
+                    value={form.repetirPassword}
+                    onChange={handleChange}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleShowRepeatPassword}
+                    className="toggle-password-btn"
+                    aria-label={showRepeatPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showRepeatPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {repeatError && <div className="validation-message error">{repeatError}</div>}
+              </div>
+            </div>
+
+            {/* Sección: Personalización */}
+            <div className="form-section">
+              <h3 className="section-title">Personalización</h3>
+
+              <div className="form-field">
+                <label className="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    name="vip"
+                    checked={form.vip}
+                    onChange={handleVIPChange}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-label">¿Quieres una cuenta VIP?</span>
+                </label>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="registro-tags" className="form-label">Mis Gustos (Tags)</label>
+                <select
+                  id="registro-tags"
+                  name="preferences"
+                  multiple
+                  value={form.preferences}
+                  onChange={handleTagsChange}
+                  className="form-input"
+                  style={{ height: 'auto', minHeight: '100px' }}
+                >
+                  {TAGS.map(tag => (
+                    <option key={tag} value={tag}>{tag}</option>
                   ))}
-                </div>
-              )}
-            </div>
-          </div>
+                </select>
+                <small className="help-text">Mantén Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
+              </div>
 
-          <button type="submit" className="submit-btn">
-            Registrarse
-          </button>
-        </form>
+              <div className="form-field avatar-selector">
+                <label className="form-label" htmlFor="avatar-toggle-btn">Foto de perfil</label>
+                <button
+                  id="avatar-toggle-btn"
+                  type="button"
+                  onClick={() => setShowAvatars((prev) => !prev)}
+                  className="avatar-toggle-btn"
+                >
+                  {showAvatars ? 'Ocultar selección' : 'Elegir foto de perfil'}
+                </button>
+                {showAvatars && (
+                  <div className="avatar-grid">
+                    {imagenes.map((img, idx) => (
+                      <label key={img} className="avatar-option">
+                        <input
+                          type="radio"
+                          name="picture"
+                          value={img}
+                          checked={form.picture === img}
+                          onChange={handleChange}
+                          className="avatar-radio"
+                        />
+                        <img
+                          src={img}
+                          alt={`avatar${idx + 1}`}
+                          className="avatar-img"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button type="submit" className="submit-btn">
+              Registrarse
+            </button>
+          </form>
         </div>
       </div>
 
