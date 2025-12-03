@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
       enabled: true
     },
     Keyboard: {
-      resize: 'body', // Esto hace que la web se encoja al salir el teclado
+      resize: 'native',
       style: 'dark',
       resizeOnFullScreen: true
     }
