@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import axios from "axios";
+import axios from "../../../api/axiosConfig"; // ✅ Asegúrate de que la ruta sea correcta
 import './Validate2FA.css';
 
 const Validate2FA = () => {
@@ -8,9 +8,17 @@ const Validate2FA = () => {
   const history = useHistory();
   const email = location.state?.email || "";
   const password = location.state?.password || "";
+  const role = location.state?.role || "";
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirigir al login si no hay datos
+  React.useEffect(() => {
+    if (!email || !password) {
+      history.push('/login');
+    }
+  }, [email, password, history]);
 
   const handleValidate2FA = async () => {
     if (!code || code.length < 6) {
@@ -22,10 +30,11 @@ const Validate2FA = () => {
     setMessage("");
 
     try {
+      // ✅ Enviar twoFactorCode (no "2fa_code")
       const response = await axios.post("/api/auth/login", {
         email,
         password,
-        "2fa_code": parseInt(code),
+        twoFactorCode: code  // ✅ Cambiado de "2fa_code" a "twoFactorCode"
       }, {
         withCredentials: true
       });
@@ -34,7 +43,10 @@ const Validate2FA = () => {
 
       // Verificar si el usuario tiene activado el 3FA
       if (data.thirdFactorEnabled) {
-        history.push("/validate-3fa", { state: { email, role: data.role } });
+        history.push("/validate-3fa", { 
+          email: data.email || email, 
+          role: data.role 
+        });
         return;
       }
 
@@ -43,23 +55,43 @@ const Validate2FA = () => {
         history.push("/adminDashboard");
       } else if (data.role === "creator") {
         history.push("/creator");
-      } else {
+      } else if (data.role === "user") {
         history.push("/usuario");
+      } else {
+        history.push("/");
       }
+
     } catch (error) {
+      console.error("Error en validación 2FA:", error);
+      
+      // Si después del 2FA se requiere 3FA
       if (error.response?.status === 428) {
-        history.push("/validate-3fa", { state: { email, role: error.response.data.role } });
+        const responseData = error.response.data;
+        history.push("/validate-3fa", { 
+          email: responseData.email || email, 
+          role: responseData.role || role 
+        });
         return;
       }
-      const errorMsg = error.response?.data?.error || "Código incorrecto o sesión expirada";
-      setMessage(errorMsg);
+
+      // Errores de autenticación
+      if (error.response?.status === 401) {
+        setMessage("Código 2FA incorrecto. Por favor, intenta de nuevo.");
+      } else if (error.response?.status === 429) {
+        setMessage("Demasiados intentos. Por favor, espera antes de intentar de nuevo.");
+      } else {
+        const errorMsg = error.response?.data?.message || 
+                        error.response?.data?.error || 
+                        "Código incorrecto o sesión expirada";
+        setMessage(errorMsg);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && code.length === 6) {
       handleValidate2FA();
     }
   };
