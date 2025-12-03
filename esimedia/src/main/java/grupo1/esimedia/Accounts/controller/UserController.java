@@ -95,7 +95,9 @@ public class UserController {
         user.setAlias(dto.getAlias());
         user.setDateOfBirth(dto.getDateOfBirth().toString());
         user.setVip(dto.isVip());
+        user.setVip(dto.isVip());
         user.setPicture(dto.getPicture());
+        user.setPreferences(dto.getPreferences());
 
         // Guardar el usuario en la base de datos
         User saved = userRepository.save(user);
@@ -307,7 +309,9 @@ public class UserController {
         user.setName(updatedUser.getName());
         user.setSurname(updatedUser.getSurname());
         user.setAlias(updatedUser.getAlias());
+        user.setAlias(updatedUser.getAlias());
         user.setPicture(updatedUser.getPicture());
+        user.setPreferences(updatedUser.getPreferences());
 
         userRepository.save(user);
         return ResponseEntity.ok(toUserResponseDTO(user));
@@ -485,6 +489,7 @@ public class UserController {
         if (user.getDateOfBirth() != null) {
             dto.setDateOfBirth(LocalDate.parse(user.getDateOfBirth()));
         }
+        dto.setPreferences(user.getPreferences());
         return dto;
     }
 }
