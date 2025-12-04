@@ -31,6 +31,12 @@ function LoginPage() {
       const data = res.data;
       const role = data?.role ?? data?.data?.role;
       
+      // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
+      if (data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        console.log('🔑 Token guardado en localStorage para móvil');
+      }
+      
       if (role === 'admin') history.push('/adminDashboard');
       else if (role === 'creator') history.push('/creator');
       else if (role === 'user') history.push('/usuario');

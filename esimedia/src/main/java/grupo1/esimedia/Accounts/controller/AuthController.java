@@ -30,7 +30,9 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-import grupo1.esimedia.Accounts.dto.*;
+import grupo1.esimedia.Accounts.dto.LoginRequestDTO;
+import grupo1.esimedia.Accounts.dto.SendThirdFactorCodeRequestDTO;
+import grupo1.esimedia.Accounts.dto.VerifyThirdFactorCodeRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.ActivateThirdFactorRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.RecoverPasswordRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.ResetPasswordRequestDTO;
@@ -370,10 +372,11 @@ public class AuthController {
             if (token != null) tokenRepository.delete(token);
         }
 
+        // ✅ MOBILE FIX: Usar mismos flags que en login para limpiar cookies
         ResponseCookie clearAccess = ResponseCookie.from("access_token", "")
-                .httpOnly(true).secure(true).sameSite("Strict").path("/").maxAge(0).build();
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(0).build();
         ResponseCookie clearCsrf = ResponseCookie.from("csrf_token", "")
-                .httpOnly(false).secure(true).sameSite("Strict").path("/").maxAge(0).build();
+                .httpOnly(false).secure(false).sameSite("Lax").path("/").maxAge(0).build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearAccess.toString())
@@ -659,10 +662,23 @@ public class AuthController {
         token.setExpiration(LocalDateTime.now().plusHours(8));
         tokenRepository.save(token);
 
+        // ✅ MOBILE FIX: secure=false y sameSite=Lax para desarrollo HTTP
+        // TODO: En producción, cambiar a secure=true y sameSite=Strict con HTTPS
         ResponseCookie accessCookie = ResponseCookie.from("access_token", tokenID)
-            .httpOnly(true).secure(true).sameSite("Strict").path("/").maxAge(Duration.ofHours(2)).build();
+            .httpOnly(true)
+            .secure(false)  // ✅ false para HTTP en desarrollo
+            .sameSite("Lax")  // ✅ Lax permite cookies entre localhost y 10.0.2.2
+            .path("/")
+            .maxAge(Duration.ofHours(2))
+            .build();
+            
         ResponseCookie csrfCookie = ResponseCookie.from("csrf_token", UUID.randomUUID().toString())
-            .httpOnly(false).secure(true).sameSite("Strict").path("/").maxAge(Duration.ofHours(2)).build();
+            .httpOnly(false)
+            .secure(false)  // ✅ false para HTTP en desarrollo
+            .sameSite("Lax")  // ✅ Lax permite cookies entre localhost y 10.0.2.2
+            .path("/")
+            .maxAge(Duration.ofHours(2))
+            .build();
 
         return new TokenResult(tokenID, accessCookie, csrfCookie);
     }
@@ -674,6 +690,8 @@ public class AuthController {
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for admin: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -690,6 +708,8 @@ public class AuthController {
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
         response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for creator: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -705,6 +725,8 @@ public class AuthController {
         response.setEmail(user.getEmail());
         response.setPicture(user.getPicture());
         response.setThirdFactorEnabled(user.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for user: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -720,6 +742,8 @@ public class AuthController {
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
@@ -735,6 +759,8 @@ public class AuthController {
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
         response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
@@ -749,6 +775,8 @@ public class AuthController {
         response.setEmail(user.getEmail());
         response.setPicture(user.getPicture());
         response.setThirdFactorEnabled(user.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())

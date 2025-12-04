@@ -3,12 +3,27 @@ import { Capacitor } from '@capacitor/core';
 
 const axiosInstance = axios.create({
   baseURL: Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080' : 'http://localhost:8080',
+  withCredentials: true, // ✅ CRÍTICO: Enviar cookies en TODAS las peticiones (para Web)
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para manejar respuestas de error en móvil
+// ⚠️ HYBRID STRATEGY: Interceptor REQUEST - Inyectar Bearer Token si existe (para Móvil)
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Si hay token manual (porque fallaron las cookies en móvil), úsalo
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Token Bearer inyectado en header Authorization');
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor RESPONSE - Manejar respuestas de error en móvil
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {

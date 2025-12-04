@@ -5,6 +5,7 @@ import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutWithCookies } from '../../../auth/logout';
+import axios from '../../../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 
 const isActivationKey = (key) => key === 'Enter' || key === ' ' || key === 'Spacebar';
 
@@ -43,9 +44,8 @@ const AvatarSelector = ({ showAvatarSelector, previewImage, tempData, availableA
 // Helper: obtiene sesión desde cookie (email, role)
 const getSession = async () => {
   try {
-    const r = await fetch('/api/auth/validate-token', { method: 'GET', credentials: 'include' });
-    if (!r.ok) return null;
-    const data = await r.json();
+    const response = await axios.get('/api/auth/validate-token', { withCredentials: true });
+    const data = response.data;
     return { email: data?.email ?? data?.data?.email, role: data?.role ?? data?.data?.role };
   } catch { return null; }
 };
@@ -53,15 +53,10 @@ const getSession = async () => {
 // Helper function for fetching 3FA status
 const fetch3FAStatus = async (setThirdFactorEnabled) => {
   try {
-    const response = await fetch('/api/users/profile', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+    const response = await axios.get('/api/users/profile', {
+      withCredentials: true
     });
-    if (response.ok) {
-      const data = await response.json();
-      setThirdFactorEnabled(data.thirdFactorEnabled);
-    }
+    setThirdFactorEnabled(response.data.thirdFactorEnabled);
   } catch (error) {
     console.error('Error al obtener el estado del 3FA:', error);
   }
@@ -93,16 +88,10 @@ const renderFormField = (label, name, value, isEditing, tempValue, handleInputCh
 /* ---------- Helpers añadidos para reducir complejidad ---------- */
 const getProfileFromBackend = async () => {
   try {
-    const res = await fetch('/api/users/profile', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+    const response = await axios.get('/api/users/profile', {
+      withCredentials: true
     });
-    if (!res.ok) {
-      console.error('Error al obtener el perfil:', res.status, res.statusText);
-      return null;
-    }
-    return await res.json();
+    return response.data;
   } catch (error) {
     console.error('Error al realizar la solicitud:', error);
     return null;
@@ -380,30 +369,22 @@ function UserProfilePage() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/users/editUser`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: tempData.name,
-          surname: tempData.surname,
-          alias: tempData.alias,
-          dateOfBirth: tempData.dateOfBirth,
-          picture: tempData.picture
-        })
+      const response = await axios.put('/api/users/editUser', {
+        name: tempData.name,
+        surname: tempData.surname,
+        alias: tempData.alias,
+        dateOfBirth: tempData.dateOfBirth,
+        picture: tempData.picture
+      }, {
+        withCredentials: true
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        showError(`Error al guardar los cambios: ${errorText}`);
-        return;
-      }
-      const updatedData = await response.json();
-      setProfileData(updatedData);
+      setProfileData(response.data);
       setIsEditing(false);
       showSuccess('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
-      showError('Ocurrió un error al guardar los cambios. Inténtalo de nuevo.');
+      const errorMsg = error.response?.data?.message || error.message || 'Ocurrió un error';
+      showError(`Error al guardar los cambios: ${errorMsg}`);
     }
   };
 
@@ -427,20 +408,9 @@ function UserProfilePage() {
         return;
       }
 
-      const res = await fetch(`/api/users/${encodeURIComponent(email)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      await axios.delete(`/api/users/${encodeURIComponent(email)}`, {
+        withCredentials: true
       });
-
-      if (!res.ok) {
-        let txt = '';
-        try { txt = await res.text(); } catch {}
-        showError(txt || 'Error al eliminar cuenta');
-        return;
-      }
 
       showSuccess('Cuenta eliminada. Redirigiendo...');
       setTimeout(() => logoutWithCookies('/', history), 1500);

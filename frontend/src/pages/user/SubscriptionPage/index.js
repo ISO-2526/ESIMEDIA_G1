@@ -5,6 +5,7 @@ import './SubscriptionPage.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
+import axios from '../../../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 
 function SubscriptionPage() {
   const history = useHistory();
@@ -46,20 +47,15 @@ function SubscriptionPage() {
 
   const loadSubscriptionData = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setSubscriptionData({
-          tipo: profileData.vip ? 'VIP' : 'NORMAL',
-          fechaInicioVIP: profileData.vipSince ? new Date(profileData.vipSince).toISOString().split('T')[0] : null,
-          beneficios: profileData.vip ? ['Acceso a contenido exclusivo'] : []
-        });
-      }
+      const profileData = response.data;
+      setSubscriptionData({
+        tipo: profileData.vip ? 'VIP' : 'NORMAL',
+        fechaInicioVIP: profileData.vipSince ? new Date(profileData.vipSince).toISOString().split('T')[0] : null,
+        beneficios: profileData.vip ? ['Acceso a contenido exclusivo'] : []
+      });
     } catch (error) {
       console.error('Error al cargar datos de suscripción:', error);
     }
@@ -70,27 +66,20 @@ function SubscriptionPage() {
       const email = localStorage.getItem('email');
       
       if (email) {
-        const response = await fetch('/api/users/profile', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'email': email
-          }
+        const response = await axios.get('/api/users/profile', {
+          withCredentials: true,
+          headers: { 'email': email }
         });
-
-        if (response.ok) {
-          const profileData = await response.json();
-          const updatedProfile = {
-            name: profileData.name,
-            surname: profileData.surname,
-            email: profileData.email,
-            alias: profileData.alias,
-            dateOfBirth: profileData.dateOfBirth,
-            picture: profileData.picture || '/pfp/avatar1.png'
-          };
-          setUserProfile(updatedProfile);
-        }
+        const profileData = response.data;
+        const updatedProfile = {
+          name: profileData.name,
+          surname: profileData.surname,
+          email: profileData.email,
+          alias: profileData.alias,
+          dateOfBirth: profileData.dateOfBirth,
+          picture: profileData.picture || '/pfp/avatar1.png'
+        };
+        setUserProfile(updatedProfile);
       }
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
@@ -112,44 +101,26 @@ function SubscriptionPage() {
     try {
       if (modalAction === 'upgrade') {
         // Upgrade to VIP
-        const response = await fetch('/api/users/vip/upgrade', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        await axios.post('/api/users/vip/upgrade', {}, {
+          withCredentials: true
         });
-
-        if (response.ok) {
-          setSubscriptionData({
-            ...subscriptionData,
-            tipo: 'VIP',
-            fechaInicioVIP: new Date().toISOString().split('T')[0]
-          });
-          showSuccess('¡Felicidades! Ahora eres un usuario VIP');
-        } else {
-          showSuccess('Error al actualizar tu suscripción. Por favor, intenta de nuevo.');
-        }
+        setSubscriptionData({
+          ...subscriptionData,
+          tipo: 'VIP',
+          fechaInicioVIP: new Date().toISOString().split('T')[0]
+        });
+        showSuccess('¡Felicidades! Ahora eres un usuario VIP');
       } else {
         // Downgrade to NORMAL and clean VIP content from playlists
-        const response = await fetch('/api/users/vip/downgrade', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        await axios.post('/api/users/vip/downgrade', {}, {
+          withCredentials: true
         });
-
-        if (response.ok) {
-          setSubscriptionData({
-            ...subscriptionData,
-            tipo: 'NORMAL',
-            fechaInicioVIP: null
-          });
-          showSuccess('Tu suscripción ha sido cancelada. Ahora eres un usuario normal');
-        } else {
-          showSuccess('Error al actualizar tu suscripción. Por favor, intenta de nuevo.');
-        }
+        setSubscriptionData({
+          ...subscriptionData,
+          tipo: 'NORMAL',
+          fechaInicioVIP: null
+        });
+        showSuccess('Tu suscripción ha sido cancelada. Ahora eres un usuario normal');
       }
     } catch (error) {
       console.error('Error updating subscription:', error);

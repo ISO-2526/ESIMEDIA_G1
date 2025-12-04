@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     CapacitorHttp: {
-      enabled: true
+      enabled: false  // ✅ Deshabilitar para que use XMLHttpRequest nativo (maneja cookies)
     },
     Keyboard: {
       resize: 'native',

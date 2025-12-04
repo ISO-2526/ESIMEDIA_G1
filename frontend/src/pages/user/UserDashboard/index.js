@@ -13,6 +13,7 @@ import './UserDashboard.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
+import axios from '../../../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 import {
   filterBySearch,
   filterByCategories,
@@ -293,25 +294,20 @@ function UserDashboard() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        const updatedProfile = {
-          name: profileData.name,
-          surname: profileData.surname,
-          email: profileData.email,
-          alias: profileData.alias,
-          dateOfBirth: profileData.dateOfBirth,
-          picture: profileData.picture || '/pfp/avatar1.png',
-          vip: profileData.vip || false
-        };
-        setUserProfile(updatedProfile);
-      }
+      const profileData = response.data;
+      const updatedProfile = {
+        name: profileData.name,
+        surname: profileData.surname,
+        email: profileData.email,
+        alias: profileData.alias,
+        dateOfBirth: profileData.dateOfBirth,
+        picture: profileData.picture || '/pfp/avatar1.png',
+        vip: profileData.vip || false
+      };
+      setUserProfile(updatedProfile);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -320,18 +316,12 @@ function UserDashboard() {
   const fetchContents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/public/contents');
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Datos recibidos del backend:', data);
-        const transformedContents = data.map(content => transformContent(content));
-        console.log('Contenidos transformados:', transformedContents);
-        setContents(transformedContents);
-      } else {
-        console.error('Error al cargar contenidos:', response.status);
-        showNotification('Error al cargar contenidos', 'error');
-      }
+      const response = await axios.get('/api/public/contents');
+      const data = response.data;
+      console.log('Datos recibidos del backend:', data);
+      const transformedContents = data.map(content => transformContent(content));
+      console.log('Contenidos transformados:', transformedContents);
+      setContents(transformedContents);
     } catch (error) {
       console.error('Error fetching contents:', error);
       showNotification('Error de conexión al cargar contenidos', 'error');
@@ -344,12 +334,8 @@ function UserDashboard() {
 
   const fetchPlaylists = async () => {
     try {
-      const response = await fetch('/api/playlists', { credentials: 'include' });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPlaylists(data);
-      }
+      const response = await axios.get('/api/playlists', { withCredentials: true });
+      setPlaylists(response.data);
     } catch (error) {
       console.error('Error fetching playlists:', error);
     }
@@ -357,12 +343,8 @@ function UserDashboard() {
 
   const fetchCreatorPlaylists = async () => {
     try {
-      const response = await fetch('/api/creator/playlists/public', { credentials: 'include' });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCreatorPlaylists(data);
-      }
+      const response = await axios.get('/api/creator/playlists/public', { withCredentials: true });
+      setCreatorPlaylists(response.data);
     } catch (error) {
       console.error('Error fetching creator playlists:', error);
     }

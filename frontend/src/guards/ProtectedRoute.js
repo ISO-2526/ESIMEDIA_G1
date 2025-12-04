@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Redirect } from 'react-router-dom';
 import useSessionTimeout from '../utils/useSessionTimeout';
+import axios from '../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null mientras se valida el token
@@ -12,20 +13,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        const response = await fetch('/api/auth/validate-token', {
-          method: 'GET',
-          credentials: 'include', // <-- envía cookies
+        console.log('🔐 Validando token desde ProtectedRoute...');
+        const response = await axios.get('/api/auth/validate-token', {
+          withCredentials: true
         });
-        if (response.ok) {
-          const data = await response.json();
-          const role = data?.role ?? data?.data?.role;
-          setUserRole(role);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
+        console.log('✅ Token válido:', response.data);
+        const role = response.data?.role ?? response.data?.data?.role;
+        setUserRole(role);
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Error al validar el token:', error);
+        console.error('❌ Error al validar el token:', error);
+        console.log('Error status:', error.response?.status);
         setIsAuthenticated(false);
       }
     };

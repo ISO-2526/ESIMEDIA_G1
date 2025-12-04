@@ -44,6 +44,12 @@ const Validate2FA = () => {
       console.log('✅ Validación 2FA exitosa:', response.data);
       const data = response.data;
 
+      // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
+      if (data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        console.log('🔑 Token guardado en localStorage para móvil');
+      }
+
       // Verificar si el usuario tiene activado el 3FA
       if (data.thirdFactorEnabled) {
         history.push("/validate-3fa", { 
