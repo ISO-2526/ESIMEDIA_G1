@@ -33,10 +33,15 @@ function LoginPage() {
       
       // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
       if (data.accessToken) {
-        localStorage.setItem('token', data.accessToken);
-        console.log('🔑 Token guardado en localStorage para móvil');
+        localStorage.setItem('access_token', data.accessToken);
+        console.log('🔑 Token guardado en localStorage:', data.accessToken);
+        console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
       }
       
+      // Pequeño delay para asegurar que localStorage se sincroniza
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🚀 Navegando a dashboard con role:', role);
       if (role === 'admin') history.push('/adminDashboard');
       else if (role === 'creator') history.push('/creator');
       else if (role === 'user') history.push('/usuario');

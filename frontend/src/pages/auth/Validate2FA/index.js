@@ -46,9 +46,13 @@ const Validate2FA = () => {
 
       // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
       if (data.accessToken) {
-        localStorage.setItem('token', data.accessToken);
-        console.log('🔑 Token guardado en localStorage para móvil');
+        localStorage.setItem('access_token', data.accessToken);
+        console.log('🔑 Token guardado en localStorage:', data.accessToken);
+        console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
       }
+
+      // ✅ Desactivar loading ANTES de navegar
+      setIsLoading(false);
 
       // Verificar si el usuario tiene activado el 3FA
       if (data.thirdFactorEnabled) {
@@ -59,7 +63,12 @@ const Validate2FA = () => {
         return;
       }
 
+      // Pequeño delay para asegurar que localStorage se sincroniza
+      // antes de que ProtectedRoute intente validar el token
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Redirigir según el rol
+      console.log('🚀 Navegando a dashboard con role:', data.role);
       if (data.role === "admin") {
         history.push("/adminDashboard");
       } else if (data.role === "creator") {
@@ -121,7 +130,6 @@ const Validate2FA = () => {
         
         setMessage(errorMsg);
       }
-    } finally {
       setIsLoading(false);
     }
   };

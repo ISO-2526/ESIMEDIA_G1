@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Redirect } from 'react-router-dom';
+import axios from '../api/axiosConfig';
 
 const ProtectedRouteAfterLogin = ({ children }) => {
   const [state, setState] = useState({ loading: true, role: null });
 
   useEffect(() => {
     let alive = true;
-    fetch('/api/auth/validate-token', { method: 'GET', credentials: 'include' })
-      .then(async (r) => {
+    axios.get('/api/auth/validate-token', { withCredentials: true })
+      .then((response) => {
         if (!alive) return;
-        if (r.ok) {
-          const data = await r.json();
-          setState({ loading: false, role: data?.role ?? data?.data?.role });
-        } else {
-          setState({ loading: false, role: null });
-        }
+        const data = response.data;
+        console.log('✅ ProtectedRouteAfterLogin - Token válido, role:', data?.role);
+        setState({ loading: false, role: data?.role ?? data?.data?.role });
       })
-      .catch(() => alive && setState({ loading: false, role: null }));
+      .catch((error) => {
+        console.log('⚠️ ProtectedRouteAfterLogin - No autenticado:', error.response?.status);
+        if (alive) setState({ loading: false, role: null });
+      });
     return () => { alive = false; };
   }, []);
 

@@ -386,17 +386,35 @@ public class AuthController {
 
     @GetMapping("/validate-token")
     public ResponseEntity<?> validateToken(
-            @CookieValue(value = "access_token", required = false) String tokenId) {
+            @CookieValue(value = "access_token", required = false) String cookieToken,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // ⚠️ HYBRID STRATEGY: Prioridad 1 - Header Bearer (Móvil), Prioridad 2 - Cookie (Web)
+        String tokenId = null;
+        
+        // 1. Intentar extraer del header Authorization (para móvil)
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenId = authHeader.substring(7);
+            System.out.println("✅ Validating token from Authorization header (mobile): " + tokenId);
+        }
+        // 2. Si no hay header, usar cookie (para web)
+        else if (cookieToken != null && !cookieToken.isBlank()) {
+            tokenId = cookieToken;
+            System.out.println("✅ Validating token from cookie (web): " + tokenId);
+        }
+        
         if (tokenId == null || tokenId.isBlank()) {
+            System.out.println("❌ No token found in header or cookie");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
         }
-        System.out.println("Validating token (cookie): " + tokenId);
 
         Token token = tokenRepository.findById(tokenId).orElse(null);
         if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
+            System.out.println("❌ Token invalid or expired: " + tokenId);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
         }
 
+        System.out.println("✅ Token validated successfully for: " + token.getAccountId());
         Map<String, Object> response = new HashMap<>();
         response.put("role", token.getRole());
         response.put("email", token.getAccountId());
