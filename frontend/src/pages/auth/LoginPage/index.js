@@ -82,9 +82,8 @@ function LoginPage() {
   return (
     <div className="page-container">
       <div className="animated-bg"></div>
-
       <div className="login-wrapper">
-        {/* Panel lateral informativo */}
+          {/* Panel lateral informativo */}
         <div className="info-panel">
           <div className="info-content">
             <h2 className="info-title">¡Bienvenido de vuelta!</h2>
