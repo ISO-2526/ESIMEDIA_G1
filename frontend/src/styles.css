@@ -477,17 +477,63 @@ ion-app > ion-router-outlet > div,
   display: block !important;
 }
 
-/* 3. OCULTAR LA BARRA DE SCROLL (SIN ROMPER LA FUNCIONALIDAD) */
-ion-router-outlet > *::-webkit-scrollbar,
+/* 3. OCULTAR LA BARRA DE SCROLL COMPLETAMENTE */
+/* Webkit (Chrome, Safari, Edge) - Desktop y Móvil */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+ion-app ::-webkit-scrollbar,
+ion-app *::-webkit-scrollbar,
+ion-router-outlet ::-webkit-scrollbar,
+ion-router-outlet *::-webkit-scrollbar,
 .ion-page::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
-ion-router-outlet > *,
+/* Firefox y IE */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+ion-app,
+ion-app *,
+ion-router-outlet,
+ion-router-outlet *,
 .ion-page {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Media Query específico para móviles */
+@media only screen and (max-width: 768px) {
+  /* Forzar ocultación en TODOS los elementos con scroll */
+  *::-webkit-scrollbar,
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+  
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  /* Asegurar que body, html y root no muestren scroll */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    display: none !important;
+  }
 }
 
 /* 4. NEUTRALIZAR .page-container */
