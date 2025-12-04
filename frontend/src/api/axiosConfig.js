@@ -8,4 +8,21 @@ const axiosInstance = axios.create({
   },
 });
 
+// Interceptor para manejar respuestas de error en móvil
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Si la respuesta es HTML en lugar de JSON, intentar parsear
+    if (error.response && typeof error.response.data === 'string' && error.response.data.includes('<!DOCTYPE')) {
+      console.warn('⚠️ Respuesta HTML detectada, convirtiendo a error JSON');
+      error.response.data = {
+        error: 'Error del servidor',
+        message: 'La respuesta del servidor no es válida',
+        status: error.response.status
+      };
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

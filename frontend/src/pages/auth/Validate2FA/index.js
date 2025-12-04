@@ -30,6 +30,8 @@ const Validate2FA = () => {
     setMessage("");
 
     try {
+      console.log('📱 Validando 2FA con:', { email, hasPassword: !!password, code });
+      
       // ✅ Enviar twoFactorCode (no "2fa_code")
       const response = await axios.post("/api/auth/login", {
         email,
@@ -39,6 +41,7 @@ const Validate2FA = () => {
         withCredentials: true
       });
 
+      console.log('✅ Validación 2FA exitosa:', response.data);
       const data = response.data;
 
       // Verificar si el usuario tiene activado el 3FA
@@ -62,16 +65,33 @@ const Validate2FA = () => {
       }
 
     } catch (error) {
-      console.error("Error en validación 2FA:", error);
+      console.error("❌ Error al validar el token:", error);
+      console.log('Error status:', error.response?.status);
+      console.log('Error data type:', typeof error.response?.data);
       
       // Si después del 2FA se requiere 3FA
       if (error.response?.status === 428) {
-        const responseData = error.response.data;
-        history.push("/validate-3fa", { 
-          email: responseData.email || email, 
-          role: responseData.role || role 
-        });
-        return;
+        try {
+          // Intentar parsear responseData de forma segura
+          let responseData = error.response.data;
+          
+          // Si data es string (HTML), no intentar parsearlo
+          if (typeof responseData === 'string') {
+            console.log('⚠️ Respuesta es HTML/texto, usando datos del state');
+            responseData = { email, role };
+          }
+          
+          console.log('🔐 Redirigiendo a 3FA con:', responseData);
+          history.push("/validate-3fa", { 
+            email: responseData.email || email, 
+            role: responseData.role || role 
+          });
+          return;
+        } catch (parseError) {
+          console.error('Error parseando respuesta 428:', parseError);
+          history.push("/validate-3fa", { email, role });
+          return;
+        }
       }
 
       // Errores de autenticación
@@ -80,9 +100,19 @@ const Validate2FA = () => {
       } else if (error.response?.status === 429) {
         setMessage("Demasiados intentos. Por favor, espera antes de intentar de nuevo.");
       } else {
-        const errorMsg = error.response?.data?.message || 
-                        error.response?.data?.error || 
-                        "Código incorrecto o sesión expirada";
+        // Manejar respuestas no-JSON de forma segura
+        let errorMsg = "Código incorrecto o sesión expirada";
+        
+        try {
+          if (error.response?.data && typeof error.response.data === 'object') {
+            errorMsg = error.response.data.message || 
+                      error.response.data.error || 
+                      errorMsg;
+          }
+        } catch (e) {
+          console.error('Error extrayendo mensaje:', e);
+        }
+        
         setMessage(errorMsg);
       }
     } finally {
