@@ -450,50 +450,95 @@ body {
    SOLUCIÓN SIMPLE Y FUNCIONAL
    ============================================ */
 
-/* 1. CREAR EL SCROLL EN EL LUGAR CORRECTO */
-ion-router-outlet > * {
+/* 1. FORZAR ALTURA Y ESTRUCTURA EN ION-APP */
+ion-app {
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+ion-app ion-router-outlet {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  contain: none !important;
+}
+
+/* 2. CREAR EL SCROLL EN EL LUGAR CORRECTO - SELECTOR MÚLTIPLE */
+ion-router-outlet > *,
+ion-router-outlet > .ion-page,
+ion-app > ion-router-outlet > div,
+.ion-page {
   height: 100% !important;
   overflow-y: scroll !important;
   overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch !important;
   position: relative !important;
+  display: block !important;
 }
 
-/* 2. OCULTAR LA BARRA DE SCROLL (SIN ROMPER LA FUNCIONALIDAD) */
-ion-router-outlet > *::-webkit-scrollbar {
-  display: none;
+/* 3. OCULTAR LA BARRA DE SCROLL (SIN ROMPER LA FUNCIONALIDAD) */
+ion-router-outlet > *::-webkit-scrollbar,
+.ion-page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
 }
 
-ion-router-outlet > * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE */
+ion-router-outlet > *,
+.ion-page {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE */
 }
 
-/* 3. NEUTRALIZAR .page-container */
-ion-router-outlet .page-container {
+/* 4. NEUTRALIZAR .page-container */
+ion-router-outlet .page-container,
+.ion-page .page-container,
+ion-app .page-container {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+  display: block !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+  padding-bottom: 120px !important;
+}
+
+/* 5. NEUTRALIZAR TODAS LAS PÁGINAS Y DASHBOARDS */
+ion-app [class*="-dashboard"],
+ion-app [class*="-page"],
+ion-app [class*="page-"] {
   height: auto !important;
   min-height: auto !important;
   overflow: visible !important;
   padding-bottom: 100px !important;
 }
 
-/* 4. NEUTRALIZAR DASHBOARDS */
-ion-router-outlet .user-dashboard,
-ion-router-outlet .admin-dashboard,
-ion-router-outlet .creator-dashboard {
-  height: auto !important;
+/* 6. NEUTRALIZAR CONTENEDORES Y WRAPPERS */
+ion-app .login-wrapper,
+ion-app .registro-wrapper,
+ion-app .form-panel,
+ion-app .info-panel,
+ion-app .content-wrapper,
+ion-app .main-content {
   min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
   overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
 }
 
-/* 5. FONDO ANIMADO */
-ion-router-outlet .animated-bg {
+/* 7. FONDO ANIMADO */
+ion-app .animated-bg {
   position: absolute !important;
 }
 
-/* 6. SCROLL AUTOMÁTICO PARA INPUTS CON TECLADO */
-ion-router-outlet input,
-ion-router-outlet textarea {
+/* 8. SCROLL AUTOMÁTICO PARA INPUTS CON TECLADO */
+ion-app input,
+ion-app textarea,
+ion-app select {
   scroll-margin-bottom: 150px;
 }
-
