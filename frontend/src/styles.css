@@ -445,79 +445,55 @@ body {
 }
 
 /* ============================================
-   PARCHE GLOBAL - IONIC/CAPACITOR COMPATIBILITY
+   FIX GLOBAL: SCROLL & TECLADO EN IONIC
    ============================================
-   
-   Este bloque neutraliza estilos conflictivos cuando
-   la app corre dentro de Ionic/Capacitor, permitiendo
-   que el sistema nativo de scroll y teclado funcione
-   correctamente sin tocar el código React.
+   SOLUCIÓN SIMPLE Y FUNCIONAL
    ============================================ */
 
-/* Detectar entorno Ionic/Capacitor */
-ion-app {
-  /* Resetear estilos globales que rompen el sistema de Ionic */
-  html, body {
-    height: auto !important;
-    min-height: 100% !important;
-    overflow: hidden !important; /* Ionic controla el overflow */
-  }
-  
-  body {
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-  
-  #root {
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-}
-
-/* Contenedores de página: eliminar scroll propio */
-ion-content .page-container {
-  position: relative !important;
-  min-height: auto !important;
-  height: auto !important;
-  overflow: visible !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-  -webkit-overflow-scrolling: auto !important;
-  padding-bottom: 80px !important; /* Espacio para el teclado */
-}
-
-/* Contenedores de formularios: fluir naturalmente */
-ion-content .form-container {
-  position: relative !important;
-  margin: 20px auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-/* IonContent: asegurar scroll nativo correcto */
-ion-content {
-  --keyboard-offset: 0px;
-  --offset-bottom: auto !important;
-}
-
-/* Elementos interactivos: asegurar visibilidad con teclado */
-ion-content input,
-ion-content textarea,
-ion-content select,
-ion-content .input-field,
-ion-content .form-group {
-  scroll-margin-bottom: 120px; /* Margen automático al hacer focus */
-}
-
-/* Prevenir bounce scroll en iOS */
-ion-content::part(scroll) {
-  overscroll-behavior-y: contain;
-}
-
-/* Ajuste adicional para formularios dentro de IonContent */
-ion-content .animated-bg {
-  position: absolute !important; /* Cambiar de fixed a absolute */
+/* 1. CREAR EL SCROLL EN EL LUGAR CORRECTO */
+ion-router-outlet > * {
   height: 100% !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  position: relative !important;
+}
+
+/* 2. OCULTAR LA BARRA DE SCROLL (SIN ROMPER LA FUNCIONALIDAD) */
+ion-router-outlet > *::-webkit-scrollbar {
+  display: none;
+}
+
+ion-router-outlet > * {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE */
+}
+
+/* 3. NEUTRALIZAR .page-container */
+ion-router-outlet .page-container {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  padding-bottom: 100px !important;
+}
+
+/* 4. NEUTRALIZAR DASHBOARDS */
+ion-router-outlet .user-dashboard,
+ion-router-outlet .admin-dashboard,
+ion-router-outlet .creator-dashboard {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+/* 5. FONDO ANIMADO */
+ion-router-outlet .animated-bg {
+  position: absolute !important;
+}
+
+/* 6. SCROLL AUTOMÁTICO PARA INPUTS CON TECLADO */
+ion-router-outlet input,
+ion-router-outlet textarea {
+  scroll-margin-bottom: 150px;
 }
 
