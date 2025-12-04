@@ -3,6 +3,7 @@ package grupo1.esimedia.controller;
 import grupo1.esimedia.Content.service.ContentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/views")
-@CrossOrigin(origins = "*")
+@PreAuthorize("hasRole('USER')")
 public class ViewCountController {
 
     @Autowired

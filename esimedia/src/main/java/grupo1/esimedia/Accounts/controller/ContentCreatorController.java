@@ -1,9 +1,7 @@
 package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.service.ContentCreatorService;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Content.model.Content;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/creators")

@@ -2,10 +2,8 @@ package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,7 +20,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/creator/playlists")
-@CrossOrigin(origins = "http://localhost:3000")
 public class CreatorPlaylistController {
 
     private static final String OWNER_TYPE_CREATOR = "CREATOR";
@@ -31,12 +28,10 @@ public class CreatorPlaylistController {
 
     private final PlaylistRepository playlistRepository;
     private final ContentCreatorRepository contentCreatorRepository;
-    private final TokenRepository tokenRepository;
 
-    public CreatorPlaylistController(PlaylistRepository playlistRepository, ContentCreatorRepository contentCreatorRepository, TokenRepository tokenRepository) {
+    public CreatorPlaylistController(PlaylistRepository playlistRepository, ContentCreatorRepository contentCreatorRepository) {
         this.playlistRepository = playlistRepository;
         this.contentCreatorRepository = contentCreatorRepository;
-        this.tokenRepository = tokenRepository;
     }
 
     private Optional<String> getCreatorAlias(String email) {
@@ -49,6 +44,7 @@ public class CreatorPlaylistController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<List<Playlist>> myCreatorPlaylists() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();

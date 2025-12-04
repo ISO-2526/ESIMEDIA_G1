@@ -2,11 +2,9 @@ package grupo1.esimedia.Accounts.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDateTime;
-import jakarta.servlet.http.Cookie;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import grupo1.esimedia.Accounts.model.Token;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +25,6 @@ import grupo1.esimedia.Accounts.model.Admin;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
 import grupo1.esimedia.utils.PasswordUtils;

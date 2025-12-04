@@ -1,9 +1,7 @@
 package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.Content;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.PublicContentRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -11,18 +9,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contents")
 public class PublicContentController {
 
     private final PublicContentRepository contentRepository;
-    private final TokenRepository tokenRepository;
 
-    public PublicContentController(PublicContentRepository contentRepository, TokenRepository tokenRepository) {
+    public PublicContentController(PublicContentRepository contentRepository) {
         this.contentRepository = contentRepository;
-        this.tokenRepository = tokenRepository;
     }
 
     // Get all active contents
@@ -59,10 +54,6 @@ public class PublicContentController {
     public ResponseEntity<Content> createContent(@RequestBody Content content) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        String role = auth.getAuthorities().stream()
-                .findFirst()
-                .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
-                .orElse("user");
 
         content.setCreatorEmail(email);
         content.setCreatedAt(LocalDateTime.now());

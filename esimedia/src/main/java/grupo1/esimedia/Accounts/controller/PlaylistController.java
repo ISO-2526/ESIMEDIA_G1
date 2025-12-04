@@ -8,13 +8,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 
 @RestController
 @RequestMapping("/api/playlists")
@@ -22,11 +19,9 @@ import grupo1.esimedia.Accounts.repository.TokenRepository;
 public class PlaylistController {
 
     private final PlaylistRepository playlistRepository;
-    private final TokenRepository tokenRepository;
 
-    public PlaylistController(PlaylistRepository playlistRepository, TokenRepository tokenRepository) {
+    public PlaylistController(PlaylistRepository playlistRepository) {
         this.playlistRepository = playlistRepository;
-        this.tokenRepository = tokenRepository;
     }
 
     // Get all playlists for a user

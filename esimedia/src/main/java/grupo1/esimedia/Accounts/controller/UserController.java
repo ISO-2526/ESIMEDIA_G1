@@ -2,12 +2,10 @@ package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.User;
 import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.service.EmailService;
 import grupo1.esimedia.utils.PasswordUtils;
 import grupo1.esimedia.Accounts.dto.request.CreateUserRequestDTO;
@@ -20,7 +18,6 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.List;
 import java.time.LocalDateTime;
-import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,8 +59,6 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private TokenRepository tokenRepository;
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequestDTO dto) {
