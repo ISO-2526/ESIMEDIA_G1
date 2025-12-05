@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.model.Admin;
@@ -16,28 +17,31 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 @SpringBootApplication
+@EnableScheduling
 public class EsimediaApplication {
 
-	private static final Logger log = LoggerFactory.getLogger(EsimediaApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(EsimediaApplication.class);
 
-	public static void main(String[] args) {
-		SpringApplication.run(EsimediaApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(EsimediaApplication.class, args);
+    }
 
     @Bean
     public CommandLineRunner ensureDefaultAdmin(AdminRepository adminRepository, PasswordUtils passwordUtils) {
         return args -> {
             long count = adminRepository.count();
             if (count == 0) {
-                
+
                 // ✅ USAR PasswordUtils con SHA-256 + bcrypt + pepper
                 String plainPassword = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_PASSWORD")).orElse("admin123");
                 String hashedPassword = passwordUtils.hashPassword(plainPassword);
-                
-                String email = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_EMAIL")).orElse("admin@esimedia.local");
+
+                String email = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_EMAIL"))
+                        .orElse("admin@esimedia.local");
                 String name = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_NAME")).orElse("System");
                 String surname = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_SURNAME")).orElse("Administrator");
-                String dept = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_DEPARTMENT")).orElse("CUSTOMER_SUPPORT");
+                String dept = Optional.ofNullable(System.getenv("ESIMEDIA_ADMIN_DEPARTMENT"))
+                        .orElse("CUSTOMER_SUPPORT");
 
                 Admin a = new Admin();
                 a.setEmail(email);

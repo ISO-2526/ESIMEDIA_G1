@@ -15,6 +15,7 @@ public class Notification {
     private boolean read = false;
     private LocalDateTime createdAt;
     private String relatedContentId; // ID of the content that triggered the notification
+    private String notificationType; // "NEW_CONTENT", "EXPIRING_SOON", etc.
 
     public Notification() {
         this.createdAt = LocalDateTime.now();
@@ -26,6 +27,16 @@ public class Notification {
         this.relatedContentId = relatedContentId;
         this.createdAt = LocalDateTime.now();
         this.read = false;
+        this.notificationType = "NEW_CONTENT";
+    }
+
+    public Notification(String userId, String message, String relatedContentId, String notificationType) {
+        this.userId = userId;
+        this.message = message;
+        this.relatedContentId = relatedContentId;
+        this.createdAt = LocalDateTime.now();
+        this.read = false;
+        this.notificationType = notificationType;
     }
 
     // Getters and Setters
@@ -75,5 +86,13 @@ public class Notification {
 
     public void setRelatedContentId(String relatedContentId) {
         this.relatedContentId = relatedContentId;
+    }
+
+    public String getNotificationType() {
+        return notificationType;
+    }
+
+    public void setNotificationType(String notificationType) {
+        this.notificationType = notificationType;
     }
 }
