@@ -34,6 +34,8 @@ import DarAltaCuenta from './pages/admin/DarAltaCuenta';
 
 // General Pages
 import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/errors/NotFoundPage';
+import ForbiddenPage from './pages/errors/ForbiddenPage';
 
 // Guards
 import ProtectedRoute from './guards/ProtectedRoute';
@@ -150,6 +152,11 @@ function App() {
             <DarAltaCuenta />
           </ProtectedRoute>
         } />
+
+        {/* Rutas de Error */}
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/404" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

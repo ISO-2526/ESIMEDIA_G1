@@ -8,6 +8,7 @@ import ContentFilters from '../../../components/ContentFilters';
 import AddToPlaylistModal from '../../../components/AddToPlaylistModal';
 import VipUpgradeModal from '../../../components/VipUpgradeModal';
 import CreatorPlaylistCard from '../../../components/CreatorPlaylistCard';
+import NotificationBell from '../../../components/NotificationBell/NotificationBell';
 import logo from '../../../resources/esimedialogo.png';
 import './UserDashboard.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -41,7 +42,8 @@ function DashboardHeader({
   handleLogout,
   showUserMenu,
   setShowUserMenu,
-  handleFiltersChange
+  handleFiltersChange,
+  userId
 }) {
   return (
     <header className="dashboard-header">
@@ -107,6 +109,14 @@ function DashboardHeader({
             />
             <i className="fas fa-search search-icon-dashboard"></i>
           </div>
+
+          {userId && (
+            <>
+              {console.log('[DashboardHeader] Rendering NotificationBell with userId:', userId)}
+              <NotificationBell userId={userId} />
+            </>
+          )}
+          {!userId && console.log('[DashboardHeader] userId is null/undefined')}
 
           <div className="user-menu-container">
             <div
@@ -272,7 +282,7 @@ function UserDashboard() {
     minRating: 0
   });
   const [activeTab, setActiveTab] = useState('all');
-  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+  const [userProfile, setUserProfile] = useState({ id: null, picture: '/pfp/avatar1.png', vip: false });
   const [showVipModal, setShowVipModal] = useState(false);
   const [selectedVipContent, setSelectedVipContent] = useState(null);
 
@@ -302,6 +312,7 @@ function UserDashboard() {
       if (response.ok) {
         const profileData = await response.json();
         const updatedProfile = {
+          id: profileData.email,
           name: profileData.name,
           surname: profileData.surname,
           email: profileData.email,
@@ -493,6 +504,7 @@ function UserDashboard() {
         showUserMenu={showUserMenu}
         setShowUserMenu={setShowUserMenu}
         handleFiltersChange={handleFiltersChange}
+        userId={userProfile.id}
       />
 
       <HeroSection

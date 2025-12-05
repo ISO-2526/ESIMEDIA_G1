@@ -6,6 +6,7 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutWithCookies } from '../../../auth/logout';
 import { TAGS } from '../../../creator/components/constants';
+import NotificationBell from '../../../components/NotificationBell/NotificationBell';
 
 const isActivationKey = (key) => key === 'Enter' || key === ' ' || key === 'Spacebar';
 
@@ -136,7 +137,7 @@ const activateOrDeactivate3FA = async ({ email, activate }) => {
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
-const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout }) => (
+const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout, userId }) => (
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
@@ -154,6 +155,7 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
         <Link to="/suscripcion">Suscripción</Link>
       </nav>
       <div className="header-right">
+        {userId && <NotificationBell userId={userId} />}
         <div className="user-menu-container">
           <div
             className="user-avatar-profile"
@@ -332,7 +334,7 @@ function UserProfilePage() {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [thirdFactorEnabled, setThirdFactorEnabled] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [userProfile, setUserProfile] = useState({ vip: false });
+  const [userProfile, setUserProfile] = useState({ id: null, vip: false });
 
   const availableAvatars = [
     '/pfp/avatar1.png', '/pfp/avatar2.png', '/pfp/avatar3.png', '/pfp/avatar4.png', '/pfp/avatar5.png',
@@ -340,7 +342,7 @@ function UserProfilePage() {
   ];
 
   const [profileData, setProfileData] = useState({
-    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', preferences: []
+    id: null, name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', preferences: []
   });
   const [tempData, setTempData] = useState({ ...profileData });
   const [previewImage, setPreviewImage] = useState(null);
@@ -358,7 +360,7 @@ function UserProfilePage() {
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({ vip: data.vip || false });
+        setUserProfile({ id: data.email, vip: data.vip || false });
       }
     })();
   }, []);
@@ -501,6 +503,7 @@ function UserProfilePage() {
         onToggleMenu={() => setShowUserMenu(s => !s)}
         showUserMenu={showUserMenu}
         logout={() => logoutWithCookies('/login', navigate)}
+        userId={profileData.id}
       />
 
       <div className="profile-container">
