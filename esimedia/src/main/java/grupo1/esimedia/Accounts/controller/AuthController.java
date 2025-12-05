@@ -412,10 +412,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
         }
 
-        System.out.println("✅ Token validated successfully for: " + token.getAccountId());
+        // Obtener role y email del token
+        String accountId = token.getAccountId();
+        String role = token.getRole();
+        
+        System.out.println("✅ Token validated successfully for: " + accountId);
         Map<String, Object> response = new HashMap<>();
         response.put("role", role);
-        response.put("email", email);
+        response.put("email", accountId);
         return ResponseEntity.ok(response);
     }
 
