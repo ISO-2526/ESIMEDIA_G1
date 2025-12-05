@@ -13,6 +13,8 @@ export const handleLogout = async (redirect = '/login', navigateFn) => {
     console.error('Error al cerrar sesión:', e);
   } finally {
     try {
+      // ⚠️ HYBRID STRATEGY: Limpiar access_token usado por móvil
+      localStorage.removeItem('access_token');
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('session');

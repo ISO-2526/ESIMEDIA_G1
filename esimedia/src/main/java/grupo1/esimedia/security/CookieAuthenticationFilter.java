@@ -57,16 +57,25 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         log.debug("🔐 CookieAuthenticationFilter - Processing: {}", path);
 
-        // 1. Extraer token de la cookie
-        String tokenId = extractTokenFromCookie(request);
+        // ⚠️ HYBRID STRATEGY: Prioridad 1 - Header Authorization (Móvil), Prioridad 2 - Cookie (Web)
+        String tokenId = null;
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenId = authHeader.substring(7);
+            log.debug("🔑 Token extracted from Authorization header (mobile): {}", tokenId);
+        } else {
+            tokenId = extractTokenFromCookie(request);
+            if (tokenId != null) {
+                log.debug("🔑 Token extracted from cookie (web): {}", tokenId);
+            }
+        }
         
         if (tokenId == null || tokenId.isBlank()) {
-            log.debug("❌ No token found in cookies for path: {}", path);
+            log.debug("❌ No token found in Authorization header or cookies for path: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
-
-        log.debug("🔑 Token found: {}", tokenId);
 
         // 2. Validar token en la base de datos
         Token token = tokenRepository.findById(tokenId).orElse(null);
