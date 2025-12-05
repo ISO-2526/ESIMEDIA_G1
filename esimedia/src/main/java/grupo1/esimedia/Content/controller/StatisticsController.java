@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/creator/statistics")
-@CrossOrigin(origins = "http://localhost:3000")
 public class StatisticsController {
 
     private final StatisticsService statisticsService;

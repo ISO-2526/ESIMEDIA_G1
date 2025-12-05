@@ -2,8 +2,7 @@ package grupo1.esimedia.Content.controller;
 
 import grupo1.esimedia.Accounts.model.ContentType;
 import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
+
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Content.service.ContentService;
@@ -11,6 +10,9 @@ import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
 import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
@@ -21,17 +23,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/creator/contents")
-@CrossOrigin(origins = "http://localhost:3000")
+@PreAuthorize("hasAnyRole('ADMIN', 'CREATOR')")
 public class CreatorContentController {
 
     private final ContentService service;
-    private final TokenRepository tokenRepository;
     private final ContentCreatorRepository creatorRepository;
 
-    public CreatorContentController(ContentService service, TokenRepository tokenRepository,
+    public CreatorContentController(ContentService service,
             ContentCreatorRepository creatorRepository) {
         this.service = service;
-        this.tokenRepository = tokenRepository;
         this.creatorRepository = creatorRepository;
     }
 
@@ -46,10 +46,10 @@ public class CreatorContentController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Object> create(
-            @CookieValue(value = "access_token", required = false) String tokenId,
             @Valid @RequestBody CreateContentRequestDTO req) {
-        ContentType actorType = resolveContentTypeFromToken(tokenId);
+        ContentType actorType = resolveContentTypeFromToken();
         try {
             Content saved = service.create(req, actorType);
             return ResponseEntity.created(URI.create("/api/creator/contents/" + saved.getId())).body(saved);
@@ -60,10 +60,10 @@ public class CreatorContentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Object> update(@PathVariable String id,
-            @CookieValue(value = "access_token", required = false) String tokenId,
             @Valid @RequestBody UpdateContentRequestDTO req) {
-        ContentType actorType = resolveContentTypeFromToken(tokenId);
+        ContentType actorType = resolveContentTypeFromToken();
         try {
             var opt = service.update(id, req, actorType);
             if (opt.isPresent()) {
@@ -77,9 +77,9 @@ public class CreatorContentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable String id,
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        ContentType actorContentType = resolveContentTypeFromToken(tokenId);
+    @PreAuthorize("hasRole('CREATOR')")
+    public ResponseEntity<Object> delete(@PathVariable String id) {
+        ContentType actorContentType = resolveContentTypeFromToken();
         return service.findById(id)
                 .map(existing -> {
                     if (actorContentType == null) {
@@ -101,15 +101,9 @@ public class CreatorContentController {
                         .body((Object) java.util.Map.of("message", "No encontrado", "status", 404)));
     }
 
-    private ContentType resolveContentTypeFromToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank())
-            return null;
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null)
-            return null;
-        String accountId = token.getAccountId();
-        if (accountId == null)
-            return null;
+    private ContentType resolveContentTypeFromToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String accountId = authentication.getName();
         ContentCreator creator = creatorRepository.findById(accountId).orElse(null);
         if (creator == null)
             return null;

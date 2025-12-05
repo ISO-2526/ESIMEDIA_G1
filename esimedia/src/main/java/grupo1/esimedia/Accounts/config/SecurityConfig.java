@@ -2,69 +2,75 @@ package grupo1.esimedia.Accounts.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import grupo1.esimedia.security.CookieAuthenticationFilter;
+import grupo1.esimedia.security.SessionTimeoutFilter;
+
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    private final SessionTimeoutFilter sessionTimeoutFilter; 
+    private final CookieAuthenticationFilter cookieAuthenticationFilter;
+
+    public SecurityConfig(
+            SessionTimeoutFilter sessionTimeoutFilter,
+            CookieAuthenticationFilter cookieAuthenticationFilter) {
+        this.sessionTimeoutFilter = sessionTimeoutFilter;
+        this.cookieAuthenticationFilter = cookieAuthenticationFilter;
+    }
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // ✅ Configurar CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .authorizeHttpRequests(auth -> auth
+            // Endpoints públicos
+            .requestMatchers(
+                "/api/auth/login",
+                "/api/auth/register",
+                "/api/auth/recover",
+                "/api/auth/reset-password",
+                "/api/auth/validate-reset-token",
+                "/api/auth/2fa/setup",
+                "/api/auth/send-3fa-code",
+                "/api/auth/verify-3fa-code",
+                "/api/auth/validate-token", // ✅ Añadir esto como público
+                "/api/auth/logout"          // ✅ Y esto también
+            ).permitAll()
             
-            // ✅ Desactivar CSRF (vital para que el login funcione)
-            .csrf(AbstractHttpConfigurer::disable)
+            .requestMatchers("/api/public/**", "/health", "/actuator/**").permitAll()
             
-            // ✅ Configurar gestión de sesión como STATELESS
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            
-            // ✅ Configurar autorización de peticiones
-            .authorizeHttpRequests(auth -> auth
-                // Permitir acceso público a endpoints de autenticación
-                .requestMatchers(
-                    "/api/auth/login",
-                    "/api/auth/register",
-                    "/api/auth/recover",
-                    "/api/auth/reset-password",
-                    "/api/auth/validate-reset-token",
-                    "/api/auth/2fa/setup",
-                    "/api/auth/send-3fa-code",
-                    "/api/auth/verify-3fa-code",
-                    "/api/auth/validate-token"
-                ).permitAll()
-                
-                // Permitir acceso a recursos públicos (si los tienes)
-                .requestMatchers(
-                    "/api/public/**",
-                    "/health",
-                    "/actuator/**"
-                ).permitAll()
-                
-                // Todas las demás peticiones requieren autenticación
-                .anyRequest().authenticated()
-            );
-        
-        return http.build();
-    }
-
+            // Todos los demás endpoints requieren autenticación
+            .anyRequest().authenticated()
+        )
+        // ✅ ORDEN IMPORTANTE: CookieAuth ANTES de SessionTimeout
+        .addFilterBefore(cookieAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(sessionTimeoutFilter, CookieAuthenticationFilter.class);
+    
+    return http.build();
+}
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

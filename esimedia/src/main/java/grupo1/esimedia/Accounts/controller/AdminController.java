@@ -2,14 +2,13 @@ package grupo1.esimedia.Accounts.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDateTime;
-import jakarta.servlet.http.Cookie;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import grupo1.esimedia.Accounts.model.Token;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,13 +25,13 @@ import grupo1.esimedia.Accounts.model.Admin;
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
 import grupo1.esimedia.utils.PasswordUtils;
 
 @RestController
 @RequestMapping("/api/admins")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
     
     @Autowired
@@ -43,9 +42,7 @@ public class AdminController {
     
     @Autowired
     private UserRepository userRepository;
-    
-    @Autowired
-    private TokenRepository tokenRepository;
+
     
     @Autowired
     private TwoFactorAuthService twoFactorAuthService;
@@ -60,30 +57,9 @@ public class AdminController {
         this.twoFactorAuthService = twoFactorAuthService;
     }
 
-    // Implementación que faltaba
-    private boolean isRequestAdmin(HttpServletRequest req) {
-		String tokenId = null;
-		if (req.getCookies() != null) {
-			for (Cookie c : req.getCookies()) {
-				if ("access_token".equals(c.getName())) {
-					tokenId = c.getValue();
-					break;
-				}
-			}
-		}
-		if (tokenId == null || tokenId.isBlank()) return false;
-
-		Token token = tokenRepository.findById(tokenId).orElse(null);
-		if (token == null) return false;
-		if (token.getExpiration() == null || token.getExpiration().isBefore(LocalDateTime.now())) return false;
-
-		return "admin".equals(token.getRole());
-	}
-
     @PostMapping(path = "/admin", consumes = "application/json")
     public ResponseEntity<?> createAdmin(@Valid @RequestBody CreateAdminRequestDTO adminDTO, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
-        
+
         if (adminRepository.existsById(adminDTO.getEmail()) ||
             userRepository.existsById(adminDTO.getEmail()) ||
             contentCreatorRepository.existsById(adminDTO.getEmail())) {
@@ -111,8 +87,7 @@ public class AdminController {
     
     @PostMapping(path = "/creator", consumes = "application/json")
     public ResponseEntity<?> createContentCreator(@Valid @RequestBody CreateCreatorRequestDTO creatorDTO, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
-        
+
         if (contentCreatorRepository.existsById(creatorDTO.getEmail()) ||
             adminRepository.existsById(creatorDTO.getEmail()) ||
             userRepository.existsById(creatorDTO.getEmail())) {
@@ -144,7 +119,6 @@ public class AdminController {
     
     @GetMapping(path = "/admins", produces = "application/json")
     public ResponseEntity<List<Admin>> getAllAdmins(HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
         List<Admin> admins = adminRepository.findAll();
         for (Admin a : admins) { if (a != null) a.setPassword(null); }
         return ResponseEntity.ok(admins);
@@ -152,7 +126,6 @@ public class AdminController {
 
     @GetMapping(path = "/creators", produces = "application/json")
     public ResponseEntity<List<ContentCreator>> getAllContentCreators(HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
         List<ContentCreator> creators = contentCreatorRepository.findAll();
         for (ContentCreator c : creators) { if (c != null) c.setPassword(null); }
         return ResponseEntity.ok(creators);
@@ -160,7 +133,6 @@ public class AdminController {
 
     @GetMapping(path = "/{email:.+}", produces = "application/json")
     public ResponseEntity<Admin> getAdminByEmail(@PathVariable String email, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
         var opt = adminRepository.findById(email);
         if (opt.isEmpty()) {
             for (Admin a : adminRepository.findAll()) {
@@ -172,7 +144,6 @@ public class AdminController {
 
     @PutMapping(path = "/{email:.+}/active", consumes = "application/json")
     public ResponseEntity<?> setAdminActive(@PathVariable String email, @Valid @RequestBody SetActiveRequestDTO body, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
 
         var adminOpt = findAdminByEmailCaseInsensitive(email);
         
@@ -200,7 +171,6 @@ public class AdminController {
 
     @DeleteMapping(path = "/{email:.+}")
     public ResponseEntity<?> deleteAdmin(@PathVariable String email, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
         var adminOpt = adminRepository.findById(email);
         if (adminOpt.isEmpty()) {
             for (Admin a : adminRepository.findAll()) {
@@ -218,7 +188,6 @@ public class AdminController {
 
     @GetMapping(path = "/creators/{email:.+}", produces = "application/json")
     public ResponseEntity<ContentCreator> getCreatorByEmail(@PathVariable String email, HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
         var opt = contentCreatorRepository.findById(email);
         if (opt.isEmpty()) {
             for (ContentCreator c : contentCreatorRepository.findAll()) {
@@ -230,7 +199,6 @@ public class AdminController {
 
 	@PutMapping(path = "/creators/{email:.+}/active", consumes = "application/json")
 	public ResponseEntity<?> setCreatorActive(@PathVariable String email, @Valid @RequestBody SetActiveRequestDTO body, HttpServletRequest req) {
-		if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
 
 		var opt = contentCreatorRepository.findById(email);
 		if (opt.isEmpty()) {
@@ -248,7 +216,6 @@ public class AdminController {
 
 	@DeleteMapping(path = "/creators/{email:.+}")
 	public ResponseEntity<?> deleteCreator(@PathVariable String email, HttpServletRequest req) {
-		if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
 		var opt = contentCreatorRepository.findById(email);
 		if (opt.isEmpty()) {
 			for (ContentCreator c : contentCreatorRepository.findAll()) {
@@ -264,7 +231,6 @@ public class AdminController {
     public ResponseEntity<?> updateAdmin(@PathVariable String email,
                                          @RequestBody Map<String, Object> body,
                                          HttpServletRequest req) {
-        if (!isRequestAdmin(req)) return ResponseEntity.status(401).build();
 
         var adminOpt = findAdminByEmailCaseInsensitive(email);
         if (adminOpt.isEmpty()) return ResponseEntity.status(404).build();

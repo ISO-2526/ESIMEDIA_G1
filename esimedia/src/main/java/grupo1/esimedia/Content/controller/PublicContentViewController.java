@@ -6,6 +6,7 @@ import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
 import grupo1.esimedia.service.RatingService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public/contents")
-@CrossOrigin(origins = "http://localhost:3000")
+@PreAuthorize("permitAll()") // ✅ Público - cualquiera puede ver contenidos
 public class PublicContentViewController {
 
     private final CreatorContentRepository contentRepository;

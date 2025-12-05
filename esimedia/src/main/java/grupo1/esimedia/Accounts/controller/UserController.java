@@ -2,12 +2,10 @@ package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.User;
 import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.service.EmailService;
 import grupo1.esimedia.utils.PasswordUtils;
 import grupo1.esimedia.Accounts.dto.request.CreateUserRequestDTO;
@@ -20,11 +18,13 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.List;
 import java.time.LocalDateTime;
-import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.google.zxing.BarcodeFormat;
@@ -59,8 +59,6 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private TokenRepository tokenRepository;
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequestDTO dto) {
@@ -106,6 +104,7 @@ public class UserController {
     }
 
     @GetMapping(path = "", produces = "application/json")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = userRepository.findAll().stream()
             .map(this::toUserResponseDTO)
@@ -114,25 +113,16 @@ public class UserController {
     }
 
     @GetMapping(path = "/{email:.+}", produces = "application/json")
-    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email, @CookieValue(value = "access_token", required = false) String tokenId) {
-        // permitir solo admin vía token cookie
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) {
-            return ResponseEntity.status(401).build();
-        }
-        var opt = userRepository.findById(email);
-        if (opt.isEmpty()) {
-            for (User u : userRepository.findAll()) {
-                if (u.getEmail() != null && u.getEmail().equalsIgnoreCase(email)) { opt = java.util.Optional.of(u); break; }
-            }
-        }
-        return opt.map(u -> ResponseEntity.ok(toUserResponseDTO(u))).orElse(ResponseEntity.status(404).build());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        var opt = findUserByEmail(email);
+        return opt.map(u -> ResponseEntity.ok(toUserResponseDTO(u)))
+                .orElse(ResponseEntity.status(404).build());
     }
 
     @PutMapping(path = "/{email:.+}/active", consumes = "application/json")
-    public ResponseEntity<?> setUserActive(@PathVariable String email, @RequestBody Map<String, Object> body, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) return ResponseEntity.status(401).build();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> setUserActive(@PathVariable String email, @RequestBody Map<String, Object> body) {
         Object activeObj = body.get("active");
         if (activeObj == null) return ResponseEntity.badRequest().body("Missing 'active' field");
         final boolean active = (activeObj instanceof Boolean) ? (Boolean) activeObj : Boolean.parseBoolean(activeObj.toString());
@@ -150,11 +140,9 @@ public class UserController {
     }
 
     @PutMapping(path = "/{email:.+}", consumes = "application/json")
-    public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody Map<String, Object> body, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) {
-            return ResponseEntity.status(401).build();
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody Map<String, Object> body) {
+
 
         var opt = findUserByEmail(email);
         
@@ -167,10 +155,10 @@ public class UserController {
 
     // Get user favorites
     @GetMapping(path = "/favorites", produces = "application/json")
-    public ResponseEntity<List<String>> getUserFavorites(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<String>> getUserFavorites() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -188,10 +176,11 @@ public class UserController {
 
     // Add content to favorites
     @PostMapping(path = "/favorites/{contentId}")
-    public ResponseEntity<?> addToFavorites(@PathVariable String contentId, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+        @PreAuthorize("hasRole('USER')")
+
+    public ResponseEntity<?> addToFavorites(@PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -224,10 +213,10 @@ public class UserController {
 
     // Remove content from favorites
     @DeleteMapping(path = "/favorites/{contentId}")
-    public ResponseEntity<?> removeFromFavorites(@PathVariable String contentId, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> removeFromFavorites(@PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -280,11 +269,10 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
@@ -293,11 +281,10 @@ public class UserController {
     }
 
     @PutMapping("/editUser")
-    public ResponseEntity<?> editUser(@CookieValue(value = "access_token", required = false) String tokenId, @RequestBody User updatedUser) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> editUser(@RequestBody User updatedUser) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
@@ -361,14 +348,7 @@ public class UserController {
         }
     }
 
-    // Helpers y endpoints finales (asegurar que existen en el archivo)
-    private Token requireValidToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) return null;
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null) return null;
-        if (token.getExpiration() == null || token.getExpiration().isBefore(LocalDateTime.now())) return null;
-        return token;
-    }
+
 
     private java.util.Optional<User> findUserByEmail(String email) {
         var opt = userRepository.findById(email);
@@ -409,6 +389,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{email:.+}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable String email) {
         var opt = findUserByEmail(email);
         return opt.map(existing -> {
@@ -418,11 +399,10 @@ public class UserController {
     }
 
     @PostMapping("/vip/upgrade")
-    public ResponseEntity<?> upgradeToVip(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> upgradeToVip() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
@@ -436,11 +416,10 @@ public class UserController {
     }
 
     @PostMapping("/vip/downgrade")
-    public ResponseEntity<?> downgradeFromVip(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> downgradeFromVip() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
