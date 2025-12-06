@@ -487,6 +487,7 @@ function UserDashboard() {
           onFiltersChange={handleFiltersChange}
           showSearch={true}
           showFilters={true}
+          showNotifications={false}
         />
       ) : (
         <DashboardHeader

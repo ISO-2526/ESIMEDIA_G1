@@ -17,8 +17,19 @@ function SubscriptionPage() {
   const [modalAction, setModalAction] = useState(''); // 'upgrade' o 'downgrade'
   const [scrolled, setScrolled] = useState(false);
   const [userProfile, setUserProfile] = useState({
-    picture: '/pfp/avatar1.png'
+    picture: '/pfp/avatar1.png',
+    vip: false
   });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
   
   // Datos de suscripción del usuario (simulados)
   const [subscriptionData, setSubscriptionData] = useState({
@@ -79,7 +90,8 @@ function SubscriptionPage() {
           email: profileData.email,
           alias: profileData.alias,
           dateOfBirth: profileData.dateOfBirth,
-          picture: profileData.picture || '/pfp/avatar1.png'
+          picture: getImageUrl(profileData.picture),
+          vip: profileData.vip || false
         };
         setUserProfile(updatedProfile);
       }
@@ -154,6 +166,7 @@ function SubscriptionPage() {
           handleLogout={handleLogout}
           showSearch={false}
           showFilters={false}
+          showNotifications={true}
         />
       ) : (
       <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>

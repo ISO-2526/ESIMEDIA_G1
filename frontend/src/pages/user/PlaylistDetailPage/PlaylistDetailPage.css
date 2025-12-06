@@ -7,7 +7,7 @@
 
 .floating-back-button {
   position: fixed;
-  top: max(24px, calc(24px + env(safe-area-inset-top)));
+  top: max(90px, calc(90px + env(safe-area-inset-top)));
   left: 24px;
   z-index: 100;
   background: rgba(24, 24, 24, 0.7);

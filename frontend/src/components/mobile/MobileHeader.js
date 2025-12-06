@@ -6,6 +6,7 @@ import {
 import { 
   searchOutline, 
   filterOutline,
+  notificationsOutline,
   listOutline,
   cardOutline,
   logOutOutline,
@@ -25,17 +26,19 @@ const MobileHeader = ({
   currentFilters,
   onFiltersChange,
   showSearch: showSearchProp = false, // Mostrar búsqueda (opcional)
-  showFilters: showFiltersProp = false // Mostrar filtros (opcional)
+  showFilters: showFiltersProp = false, // Mostrar filtros (opcional)
+  showNotifications: showNotificationsProp = true // Mostrar notificaciones (opcional, por defecto true)
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const history = useHistory();
 
   // Prevenir scroll cuando se abren los menus
   React.useEffect(() => {
-    if (isMenuOpen || isFilterOpen) {
+    if (isMenuOpen || isFilterOpen || isNotificationsOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
@@ -49,7 +52,7 @@ const MobileHeader = ({
       document.body.style.position = '';
       document.body.style.width = '';
     };
-  }, [isMenuOpen, isFilterOpen]);
+  }, [isMenuOpen, isFilterOpen, isNotificationsOpen]);
 
   return (
     <div className={`mobile-header-ionic ${showSearch ? 'search-expanded' : ''}`}>
@@ -108,9 +111,25 @@ const MobileHeader = ({
               onClick={() => {
                 setIsFilterOpen(!isFilterOpen);
                 setIsMenuOpen(false);
+                setIsNotificationsOpen(false);
               }}
             >
               <IonIcon icon={filterOutline} />
+            </button>
+          )}
+
+          {/* Notificaciones - solo si showNotificationsProp es true y búsqueda no está activa */}
+          {showNotificationsProp && !showSearch && (
+            <button 
+              id="notifications-menu-trigger"
+              className="mobile-icon-btn"
+              onClick={() => {
+                setIsNotificationsOpen(!isNotificationsOpen);
+                setIsMenuOpen(false);
+                setIsFilterOpen(false);
+              }}
+            >
+              <IonIcon icon={notificationsOutline} />
             </button>
           )}
 
@@ -122,6 +141,7 @@ const MobileHeader = ({
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
                 setIsFilterOpen(false);
+                setIsNotificationsOpen(false);
               }}
             >
               <div className="mobile-avatar">
@@ -210,6 +230,32 @@ const MobileHeader = ({
             <IonIcon icon={logOutOutline} />
             <span>Cerrar Sesión</span>
           </button>
+        </div>
+      </IonPopover>
+
+      {/* Popover de notificaciones */}
+      <IonPopover
+        trigger="notifications-menu-trigger"
+        reference="trigger"
+        side="bottom"
+        alignment="end"
+        isOpen={isNotificationsOpen}
+        onDidDismiss={() => setIsNotificationsOpen(false)}
+        arrow={false}
+        className="notifications-popover"
+      >
+        <div className="notifications-content">
+          <div className="notifications-header">
+            <h3>Notificaciones</h3>
+          </div>
+          <div className="notifications-list">
+            {/* Mensaje cuando no hay notificaciones */}
+            <div className="no-notifications">
+              <IonIcon icon={notificationsOutline} />
+              <p>No tienes notificaciones nuevas</p>
+            </div>
+            {/* Aquí se cargarán las notificaciones dinámicamente */}
+          </div>
         </div>
       </IonPopover>
 

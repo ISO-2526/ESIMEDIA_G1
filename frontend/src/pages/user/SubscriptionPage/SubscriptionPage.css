@@ -10,6 +10,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Mobile: Padding para el MobileHeader */
+@media (max-width: 768px) {
+  .subscription-page {
+    padding-top: max(100px, calc(100px + env(safe-area-inset-top)));
+  }
+}
+
 .subscription-page::before {
   content: '';
   position: fixed;

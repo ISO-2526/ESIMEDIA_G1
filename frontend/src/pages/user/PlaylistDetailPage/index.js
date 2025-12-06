@@ -23,6 +23,16 @@ function PlaylistDetailPage() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
 
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
+
   const handleLogout = async () => {
     await logoutCsrf('/login', history);
   };
@@ -55,6 +65,7 @@ function PlaylistDetailPage() {
       if (response.ok) {
         const profileData = await response.json();
         setUserProfile({
+          picture: getImageUrl(profileData.picture),
           vip: profileData.vip || false
         });
       }
@@ -369,6 +380,7 @@ function PlaylistDetailPage() {
           handleLogout={handleLogout}
           showSearch={false}
           showFilters={false}
+          showNotifications={true}
         />
       )}
       <button 

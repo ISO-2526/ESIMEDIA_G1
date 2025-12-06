@@ -17,7 +17,17 @@ function PlaylistsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistDescription, setNewPlaylistDescription] = useState('');
-  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png' });
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
 
   const handleLogout = async () => {
     await logoutCsrf('/login', history);
@@ -26,7 +36,28 @@ function PlaylistsPage() {
   useEffect(() => {
     console.log('PlaylistsPage montada o actualizada - recargando datos');
     fetchPlaylists();
+    loadUserProfile();
   }, [location.key]); // Se ejecuta cada vez que cambia la navegación
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const profileData = await response.json();
+        setUserProfile({
+          picture: getImageUrl(profileData.picture),
+          vip: profileData.vip || false
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar el perfil del usuario:', error);
+    }
+  };
 
   const fetchPlaylists = async () => {
     try {
@@ -118,6 +149,7 @@ function PlaylistsPage() {
           handleLogout={handleLogout}
           showSearch={false}
           showFilters={false}
+          showNotifications={true}
         />
       )}
       <div className="playlists-header">
