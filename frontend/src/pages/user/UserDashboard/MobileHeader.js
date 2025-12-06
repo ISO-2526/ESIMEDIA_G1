@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   IonIcon,
-  IonSearchbar,
   IonPopover,
   IonList,
   IonItem,
@@ -13,7 +12,8 @@ import {
   personCircleOutline,
   listOutline,
   cardOutline,
-  logOutOutline
+  logOutOutline,
+  closeOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import logo from '../../../resources/esimedialogo.png';
@@ -38,21 +38,38 @@ const MobileHeader = ({
           </div>
         )}
 
-        {/* Buscador expandible */}
+        {/* Buscador expandible - SOLUCIÓN PÍLDORA COMPLETA */}
         {showSearch ? (
-          <IonSearchbar
-            mode="md"
-            value={searchQuery}
-            onIonChange={e => setSearchQuery(e.detail.value)}
-            onIonBlur={() => {
-              if (!searchQuery) setShowSearch(false);
-            }}
-            placeholder="Buscar contenido..."
-            className="mobile-searchbar"
-            animated
-            autoFocus
-            showCancelButton="never"
-          />
+          <div className="mobile-searchbar-container">
+            {/* Icono de búsqueda */}
+            <div className="mobile-search-icon">
+              <IonIcon icon={searchOutline} />
+            </div>
+            
+            {/* Input nativo - flex: 1 ocupa todo el espacio */}
+            <input
+              type="search"
+              className="mobile-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => {
+                if (!searchQuery) setShowSearch(false);
+              }}
+              placeholder="Buscar contenido..."
+              autoFocus
+            />
+            
+            {/* Botón X - Solo visible si hay texto */}
+            {searchQuery && (
+              <button 
+                className="mobile-clear-button"
+                onClick={() => setSearchQuery('')}
+                type="button"
+              >
+                <IonIcon icon={closeOutline} />
+              </button>
+            )}
+          </div>
         ) : null}
 
         {/* Botones de acción */}

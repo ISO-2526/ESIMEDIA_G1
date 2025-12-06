@@ -43,90 +43,88 @@
   cursor: pointer;
 }
 
-/* Buscador expandible - ANDROID MATERIAL DESIGN OPTIMIZADO */
-.mobile-searchbar {
-  /* Variables CSS de Ionic - Glassmorphism Android */
-  --background: rgba(18, 18, 18, 0.75) !important;
-  --color: #F5F6F3 !important;
-  --placeholder-color: rgba(245, 246, 243, 0.5) !important;
-  --placeholder-opacity: 1 !important;
-  --icon-color: #4F56BA !important;
-  --clear-button-color: #F5F6F3 !important;
-  --box-shadow: none !important;
-  --cancel-button-color: #F5F6F3 !important;
-  
-  /* Estilos del contenedor - Android First */
-  border: none !important;
-  border-radius: 24px !important;
-  margin: 0 !important;
-  flex: 1 !important;
-  max-width: none !important;
-  height: 48px !important;
-  min-height: 48px !important;
+/* BARRA DE BÚSQUEDA PÍLDORA - SOLUCIÓN COMPLETA FLEXBOX */
+.mobile-searchbar-container {
+  display: flex;
+  align-items: center;
+  background: rgba(18, 18, 18, 0.75);
+  border-radius: 24px;
+  height: 48px;
+  padding: 0 16px;
+  gap: 12px;
+  flex: 1;
+  max-width: none;
   animation: searchExpand 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Fondo oscuro glassmorphism */
-  background: rgba(18, 18, 18, 0.75) !important;
-  box-shadow: none !important;
 }
 
-/* Contenedor nativo del searchbar - Material Design Android */
-.mobile-searchbar::part(native) {
-  background: rgba(18, 18, 18, 0.75) !important;
-  border-radius: 24px !important;
-  padding: 0 16px !important;
-  height: 48px !important;
-  min-height: 48px !important;
-  border: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  outline: none !important;
-  elevation: 0 !important;
+/* Icono de búsqueda (lupa) */
+.mobile-search-icon {
+  color: #4F56BA;
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Input de texto - DESTRUIR ESTILOS NATIVOS */
-.mobile-searchbar::part(input) {
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #F5F6F3 !important;
-  font-size: 17px !important;
-  font-weight: 500 !important;
-  padding-left: 8px !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
-  outline: none !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
+/* Input nativo - Ocupa todo el espacio disponible */
+.mobile-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
 }
 
-/* Icono de búsqueda (lupa) - TRANSPARENTE */
-.mobile-searchbar::part(icon) {
-  color: #4F56BA !important;
-  opacity: 1 !important;
-  background: transparent !important;
-  background-color: transparent !important;
+.mobile-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
 }
 
-/* Botón de cerrar (X) - TRANSPARENTE */
-.mobile-searchbar::part(clear-button) {
-  color: #F5F6F3 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  opacity: 0.9 !important;
-  width: 36px !important;
-  height: 36px !important;
-  font-size: 20px !important;
-  border: none !important;
-  box-shadow: none !important;
-  -webkit-box-shadow: none !important;
+/* Ocultar la 'X' nativa de Chrome/Android */
+.mobile-search-input::-webkit-search-cancel-button,
+.mobile-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
-.mobile-searchbar::part(clear-button):active {
-  opacity: 1 !important;
-  transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.1) !important;
+/* Botón X para borrar - Solo visible cuando hay texto */
+.mobile-clear-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.mobile-clear-button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-clear-button:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mobile-clear-button ion-icon {
+  font-size: 20px;
 }
 
 @keyframes searchExpand {
