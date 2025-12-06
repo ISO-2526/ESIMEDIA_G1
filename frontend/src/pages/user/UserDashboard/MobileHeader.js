@@ -32,6 +32,24 @@ const MobileHeader = ({
   const [imageError, setImageError] = useState(false);
   const history = useHistory();
 
+  // Prevenir scroll cuando se abren los menus
+  React.useEffect(() => {
+    if (isMenuOpen || isFilterOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isMenuOpen, isFilterOpen]);
+
   return (
     <div className={`mobile-header-ionic ${showSearch ? 'search-expanded' : ''}`}>
       <div className="mobile-toolbar">
@@ -90,7 +108,7 @@ const MobileHeader = ({
             id="filter-menu-trigger"
             className="mobile-icon-btn"
             onClick={() => {
-              setIsFilterOpen(true);
+              setIsFilterOpen(!isFilterOpen);
               setIsMenuOpen(false);
             }}
           >
