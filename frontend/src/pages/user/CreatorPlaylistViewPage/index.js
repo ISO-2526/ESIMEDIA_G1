@@ -32,7 +32,7 @@ function CreatorPlaylistViewPage() {
   };
 
   const handleLogout = async () => {
-    await logoutCsrf('/login', history);
+    await logoutCsrf('/', history);
   };
 
   const loadUserProfile = async () => {

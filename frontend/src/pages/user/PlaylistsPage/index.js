@@ -30,7 +30,7 @@ function PlaylistsPage() {
   };
 
   const handleLogout = async () => {
-    await logoutCsrf('/login', history);
+    await logoutCsrf('/', history);
   };
 
   useEffect(() => {

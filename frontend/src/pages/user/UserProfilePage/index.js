@@ -475,7 +475,7 @@ function UserProfilePage() {
       {Capacitor.isNativePlatform() ? (
         <MobileHeader
           userProfile={userProfile}
-          handleLogout={() => logoutWithCookies('/login', history)}
+          handleLogout={() => logoutWithCookies('/', history)}
           showSearch={false}
           showFilters={false}
           showNotifications={true}
@@ -487,7 +487,7 @@ function UserProfilePage() {
           vip={userProfile.vip}
           onToggleMenu={() => setShowUserMenu(s => !s)}
           showUserMenu={showUserMenu}
-          logout={() => logoutWithCookies('/login', history)}
+          logout={() => logoutWithCookies('/', history)}
         />
       )}
 

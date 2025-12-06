@@ -18,6 +18,12 @@ export const handleLogout = async (redirect = '/login', navigateFn) => {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('session');
+      
+      // 🍪 Eliminar cookies explícitamente (importante para localhost en móvil)
+      // Establecer cookies con valor vacío y fecha de expiración en el pasado
+      document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'JSESSIONID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     } catch {}
     if (navigateFn) {
       navigateFn.push(redirect);
