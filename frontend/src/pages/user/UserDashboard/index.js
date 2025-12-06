@@ -483,6 +483,8 @@ function UserDashboard() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           handleLogout={handleLogout}
+          currentFilters={filters}
+          onFiltersChange={handleFiltersChange}
         />
       ) : (
         <DashboardHeader

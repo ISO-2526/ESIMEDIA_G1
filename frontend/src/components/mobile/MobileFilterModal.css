@@ -1,0 +1,237 @@
+/* Mobile Filter Modal - Glassmorphism Dark Theme */
+
+ion-modal.mobile-filter-modal {
+  --background: #1e1e1e;
+  --border-radius: 20px 20px 0 0;
+}
+
+ion-modal.mobile-filter-modal ion-content {
+  --background: #1e1e1e;
+}
+
+/* Header */
+.modal-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(79, 86, 186, 0.2);
+}
+
+.modal-toolbar {
+  --background: transparent;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --min-height: 60px;
+}
+
+.modal-title {
+  color: #F5F6F3;
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-icon {
+  color: #4F56BA;
+  font-size: 24px;
+}
+
+.modal-close-btn {
+  --color: #F5F6F3;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.modal-close-btn ion-icon {
+  font-size: 28px;
+}
+
+/* Content */
+.modal-content {
+  --background: transparent;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 20px;
+  --padding-bottom: 90px;
+}
+
+/* Filter Sections */
+.filter-section {
+  margin-bottom: 32px;
+}
+
+.filter-section-title {
+  color: #F5F6F3;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-section-title ion-icon {
+  color: #4F56BA;
+  font-size: 20px;
+}
+
+/* Chips Container */
+.filter-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Filter Chips */
+.filter-chip {
+  --background: rgba(41, 43, 38, 0.8);
+  --color: rgba(245, 246, 243, 0.9);
+  border: 1px solid rgba(79, 86, 186, 0.2);
+  border-radius: 20px;
+  height: 40px;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-chip ion-icon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.filter-chip ion-label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.filter-chip.selected {
+  --background: rgba(79, 86, 186, 0.3);
+  --color: #FAED5C;
+  border: 1px solid #4F56BA;
+  box-shadow: 0 0 12px rgba(79, 86, 186, 0.4);
+}
+
+.filter-chip.selected .check-icon {
+  color: #FAED5C;
+  font-size: 18px;
+  margin-left: 4px;
+}
+
+.filter-chip:active {
+  transform: scale(0.95);
+}
+
+/* Range Items */
+.range-item {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  margin-top: 8px;
+}
+
+.range-label {
+  color: #F5F6F3;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Range Sliders */
+.year-range,
+.duration-range,
+.rating-range {
+  --bar-background: rgba(79, 86, 186, 0.2);
+  --bar-background-active: #4F56BA;
+  --bar-height: 4px;
+  --bar-border-radius: 2px;
+  --knob-background: #FAED5C;
+  --knob-size: 24px;
+  --knob-box-shadow: 0 3px 12px rgba(250, 237, 92, 0.5);
+  --pin-background: #4F56BA;
+  --pin-color: #ffffff;
+  padding: 20px 0;
+}
+
+/* Action Buttons */
+.filter-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: rgba(18, 18, 18, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(79, 86, 186, 0.2);
+  display: flex;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.clear-button {
+  --background: transparent;
+  --background-hover: rgba(255, 255, 255, 0.05);
+  --background-activated: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(79, 86, 186, 0.5);
+  --border-width: 2px;
+  --color: #F5F6F3;
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.apply-button {
+  --background: linear-gradient(135deg, #4F56BA 0%, #6B73E0 100%);
+  --background-hover: linear-gradient(135deg, #5B62C6 0%, #7880E8 100%);
+  --background-activated: linear-gradient(135deg, #434A9E 0%, #5F67D4 100%);
+  --color: #ffffff;
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+  flex: 2;
+  box-shadow: 0 4px 16px rgba(79, 86, 186, 0.4);
+}
+
+.clear-button ion-icon,
+.apply-button ion-icon {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+/* Scrollbar Styling */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(41, 43, 38, 0.3);
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(79, 86, 186, 0.5);
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 86, 186, 0.7);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  .filter-chip {
+    height: 36px;
+    font-size: 13px;
+  }
+  
+  .filter-section-title {
+    font-size: 15px;
+  }
+  
+  .modal-title {
+    font-size: 18px;
+  }
+}

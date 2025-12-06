@@ -207,6 +207,22 @@
   object-fit: cover;
 }
 
+/* Avatar Placeholder - Fallback cuando no hay imagen */
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F56BA 0%, #3a417d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder ion-icon {
+  font-size: 20px;
+  color: #ffffff;
+}
+
 .vip-badge-mobile {
   position: absolute;
   top: -6px;
@@ -228,15 +244,45 @@
   font-size: 11px;
 }
 
-/* Popovers - Estilo ESIMEDIA */
-.user-menu-popover,
+/* Popovers - Estilo ESIMEDIA - FORZADO ABSOLUTO */
+.user-menu-popover {
+  --width: 220px !important;
+  --min-width: 200px !important;
+  --max-width: 90% !important;
+  --background: rgba(41, 43, 38, 0.95) !important;
+  --backdrop-opacity: 0 !important;
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  --border-radius: 12px !important;
+}
+
+/* FORZAR posición en la parte superior derecha */
+.user-menu-popover::part(backdrop) {
+  display: none !important;
+}
+
+.user-menu-popover::part(content) {
+  position: fixed !important;
+  top: calc(66px + env(safe-area-inset-top)) !important; /* Justo debajo del header */
+  right: 15px !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 220px !important;
+  max-width: 90vw !important;
+  transform: none !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(41, 43, 38, 0.95);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
 .filters-popover {
   --background: rgba(41, 43, 38, 0.98);
   --backdrop-opacity: 0.6;
   --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.user-menu-popover::part(content),
 .filters-popover::part(content) {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -244,13 +290,73 @@
   border-radius: 12px;
 }
 
-.user-menu-popover ion-list,
+.user-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.user-menu-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.user-menu-button:active {
+  transform: scale(0.97);
+  background: rgba(79, 86, 186, 0.3);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.user-menu-button ion-icon {
+  color: #4F56BA;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.user-menu-button span {
+  flex: 1;
+  text-align: left;
+}
+
+/* Botón de logout con color especial */
+.logout-button {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.3);
+  margin-top: 4px;
+}
+
+.logout-button:active {
+  background: rgba(255, 68, 68, 0.25);
+  border-color: rgba(255, 68, 68, 0.5);
+}
+
+.logout-button ion-icon {
+  color: #ff4444;
+}
+
+.logout-button span {
+  color: #ff4444;
+}
+
 .filters-popover ion-list {
   background: transparent;
   padding: 12px 0;
 }
 
-.user-menu-popover ion-item,
 .filters-popover ion-item {
   --background: transparent;
   --color: #F5F6F3;
@@ -262,17 +368,14 @@
   cursor: pointer;
 }
 
-.user-menu-popover ion-item::part(native),
 .filters-popover ion-item::part(native) {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.user-menu-popover ion-item:active,
 .filters-popover ion-item:active {
   --background: rgba(79, 86, 186, 0.2);
 }
 
-.user-menu-popover ion-icon,
 .filters-popover ion-icon {
   color: #4F56BA;
   font-size: 22px;
