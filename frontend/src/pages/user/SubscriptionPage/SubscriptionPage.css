@@ -38,6 +38,7 @@
   width: 96%;
   background: rgba(18, 18, 18, 0.7);
   padding: 12px 40px;
+  padding-top: max(12px, calc(12px + env(safe-area-inset-top)));
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(15px) saturate(150%);
@@ -50,6 +51,7 @@
 .subscription-page .profile-header.scrolled {
   background: rgba(18, 18, 18, 0.85);
   padding: 10px 40px;
+  padding-top: max(10px, calc(10px + env(safe-area-inset-top)));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);

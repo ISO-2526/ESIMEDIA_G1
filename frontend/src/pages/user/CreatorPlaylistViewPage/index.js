@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
+import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -16,6 +19,11 @@ function CreatorPlaylistViewPage() {
   const [contents, setContents] = useState([]);
   const [allContents, setAllContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png' });
+
+  const handleLogout = async () => {
+    await logoutCsrf('/login', history);
+  };
   const [sortBy, setSortBy] = useState('addedDate');
   const [selectedContent, setSelectedContent] = useState(null);
   const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
@@ -247,6 +255,14 @@ function CreatorPlaylistViewPage() {
 
   return (
     <div className="playlist-detail-page">
+      {Capacitor.isNativePlatform() && (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+        />
+      )}
       <button className="floating-back-button" onClick={() => history.push('/usuario')}>
         <i className="fas fa-arrow-left"></i>
       </button>

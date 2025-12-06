@@ -9,7 +9,7 @@ import ContentFilters from '../../../components/ContentFilters';
 import AddToPlaylistModal from '../../../components/AddToPlaylistModal';
 import VipUpgradeModal from '../../../components/VipUpgradeModal';
 import CreatorPlaylistCard from '../../../components/CreatorPlaylistCard';
-import MobileHeader from './MobileHeader'; // 📱 Componente móvil nativo
+import MobileHeader from '../../../components/mobile/MobileHeader'; // 📱 Componente móvil nativo
 import logo from '../../../resources/esimedialogo.png';
 import './UserDashboard.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -485,6 +485,8 @@ function UserDashboard() {
           handleLogout={handleLogout}
           currentFilters={filters}
           onFiltersChange={handleFiltersChange}
+          showSearch={true}
+          showFilters={true}
         />
       ) : (
         <DashboardHeader

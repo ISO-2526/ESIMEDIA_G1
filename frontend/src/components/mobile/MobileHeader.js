@@ -5,8 +5,7 @@ import {
 } from '@ionic/react';
 import { 
   searchOutline, 
-  filterOutline, 
-  personCircleOutline,
+  filterOutline,
   listOutline,
   cardOutline,
   logOutOutline,
@@ -14,8 +13,8 @@ import {
   person
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import MobileFilterModal from '../../../components/mobile/MobileFilterModal';
-import logo from '../../../resources/esimedialogo.png';
+import MobileFilterModal from './MobileFilterModal';
+import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
 
 const MobileHeader = ({ 
@@ -24,7 +23,9 @@ const MobileHeader = ({
   setSearchQuery,
   handleLogout,
   currentFilters,
-  onFiltersChange
+  onFiltersChange,
+  showSearch: showSearchProp = false, // Mostrar búsqueda (opcional)
+  showFilters: showFiltersProp = false // Mostrar filtros (opcional)
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -60,33 +61,29 @@ const MobileHeader = ({
           </div>
         )}
 
-        {/* Buscador expandible - SOLUCIÓN PÍLDORA COMPLETA */}
-        {showSearch ? (
+        {/* Buscador expandible - solo si showSearchProp es true */}
+        {showSearchProp && showSearch ? (
           <div className="mobile-searchbar-container">
             {/* Icono de búsqueda */}
             <div className="mobile-search-icon">
               <IonIcon icon={searchOutline} />
             </div>
-            
-            {/* Input nativo - flex: 1 ocupa todo el espacio */}
+
+            {/* Input nativo */}
             <input
-              type="search"
+              type="text"
               className="mobile-search-input"
+              placeholder="Buscar contenido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onBlur={() => {
-                if (!searchQuery) setShowSearch(false);
-              }}
-              placeholder="Buscar contenido..."
               autoFocus
             />
-            
-            {/* Botón X - Solo visible si hay texto */}
+
+            {/* Botón cerrar búsqueda */}
             {searchQuery && (
-              <button 
-                className="mobile-clear-button"
+              <button
+                className="mobile-search-clear"
                 onClick={() => setSearchQuery('')}
-                type="button"
               >
                 <IonIcon icon={closeOutline} />
               </button>
@@ -96,24 +93,26 @@ const MobileHeader = ({
 
         {/* Botones de acción */}
         <div className="mobile-action-buttons">
-          {/* Búsqueda */}
-          {!showSearch && (
+          {/* Búsqueda - solo si showSearchProp es true */}
+          {showSearchProp && !showSearch && (
             <button className="mobile-icon-btn" onClick={() => setShowSearch(true)}>
               <IonIcon icon={searchOutline} />
             </button>
           )}
 
-          {/* Filtros - siempre visible */}
-          <button 
-            id="filter-menu-trigger"
-            className="mobile-icon-btn"
-            onClick={() => {
-              setIsFilterOpen(!isFilterOpen);
-              setIsMenuOpen(false);
-            }}
-          >
-            <IonIcon icon={filterOutline} />
-          </button>
+          {/* Filtros - solo si showFiltersProp es true */}
+          {showFiltersProp && (
+            <button 
+              id="filter-menu-trigger"
+              className="mobile-icon-btn"
+              onClick={() => {
+                setIsFilterOpen(!isFilterOpen);
+                setIsMenuOpen(false);
+              }}
+            >
+              <IonIcon icon={filterOutline} />
+            </button>
+          )}
 
           {/* Avatar con menú - se oculta cuando búsqueda está activa */}
           {!showSearch && (
@@ -126,10 +125,10 @@ const MobileHeader = ({
               }}
             >
               <div className="mobile-avatar">
-                {userProfile.picture && !imageError ? (
+                {userProfile?.picture && !imageError ? (
                   <img 
                     src={userProfile.picture} 
-                    alt="Perfil"
+                    alt="Avatar" 
                     onError={() => setImageError(true)}
                   />
                 ) : (
@@ -137,83 +136,92 @@ const MobileHeader = ({
                     <IonIcon icon={person} />
                   </div>
                 )}
-                {userProfile.vip && (
-                  <div className="vip-badge-mobile">
-                    <i className="fas fa-crown"></i>
-                  </div>
-                )}
               </div>
             </button>
           )}
-        </div>
 
-        {/* Modal de Filtros Avanzados */}
+          {/* Botón para cerrar búsqueda */}
+          {showSearchProp && showSearch && (
+            <button
+              className="mobile-icon-btn"
+              onClick={() => {
+                setShowSearch(false);
+                setSearchQuery('');
+              }}
+            >
+              <IonIcon icon={closeOutline} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Popover del menú de usuario */}
+      <IonPopover
+        trigger="user-menu-trigger"
+        reference="trigger"
+        side="bottom"
+        alignment="end"
+        isOpen={isMenuOpen}
+        onDidDismiss={() => setIsMenuOpen(false)}
+        arrow={false}
+        className="user-menu-popover"
+      >
+        <div className="user-menu-content">
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              history.push('/perfil');
+            }}
+          >
+            <IonIcon icon={person} />
+            <span>Mi Perfil</span>
+          </button>
+
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              history.push('/playlists');
+            }}
+          >
+            <IonIcon icon={listOutline} />
+            <span>Mis Listas</span>
+          </button>
+
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              history.push('/suscripcion');
+            }}
+          >
+            <IonIcon icon={cardOutline} />
+            <span>Suscripción</span>
+          </button>
+
+          <button
+            className="user-menu-button logout-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleLogout();
+            }}
+          >
+            <IonIcon icon={logOutOutline} />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </IonPopover>
+
+      {/* Modal de filtros - solo si showFiltersProp es true */}
+      {showFiltersProp && (
         <MobileFilterModal
           isOpen={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
           currentFilters={currentFilters}
           onApplyFilters={onFiltersChange}
         />
-
-        {/* Popover de Usuario */}
-        <IonPopover 
-          trigger="user-menu-trigger"
-          reference="trigger"
-          side="bottom"
-          alignment="end"
-          isOpen={isMenuOpen}
-          onDidDismiss={() => setIsMenuOpen(false)}
-          arrow={false}
-          className="user-menu-popover"
-        >
-          <div className="user-menu-content">
-            <button 
-              className="user-menu-button"
-              onClick={() => { 
-                setIsMenuOpen(false);
-                history.push('/perfil'); 
-              }}
-            >
-              <IonIcon icon={personCircleOutline} />
-              <span>Mi Perfil</span>
-            </button>
-            
-            <button 
-              className="user-menu-button"
-              onClick={() => { 
-                setIsMenuOpen(false);
-                history.push('/playlists'); 
-              }}
-            >
-              <IonIcon icon={listOutline} />
-              <span>Mis Listas</span>
-            </button>
-            
-            <button 
-              className="user-menu-button"
-              onClick={() => { 
-                setIsMenuOpen(false);
-                history.push('/suscripcion'); 
-              }}
-            >
-              <IonIcon icon={cardOutline} />
-              <span>Suscripción</span>
-            </button>
-            
-            <button 
-              className="user-menu-button logout-button"
-              onClick={() => {
-                setIsMenuOpen(false);
-                handleLogout();
-              }}
-            >
-              <IonIcon icon={logOutOutline} />
-              <span>Cerrar Sesión</span>
-            </button>
-          </div>
-        </IonPopover>
-
-      </div>
+      )}
     </div>
   );
 };

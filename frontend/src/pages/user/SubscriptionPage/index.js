@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './SubscriptionPage.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -146,6 +148,14 @@ function SubscriptionPage() {
       <div className="animated-bg"></div>
       
       {/* Header */}
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+        />
+      ) : (
       <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
           <div className="header-left">
@@ -235,6 +245,7 @@ function SubscriptionPage() {
           </div>
         </div>
       </header>
+      )}
       
       <div className="subscription-container">
         <div className="subscription-box">

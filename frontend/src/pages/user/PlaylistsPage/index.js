@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
+import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import PlaylistCard from '../../../components/PlaylistCard';
 import './PlaylistsPage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -14,6 +17,11 @@ function PlaylistsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistDescription, setNewPlaylistDescription] = useState('');
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png' });
+
+  const handleLogout = async () => {
+    await logoutCsrf('/login', history);
+  };
 
   useEffect(() => {
     console.log('PlaylistsPage montada o actualizada - recargando datos');
@@ -104,6 +112,14 @@ function PlaylistsPage() {
 
   return (
     <div className="playlists-page">
+      {Capacitor.isNativePlatform() && (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+        />
+      )}
       <div className="playlists-header">
         <div className="playlists-header-left">
           <button className="back-button" onClick={() => history.push('/usuario')}>

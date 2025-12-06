@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -457,14 +459,23 @@ function UserProfilePage() {
     <div className="user-profile-page">
       <div className="animated-bg"></div>
 
-      <ProfileHeader
-        scrolled={scrolled}
-        picture={profileData.picture}
-        vip={userProfile.vip}
-        onToggleMenu={() => setShowUserMenu(s => !s)}
-        showUserMenu={showUserMenu}
-        logout={() => logoutWithCookies('/login', history)}
-      />
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={() => logoutWithCookies('/login', history)}
+          showSearch={false}
+          showFilters={false}
+        />
+      ) : (
+        <ProfileHeader
+          scrolled={scrolled}
+          picture={profileData.picture}
+          vip={userProfile.vip}
+          onToggleMenu={() => setShowUserMenu(s => !s)}
+          showUserMenu={showUserMenu}
+          logout={() => logoutWithCookies('/login', history)}
+        />
+      )}
 
       <div className="profile-container">
         <div className="profile-box">
