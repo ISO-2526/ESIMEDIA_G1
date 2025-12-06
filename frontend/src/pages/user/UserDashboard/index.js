@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import ContentLayout from '../../../layouts/ContentLayout';
 import VideoPlayer from '../../../components/VideoPlayer';
 import AudioPlayer from '../../../components/AudioPlayer';
@@ -8,6 +9,7 @@ import ContentFilters from '../../../components/ContentFilters';
 import AddToPlaylistModal from '../../../components/AddToPlaylistModal';
 import VipUpgradeModal from '../../../components/VipUpgradeModal';
 import CreatorPlaylistCard from '../../../components/CreatorPlaylistCard';
+import MobileHeader from './MobileHeader'; // 📱 Componente móvil nativo
 import logo from '../../../resources/esimedialogo.png';
 import './UserDashboard.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -292,6 +294,17 @@ function UserDashboard() {
     loadUserProfile();
   }, []);
 
+  // ⚠️ HYBRID STRATEGY: Función para construir URLs absolutas en móvil
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png'; // Fallback
+    if (path.startsWith('http')) return path; // Ya es absoluta
+    // Si es nativo y ruta relativa, usar backend android
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path; // Web: usar ruta relativa
+  };
+
   const loadUserProfile = async () => {
     try {
       const response = await axios.get('/api/users/profile', {
@@ -304,10 +317,11 @@ function UserDashboard() {
         email: profileData.email,
         alias: profileData.alias,
         dateOfBirth: profileData.dateOfBirth,
-        picture: profileData.picture || '/pfp/avatar1.png',
+        picture: getImageUrl(profileData.picture), // ✅ URL absoluta en móvil
         vip: profileData.vip || false
       };
       setUserProfile(updatedProfile);
+      console.log('🖼️ Profile picture URL:', updatedProfile.picture);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -462,20 +476,30 @@ function UserDashboard() {
       <div className="animated-bg"></div>
       <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
 
-      <DashboardHeader
-        logo={logo}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        creatorPlaylists={creatorPlaylists}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        handleAddToPlaylist={handleAddToPlaylist}
-        userProfile={userProfile}
-        handleLogout={handleLogout}
-        showUserMenu={showUserMenu}
-        setShowUserMenu={setShowUserMenu}
-        handleFiltersChange={handleFiltersChange}
-      />
+      {/* 📱 Renderizado condicional: Móvil vs Desktop */}
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleLogout={handleLogout}
+        />
+      ) : (
+        <DashboardHeader
+          logo={logo}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          creatorPlaylists={creatorPlaylists}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleAddToPlaylist={handleAddToPlaylist}
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showUserMenu={showUserMenu}
+          setShowUserMenu={setShowUserMenu}
+          handleFiltersChange={handleFiltersChange}
+        />
+      )}
 
       <HeroSection
         currentHero={currentHero}
