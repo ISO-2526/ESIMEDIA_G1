@@ -28,6 +28,7 @@ const MobileHeader = ({
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const history = useHistory();
 
@@ -86,8 +87,12 @@ const MobileHeader = ({
 
           {/* Filtros - siempre visible */}
           <button 
-            className="mobile-icon-btn" 
-            onClick={() => setIsFilterOpen(true)}
+            id="filter-menu-trigger"
+            className="mobile-icon-btn"
+            onClick={() => {
+              setIsFilterOpen(true);
+              setIsMenuOpen(false);
+            }}
           >
             <IonIcon icon={filterOutline} />
           </button>
@@ -97,6 +102,10 @@ const MobileHeader = ({
             <button 
               className="mobile-icon-btn avatar-button" 
               id="user-menu-trigger"
+              onClick={() => {
+                setIsMenuOpen(!isMenuOpen);
+                setIsFilterOpen(false);
+              }}
             >
               <div className="mobile-avatar">
                 {userProfile.picture && !imageError ? (
@@ -134,14 +143,18 @@ const MobileHeader = ({
           reference="trigger"
           side="bottom"
           alignment="end"
-          dismissOnSelect={true}
+          isOpen={isMenuOpen}
+          onDidDismiss={() => setIsMenuOpen(false)}
           arrow={false}
           className="user-menu-popover"
         >
           <div className="user-menu-content">
             <button 
               className="user-menu-button"
-              onClick={() => { history.push('/perfil'); }}
+              onClick={() => { 
+                setIsMenuOpen(false);
+                history.push('/perfil'); 
+              }}
             >
               <IonIcon icon={personCircleOutline} />
               <span>Mi Perfil</span>
@@ -149,7 +162,10 @@ const MobileHeader = ({
             
             <button 
               className="user-menu-button"
-              onClick={() => { history.push('/playlists'); }}
+              onClick={() => { 
+                setIsMenuOpen(false);
+                history.push('/playlists'); 
+              }}
             >
               <IonIcon icon={listOutline} />
               <span>Mis Listas</span>
@@ -157,7 +173,10 @@ const MobileHeader = ({
             
             <button 
               className="user-menu-button"
-              onClick={() => { history.push('/suscripcion'); }}
+              onClick={() => { 
+                setIsMenuOpen(false);
+                history.push('/suscripcion'); 
+              }}
             >
               <IonIcon icon={cardOutline} />
               <span>Suscripción</span>
@@ -165,7 +184,10 @@ const MobileHeader = ({
             
             <button 
               className="user-menu-button logout-button"
-              onClick={handleLogout}
+              onClick={() => {
+                setIsMenuOpen(false);
+                handleLogout();
+              }}
             >
               <IonIcon icon={logOutOutline} />
               <span>Cerrar Sesión</span>

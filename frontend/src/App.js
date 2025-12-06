@@ -58,7 +58,7 @@ function App() {
             {/* Rutas públicas */}
             <Route exact path="/" render={() => (
               <ProtectedRouteAfterLogin>
-                <HomePage />
+                <LoginPage />
               </ProtectedRouteAfterLogin>
             )} />
             <Route path="/login" render={() => (

@@ -1,237 +1,95 @@
-/* Mobile Filter Modal - Glassmorphism Dark Theme */
+/* Mobile Filter Popover - Glassmorphism Dark Theme */
 
-ion-modal.mobile-filter-modal {
-  --background: #1e1e1e;
-  --border-radius: 20px 20px 0 0;
+.mobile-filter-popover {
+  --width: 240px;
+  --backdrop-opacity: 0;
+  --offset-y: 10px;
 }
 
-ion-modal.mobile-filter-modal ion-content {
-  --background: #1e1e1e;
+.mobile-filter-popover::part(backdrop) {
+  display: none !important;
 }
 
-/* Header */
-.modal-header {
-  background: transparent;
-  border-bottom: 1px solid rgba(79, 86, 186, 0.2);
+.mobile-filter-popover::part(content) {
+  position: fixed !important;
+  top: calc(66px + env(safe-area-inset-top)) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 240px !important;
+  background: rgba(41, 43, 38, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(79, 86, 186, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
-.modal-toolbar {
-  --background: transparent;
-  --padding-start: 20px;
-  --padding-end: 20px;
-  --min-height: 60px;
+.filter-menu-content {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 6px;
 }
 
-.modal-title {
-  color: #F5F6F3;
-  font-size: 20px;
-  font-weight: 600;
+.filter-menu-button {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.modal-title-icon {
-  color: #4F56BA;
-  font-size: 24px;
-}
-
-.modal-close-btn {
-  --color: #F5F6F3;
-  --padding-start: 0;
-  --padding-end: 0;
-}
-
-.modal-close-btn ion-icon {
-  font-size: 28px;
-}
-
-/* Content */
-.modal-content {
-  --background: transparent;
-  --padding-start: 20px;
-  --padding-end: 20px;
-  --padding-top: 20px;
-  --padding-bottom: 90px;
-}
-
-/* Filter Sections */
-.filter-section {
-  margin-bottom: 32px;
-}
-
-.filter-section-title {
-  color: #F5F6F3;
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-section-title ion-icon {
-  color: #4F56BA;
-  font-size: 20px;
-}
-
-/* Chips Container */
-.filter-chips-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* Filter Chips */
-.filter-chip {
-  --background: rgba(41, 43, 38, 0.8);
-  --color: rgba(245, 246, 243, 0.9);
-  border: 1px solid rgba(79, 86, 186, 0.2);
-  border-radius: 20px;
-  height: 40px;
-  padding: 0 16px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.filter-chip ion-icon {
-  font-size: 18px;
-  margin-right: 6px;
-}
-
-.filter-chip ion-label {
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.filter-chip.selected {
-  --background: rgba(79, 86, 186, 0.3);
-  --color: #FAED5C;
-  border: 1px solid #4F56BA;
-  box-shadow: 0 0 12px rgba(79, 86, 186, 0.4);
-}
-
-.filter-chip.selected .check-icon {
-  color: #FAED5C;
-  font-size: 18px;
-  margin-left: 4px;
-}
-
-.filter-chip:active {
-  transform: scale(0.95);
-}
-
-/* Range Items */
-.range-item {
-  --background: transparent;
-  --padding-start: 0;
-  --padding-end: 0;
-  --inner-padding-end: 0;
-  margin-top: 8px;
-}
-
-.range-label {
-  color: #F5F6F3;
-  font-size: 14px;
-  font-weight: 600;
-  min-width: 50px;
-  text-align: center;
-}
-
-/* Range Sliders */
-.year-range,
-.duration-range,
-.rating-range {
-  --bar-background: rgba(79, 86, 186, 0.2);
-  --bar-background-active: #4F56BA;
-  --bar-height: 4px;
-  --bar-border-radius: 2px;
-  --knob-background: #FAED5C;
-  --knob-size: 24px;
-  --knob-box-shadow: 0 3px 12px rgba(250, 237, 92, 0.5);
-  --pin-background: #4F56BA;
-  --pin-color: #ffffff;
-  padding: 20px 0;
-}
-
-/* Action Buttons */
-.filter-actions {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 20px;
-  background: rgba(18, 18, 18, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(79, 86, 186, 0.2);
-  display: flex;
   gap: 12px;
-  z-index: 1000;
+  padding: 14px 16px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  position: relative;
 }
 
-.clear-button {
-  --background: transparent;
-  --background-hover: rgba(255, 255, 255, 0.05);
-  --background-activated: rgba(255, 255, 255, 0.1);
-  --border-color: rgba(79, 86, 186, 0.5);
-  --border-width: 2px;
-  --color: #F5F6F3;
-  --border-radius: 12px;
-  height: 48px;
-  font-weight: 600;
+.filter-menu-button ion-icon {
+  color: #4F56BA;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.filter-menu-button span {
   flex: 1;
 }
 
-.apply-button {
-  --background: linear-gradient(135deg, #4F56BA 0%, #6B73E0 100%);
-  --background-hover: linear-gradient(135deg, #5B62C6 0%, #7880E8 100%);
-  --background-activated: linear-gradient(135deg, #434A9E 0%, #5F67D4 100%);
-  --color: #ffffff;
-  --border-radius: 12px;
-  height: 48px;
-  font-weight: 600;
-  flex: 2;
-  box-shadow: 0 4px 16px rgba(79, 86, 186, 0.4);
+.filter-menu-button.selected {
+  background: rgba(79, 86, 186, 0.3);
+  border-color: rgba(79, 86, 186, 0.6);
 }
 
-.clear-button ion-icon,
-.apply-button ion-icon {
-  font-size: 20px;
-  margin-right: 8px;
-}
-
-/* Scrollbar Styling */
-.modal-content::-webkit-scrollbar {
+.filter-menu-button.selected .selected-indicator {
   width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FAED5C;
+  box-shadow: 0 0 8px rgba(250, 237, 92, 0.6);
+  margin-left: auto;
 }
 
-.modal-content::-webkit-scrollbar-track {
-  background: rgba(41, 43, 38, 0.3);
-  border-radius: 3px;
+.filter-menu-button:active {
+  transform: scale(0.97);
+  background: rgba(79, 86, 186, 0.25);
 }
 
-.modal-content::-webkit-scrollbar-thumb {
-  background: rgba(79, 86, 186, 0.5);
-  border-radius: 3px;
+.filter-menu-button.clear-button {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.3);
+  margin-top: 6px;
 }
 
-.modal-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 86, 186, 0.7);
+.filter-menu-button.clear-button ion-icon {
+  color: #FF4444;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 480px) {
-  .filter-chip {
-    height: 36px;
-    font-size: 13px;
-  }
-  
-  .filter-section-title {
-    font-size: 15px;
-  }
-  
-  .modal-title {
-    font-size: 18px;
-  }
+.filter-menu-button.clear-button:active {
+  background: rgba(255, 68, 68, 0.25);
 }
