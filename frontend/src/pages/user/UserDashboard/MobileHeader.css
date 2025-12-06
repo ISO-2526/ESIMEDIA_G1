@@ -43,37 +43,90 @@
   cursor: pointer;
 }
 
-/* Buscador expandible */
+/* Buscador expandible - ANDROID MATERIAL DESIGN OPTIMIZADO */
 .mobile-searchbar {
-  --background: transparent;
-  --color: #F5F6F3;
-  --placeholder-color: rgba(245, 246, 243, 0.5);
-  --icon-color: #4F56BA;
-  --clear-button-color: #F5F6F3;
-  --box-shadow: none;
-  border: 1px solid rgba(79, 86, 186, 0.2);
-  border-radius: 24px;
-  margin: 0;
-  flex: 1;
-  max-width: none;
+  /* Variables CSS de Ionic - Glassmorphism Android */
+  --background: rgba(18, 18, 18, 0.75) !important;
+  --color: #F5F6F3 !important;
+  --placeholder-color: rgba(245, 246, 243, 0.5) !important;
+  --placeholder-opacity: 1 !important;
+  --icon-color: #4F56BA !important;
+  --clear-button-color: #F5F6F3 !important;
+  --box-shadow: none !important;
+  --cancel-button-color: #F5F6F3 !important;
+  
+  /* Estilos del contenedor - Android First */
+  border: none !important;
+  border-radius: 24px !important;
+  margin: 0 !important;
+  flex: 1 !important;
+  max-width: none !important;
+  height: 48px !important;
+  min-height: 48px !important;
   animation: searchExpand 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  
+  /* Fondo oscuro glassmorphism */
+  background: rgba(18, 18, 18, 0.75) !important;
+  box-shadow: none !important;
 }
 
+/* Contenedor nativo del searchbar - Material Design Android */
+.mobile-searchbar::part(native) {
+  background: rgba(18, 18, 18, 0.75) !important;
+  border-radius: 24px !important;
+  padding: 0 16px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  elevation: 0 !important;
+}
+
+/* Input de texto - DESTRUIR ESTILOS NATIVOS */
 .mobile-searchbar::part(input) {
-  background: transparent;
-  color: #F5F6F3;
-  font-size: 15px;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #F5F6F3 !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  padding-left: 8px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
+/* Icono de búsqueda (lupa) - TRANSPARENTE */
+.mobile-searchbar::part(icon) {
+  color: #4F56BA !important;
+  opacity: 1 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Botón de cerrar (X) - TRANSPARENTE */
 .mobile-searchbar::part(clear-button) {
-  color: #F5F6F3;
-  opacity: 0.8;
+  color: #F5F6F3 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  opacity: 0.9 !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 20px !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
 }
 
-.mobile-searchbar::part(clear-button):hover {
-  opacity: 1;
-  transform: scale(1.1);
+.mobile-searchbar::part(clear-button):active {
+  opacity: 1 !important;
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 @keyframes searchExpand {

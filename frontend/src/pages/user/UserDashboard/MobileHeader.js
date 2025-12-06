@@ -41,6 +41,7 @@ const MobileHeader = ({
         {/* Buscador expandible */}
         {showSearch ? (
           <IonSearchbar
+            mode="md"
             value={searchQuery}
             onIonChange={e => setSearchQuery(e.detail.value)}
             onIonBlur={() => {
@@ -50,6 +51,7 @@ const MobileHeader = ({
             className="mobile-searchbar"
             animated
             autoFocus
+            showCancelButton="never"
           />
         ) : null}
 
