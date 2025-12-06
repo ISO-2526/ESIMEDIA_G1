@@ -15,8 +15,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'http',
     cleartext: true,
-    hostname: '10.0.2.2',
-    androidSchemeHttp: true
+    // NO especificar URL - la app se sirve desde archivos locales
+    allowNavigation: ['10.0.2.2:8080', 'localhost:8080']
   },
   
   plugins: {
