@@ -1,0 +1,579 @@
+/* Mobile Header con estilo glassmorphism ESIMEDIA */
+.mobile-header-ionic {
+  --background: transparent;
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: 600px;
+  background: rgba(18, 18, 18, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 10000;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  min-height: 56px;
+  border-radius: 50px;
+  gap: 12px;
+}
+
+/* Logo */
+.mobile-logo-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mobile-logo {
+  height: 36px;
+  width: auto;
+  filter: drop-shadow(0 4px 12px rgba(79, 86, 186, 0.4));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+/* BARRA DE BÚSQUEDA PÍLDORA - SOLUCIÓN COMPLETA FLEXBOX */
+.mobile-searchbar-container {
+  display: flex;
+  align-items: center;
+  background: rgba(18, 18, 18, 0.75);
+  border-radius: 24px;
+  height: 48px;
+  padding: 0 16px;
+  gap: 12px;
+  flex: 1;
+  max-width: none;
+  animation: searchExpand 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Icono de búsqueda (lupa) */
+.mobile-search-icon {
+  color: #4F56BA;
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Input nativo - Ocupa todo el espacio disponible */
+.mobile-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.mobile-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+/* Ocultar la 'X' nativa de Chrome/Android */
+.mobile-search-input::-webkit-search-cancel-button,
+.mobile-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* Botón X para borrar - Solo visible cuando hay texto */
+.mobile-clear-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.mobile-clear-button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-clear-button:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mobile-clear-button ion-icon {
+  font-size: 20px;
+}
+
+@keyframes searchExpand {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Estado expandido del header */
+.mobile-header-ionic.search-expanded {
+  width: 96%;
+}
+
+.mobile-header-ionic.search-expanded .mobile-toolbar {
+  gap: 10px;
+}
+
+/* Botones de acción */
+.mobile-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.mobile-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(245, 246, 243, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 22px;
+  padding: 0;
+}
+
+.mobile-icon-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.95);
+}
+
+.mobile-icon-btn ion-icon {
+  font-size: 24px;
+  color: rgba(245, 246, 243, 0.9);
+}
+
+/* Avatar */
+.avatar-button {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.mobile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  box-shadow: 0 4px 15px rgba(79, 86, 186, 0.3);
+  overflow: visible;
+}
+
+.mobile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Avatar Placeholder - Fallback cuando no hay imagen */
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F56BA 0%, #3a417d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder ion-icon {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.vip-badge-mobile {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #FAED5C 0%, #ffc107 100%);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(250, 237, 92, 0.6);
+  border: 2px solid #292B26;
+  z-index: 10;
+}
+
+.vip-badge-mobile i {
+  color: #292B26;
+  font-size: 11px;
+}
+
+/* Popovers - Estilo ESIMEDIA - FORZADO ABSOLUTO */
+.user-menu-popover {
+  --width: 220px !important;
+  --min-width: 200px !important;
+  --max-width: 90% !important;
+  --background: rgba(41, 43, 38, 0.95) !important;
+  --backdrop-opacity: 0 !important;
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  --border-radius: 12px !important;
+}
+
+/* FORZAR posición en la parte superior derecha */
+.user-menu-popover::part(backdrop) {
+  display: none !important;
+}
+
+.user-menu-popover::part(content) {
+  position: fixed !important;
+  top: calc(66px + env(safe-area-inset-top)) !important; /* Justo debajo del header */
+  right: 15px !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 220px !important;
+  max-width: 90vw !important;
+  transform: none !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(41, 43, 38, 0.95);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.filters-popover {
+  --background: rgba(41, 43, 38, 0.98);
+  --backdrop-opacity: 0.6;
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.filters-popover::part(content) {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(79, 86, 186, 0.2);
+  border-radius: 12px;
+}
+
+.user-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.user-menu-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.user-menu-button:active {
+  transform: scale(0.97);
+  background: rgba(79, 86, 186, 0.3);
+  border-color: rgba(79, 86, 186, 0.5);
+}
+
+.user-menu-button ion-icon {
+  color: #4F56BA;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.user-menu-button span {
+  flex: 1;
+  text-align: left;
+}
+
+/* Botón de logout con color especial */
+.logout-button {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.3);
+  margin-top: 4px;
+}
+
+.logout-button:active {
+  background: rgba(255, 68, 68, 0.25);
+  border-color: rgba(255, 68, 68, 0.5);
+}
+
+.logout-button ion-icon {
+  color: #ff4444;
+}
+
+.logout-button span {
+  color: #ff4444;
+}
+
+.filters-popover ion-list {
+  background: transparent;
+  padding: 12px 0;
+}
+
+.filters-popover ion-item {
+  --background: transparent;
+  --color: #F5F6F3;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --min-height: 52px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filters-popover ion-item::part(native) {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filters-popover ion-item:active {
+  --background: rgba(79, 86, 186, 0.2);
+}
+
+.filters-popover ion-icon {
+  color: #4F56BA;
+  font-size: 22px;
+  margin-right: 12px;
+}
+
+.logout-item {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(79, 86, 186, 0.2);
+}
+
+.logout-item ion-icon {
+  color: #ff4444 !important;
+}
+
+.logout-item ion-label {
+  color: #ff4444 !important;
+}
+
+/* Asegurar que no interfiera con el contenido */
+ion-content {
+  --padding-top: 0;
+}
+
+/* ============================================
+   POPOVER DE NOTIFICACIONES
+   ============================================ */
+.notifications-popover {
+  --background: transparent;
+  --backdrop-opacity: 0.3;
+}
+
+.notifications-popover::part(content) {
+  position: fixed;
+  top: calc(76px + env(safe-area-inset-top));
+  right: 16px;
+  left: auto;
+  max-width: 380px;
+  width: calc(100vw - 32px);
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  max-height: calc(100vh - 120px - env(safe-area-inset-top));
+  overflow: hidden;
+}
+
+.notifications-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 500px;
+}
+
+.notifications-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(79, 86, 186, 0.2);
+  background: rgba(79, 86, 186, 0.1);
+  border-radius: 20px 20px 0 0;
+}
+
+.notifications-header h3 {
+  margin: 0;
+  color: #F5F6F3;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.notifications-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  max-height: 400px;
+}
+
+/* Scrollbar personalizado para la lista de notificaciones */
+.notifications-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: rgba(79, 86, 186, 0.1);
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background: rgba(79, 86, 186, 0.4);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 86, 186, 0.6);
+}
+
+/* Estado sin notificaciones */
+.no-notifications {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(245, 246, 243, 0.6);
+}
+
+.no-notifications ion-icon {
+  font-size: 64px;
+  color: rgba(79, 86, 186, 0.4);
+  margin-bottom: 16px;
+}
+
+.no-notifications p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(245, 246, 243, 0.6);
+}
+
+/* Estilos para notificaciones individuales (cuando se agreguen) */
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(79, 86, 186, 0.1);
+  border: 1px solid rgba(79, 86, 186, 0.2);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-item:last-child {
+  margin-bottom: 0;
+}
+
+.notification-item:active {
+  transform: scale(0.98);
+  background: rgba(79, 86, 186, 0.2);
+  border-color: rgba(79, 86, 186, 0.4);
+}
+
+.notification-item.unread {
+  background: rgba(79, 86, 186, 0.2);
+  border-color: rgba(79, 86, 186, 0.3);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 86, 186, 0.3);
+  border-radius: 50%;
+  color: #4F56BA;
+  font-size: 20px;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  margin: 0 0 4px;
+  color: #F5F6F3;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.notification-message {
+  margin: 0 0 6px;
+  color: rgba(245, 246, 243, 0.8);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notification-time {
+  margin: 0;
+  color: rgba(245, 246, 243, 0.5);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.notification-badge {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  background: #FAED5C;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(250, 237, 92, 0.6);
+}

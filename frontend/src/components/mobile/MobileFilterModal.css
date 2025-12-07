@@ -1,0 +1,95 @@
+/* Mobile Filter Popover - Glassmorphism Dark Theme */
+
+.mobile-filter-popover {
+  --width: 240px;
+  --backdrop-opacity: 0;
+  --offset-y: 10px;
+}
+
+.mobile-filter-popover::part(backdrop) {
+  display: none !important;
+}
+
+.mobile-filter-popover::part(content) {
+  position: fixed !important;
+  top: calc(66px + env(safe-area-inset-top)) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 240px !important;
+  background: rgba(41, 43, 38, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(79, 86, 186, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.filter-menu-content {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 6px;
+}
+
+.filter-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(79, 86, 186, 0.15);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 12px;
+  color: #F5F6F3;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  position: relative;
+}
+
+.filter-menu-button ion-icon {
+  color: #4F56BA;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.filter-menu-button span {
+  flex: 1;
+}
+
+.filter-menu-button.selected {
+  background: rgba(79, 86, 186, 0.3);
+  border-color: rgba(79, 86, 186, 0.6);
+}
+
+.filter-menu-button.selected .selected-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FAED5C;
+  box-shadow: 0 0 8px rgba(250, 237, 92, 0.6);
+  margin-left: auto;
+}
+
+.filter-menu-button:active {
+  transform: scale(0.97);
+  background: rgba(79, 86, 186, 0.25);
+}
+
+.filter-menu-button.clear-button {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.3);
+  margin-top: 6px;
+}
+
+.filter-menu-button.clear-button ion-icon {
+  color: #FF4444;
+}
+
+.filter-menu-button.clear-button:active {
+  background: rgba(255, 68, 68, 0.25);
+}

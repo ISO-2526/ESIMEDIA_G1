@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -320,7 +322,17 @@ function UserProfilePage() {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [thirdFactorEnabled, setThirdFactorEnabled] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [userProfile, setUserProfile] = useState({ vip: false });
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
 
   const availableAvatars = [
     '/pfp/avatar1.png','/pfp/avatar2.png','/pfp/avatar3.png','/pfp/avatar4.png','/pfp/avatar5.png',
@@ -346,7 +358,10 @@ function UserProfilePage() {
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({ vip: data.vip || false });
+        setUserProfile({ 
+          picture: getImageUrl(data.picture),
+          vip: data.vip || false 
+        });
       }
     })();
   }, []);
@@ -457,14 +472,24 @@ function UserProfilePage() {
     <div className="user-profile-page">
       <div className="animated-bg"></div>
 
-      <ProfileHeader
-        scrolled={scrolled}
-        picture={profileData.picture}
-        vip={userProfile.vip}
-        onToggleMenu={() => setShowUserMenu(s => !s)}
-        showUserMenu={showUserMenu}
-        logout={() => logoutWithCookies('/login', history)}
-      />
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={() => logoutWithCookies('/login', history)}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      ) : (
+        <ProfileHeader
+          scrolled={scrolled}
+          picture={profileData.picture}
+          vip={userProfile.vip}
+          onToggleMenu={() => setShowUserMenu(s => !s)}
+          showUserMenu={showUserMenu}
+          logout={() => logoutWithCookies('/login', history)}
+        />
+      )}
 
       <div className="profile-container">
         <div className="profile-box">

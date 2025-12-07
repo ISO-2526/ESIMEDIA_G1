@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
+import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -18,6 +21,21 @@ function PlaylistDetailPage() {
   const [contents, setContents] = useState([]);
   const [allContents, setAllContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
+
+  const handleLogout = async () => {
+    await logoutCsrf('/login', history);
+  };
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -27,7 +45,6 @@ function PlaylistDetailPage() {
   const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
   const [selectedVipContent, setSelectedVipContent] = useState(null);
-  const [userProfile, setUserProfile] = useState({ vip: false });
   const [contentCovers, setContentCovers] = useState([]);
   const [sortBy, setSortBy] = useState('addedDate');
 
@@ -48,6 +65,7 @@ function PlaylistDetailPage() {
       if (response.ok) {
         const profileData = await response.json();
         setUserProfile({
+          picture: getImageUrl(profileData.picture),
           vip: profileData.vip || false
         });
       }
@@ -356,6 +374,15 @@ function PlaylistDetailPage() {
 
   return (
     <div className="playlist-detail-page">
+      {Capacitor.isNativePlatform() && (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      )}
       <button 
         className="floating-back-button" 
         onClick={() => history.push('/playlists')}
