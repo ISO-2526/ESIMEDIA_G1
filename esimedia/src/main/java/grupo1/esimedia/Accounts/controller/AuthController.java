@@ -434,43 +434,22 @@ public class AuthController {
     }
 
     @GetMapping("/validate-token")
-    public ResponseEntity<?> validateToken(
-            @CookieValue(value = "access_token", required = false) String cookieToken,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> validateToken() {
+        // Si llegamos aquí y el filtro funcionó, el usuario ya está autenticado
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
-        // ⚠️ HYBRID STRATEGY: Prioridad 1 - Header Bearer (Móvil), Prioridad 2 - Cookie (Web)
-        String tokenId = null;
-        
-        // 1. Intentar extraer del header Authorization (para móvil)
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            tokenId = authHeader.substring(7);
-            System.out.println("✅ Validating token from Authorization header (mobile): " + tokenId);
-        }
-        // 2. Si no hay header, usar cookie (para web)
-        else if (cookieToken != null && !cookieToken.isBlank()) {
-            tokenId = cookieToken;
-            System.out.println("✅ Validating token from cookie (web): " + tokenId);
-        }
-        
-        if (tokenId == null || tokenId.isBlank()) {
-            System.out.println("❌ No token found in header or cookie");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
         }
 
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
-            System.out.println("❌ Token invalid or expired: " + tokenId);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
-        }
+        String email = auth.getName();
+        String role = auth.getAuthorities().stream()
+                        .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
+                        .findFirst().orElse("user");
 
-        // Obtener role y email del token
-        String accountId = token.getAccountId();
-        String role = token.getRole();
-        
-        System.out.println("✅ Token validated successfully for: " + accountId);
         Map<String, Object> response = new HashMap<>();
         response.put("role", role);
-        response.put("email", accountId);
+        response.put("email", email);
         return ResponseEntity.ok(response);
     }
 

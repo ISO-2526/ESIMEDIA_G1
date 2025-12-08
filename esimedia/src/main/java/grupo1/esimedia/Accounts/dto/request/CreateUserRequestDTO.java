@@ -35,7 +35,7 @@ public class CreateUserRequestDTO {
 
     private String alias;
 
-    @NotBlank(message = "La fecha de nacimiento es obligatoria")
+    @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Past(message = "La fecha de nacimiento debe ser en el pasado")
     private LocalDate dateOfBirth;
 

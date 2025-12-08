@@ -31,7 +31,7 @@ public class CreateCreatorRequestDTO {
     @NotBlank(message = "La especialidad es obligatoria")
     private String specialty;
 
-    @NotBlank(message = "El tipo de contenido es obligatorio")
+    @NotNull(message = "El tipo de contenido es obligatorio")
     private ContentType contentType;
 
     // Getters y Setters
