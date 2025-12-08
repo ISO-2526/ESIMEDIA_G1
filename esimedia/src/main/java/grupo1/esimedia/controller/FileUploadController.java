@@ -13,12 +13,20 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.InputStream;
 
 @RestController
 @RequestMapping("/api/upload")
 @PreAuthorize("hasRole('CREATOR')")
 public class FileUploadController {
+
+    private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
 
     // Ruta donde se guardan los archivos de audio
     private static final String AUDIO_UPLOAD_DIR = "src/main/resources/static/audio/";
@@ -27,6 +35,17 @@ public class FileUploadController {
     // Tamaño máximo: 1MB = 1048576 bytes
     private static final long MAX_AUDIO_SIZE = 1048576; // 1MB
     private static final long MAX_COVER_SIZE = 5242880; // 5MB para portadas
+
+    private static final Set<String> ALLOWED_AUDIO_MIME_TYPES = Set.of(
+        "audio/mpeg", 
+        "audio/mp3", 
+        "audio/wav", 
+        "audio/x-wav", 
+        "audio/ogg", 
+        "audio/aac", 
+        "audio/x-m4a"
+        // Se pueden añadir más si son necesarios, pero en minúsculas.
+    );
 
     @PostMapping("/audio")
     public ResponseEntity<?> uploadAudioFile(@RequestParam("file") MultipartFile file) {
@@ -46,12 +65,8 @@ public class FileUploadController {
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
             }
 
-            // Validar el tipo de archivo (solo audio)
-            String contentType = file.getContentType();
-            if (contentType == null || !isAudioFile(contentType)) {
-                response.put("error", "Tipo de archivo no permitido. Solo se aceptan archivos de audio (MP3, WAV, OGG, AAC)");
-                return ResponseEntity.badRequest().body(response);
-            }
+            validateFileMagicNumbers(file, ALLOWED_AUDIO_MIME_TYPES);
+            // Si llega aquí, el archivo es de audio legítimo.
 
             // Obtener el nombre original y la extensión
             String originalFilename = file.getOriginalFilename();
@@ -78,10 +93,14 @@ public class FileUploadController {
             response.put("filename", uniqueFilename);
             response.put("originalFilename", originalFilename);
             response.put("size", file.getSize());
-            response.put("contentType", contentType);
+            response.put("contentType", file.getContentType());
 
             return ResponseEntity.ok(response);
 
+        } catch (SecurityException se) {
+            // Capturar el error específico de Tika/Magic Numbers
+            response.put("error", se.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         } catch (IOException e) {
             response.put("error", "Error al guardar el archivo: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -164,17 +183,46 @@ public class FileUploadController {
         }
     }
 
-    // Métodos auxiliares para validar tipos de archivo
-    private boolean isAudioFile(String contentType) {
-        return contentType.equals("audio/mpeg") ||      // MP3
-               contentType.equals("audio/mp3") ||
-               contentType.equals("audio/wav") ||        // WAV
-               contentType.equals("audio/wave") ||
-               contentType.equals("audio/x-wav") ||
-               contentType.equals("audio/ogg") ||        // OGG
-               contentType.equals("audio/aac") ||        // AAC
-               contentType.equals("audio/mp4") ||        // M4A
-               contentType.equals("audio/x-m4a");
+// -------------------------------------------------------------
+    // ⭐ MÉTODO DE VALIDACIÓN CON MAGIC NUMBERS (Tika) ⭐
+    // -------------------------------------------------------------
+    /**
+     * Valida un archivo usando "Magic Numbers" (Apache Tika) contra una lista blanca.
+     * Esto previene que se suban archivos con extensiones falsificadas.
+     * * NOTA: Este es el método que me pasaste en el primer mensaje.
+     */
+    private void validateFileMagicNumbers(MultipartFile file, Set<String> allowedMagicTypes) throws IOException {
+        String magicType;
+        Tika tika = new Tika();
+
+        // Usamos try-with-resources para asegurar que el stream se cierra
+        try (InputStream inputStream = file.getInputStream()) {
+            magicType = tika.detect(inputStream);
+        } catch (IOException e) {
+            log.error("Error al leer el stream del archivo para validación Tika", e);
+            // Propagamos la excepción
+            throw new IOException("Error al procesar el archivo", e); 
+        }
+
+        // Comprobamos contra la lista blanca SEGURA
+        if (magicType == null || !allowedMagicTypes.contains(magicType.toLowerCase())) {
+            log.warn("[BLOQUEO DE SEGURIDAD] Rechazo de archivo. " +
+                    "Nombre: {}. " +
+                    "MIME Cliente: {}. " +
+                    "MIME Real (Tika): {}. " +
+                    "Permitidos: {}",
+                    file.getOriginalFilename(),
+                    file.getContentType(),
+                    magicType,
+                    allowedMagicTypes);
+            
+            throw new SecurityException(
+                "El tipo de archivo real (" + magicType + ") no está permitido. " +
+                "El archivo puede ser malicioso o estar corrupto."
+            );
+        }
+
+        log.debug("✅ Validación Tika superada. Tipo real: {}", magicType);
     }
 
     private boolean isImageFile(String contentType) {
