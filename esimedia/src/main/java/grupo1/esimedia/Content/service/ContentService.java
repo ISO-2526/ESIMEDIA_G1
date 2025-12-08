@@ -18,11 +18,17 @@ import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.Accounts.service.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class ContentService {
 
     private final CreatorContentRepository repository;
+    
+    @Autowired
+    private NotificationService notificationService;
+
     private static final String DEFAULT_COVER = "cover3.png";
 
     public ContentService(CreatorContentRepository repository) {
@@ -93,7 +99,9 @@ public class ContentService {
         c.setUpdatedAt(now);
         c.setCreatorAlias(req.getCreatorAlias());
 
-        return repository.save(c);
+        Content saved = repository.save(c);
+        notificationService.notifyUsersInterestedIn(saved);
+        return saved;
     }
 
     private void applyCoverUpdate(Content existing, UpdateContentRequestDTO req) {

@@ -10,6 +10,7 @@ public class UserResponseDTO {
     private String picture;
     private boolean vip;
     private LocalDate dateOfBirth;
+    private java.util.List<String> preferences;
     // Omitimos password, tokens, etc.
 
     // Constructor vacío
@@ -30,4 +31,6 @@ public class UserResponseDTO {
     public void setVip(boolean vip) { this.vip = vip; }
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public java.util.List<String> getPreferences() { return preferences; }
+    public void setPreferences(java.util.List<String> preferences) { this.preferences = preferences; }
 }

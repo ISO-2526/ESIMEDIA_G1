@@ -12,6 +12,7 @@ public class UpdateUserRequestDTO {
     private String alias;
     private String picture;
     private Boolean active;
+    private java.util.List<String> preferences;
     
     public String getName() {
         return name;
@@ -50,5 +51,13 @@ public class UpdateUserRequestDTO {
     
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public java.util.List<String> getPreferences() {
+        return preferences;
+    }
+
+    public void setPreferences(java.util.List<String> preferences) {
+        this.preferences = preferences;
     }
 }

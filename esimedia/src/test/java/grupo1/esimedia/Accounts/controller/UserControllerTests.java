@@ -92,25 +92,24 @@ class UserControllerTests {
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basicUserPayload("exists@test.com", "Secure#12345"))))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Error al crear cuenta")));
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Error al crear cuenta")));
     }
 
     @Test
     void createUserRejectsPasswordContainingAlias() throws Exception {
         Map<String, Object> payload = Map.of(
-            "email", "weak@test.com",
-            "password", "alias12345",
-            "name", "Weak",
-            "surname", "User",
-            "alias", "alias"
-        );
+                "email", "weak@test.com",
+                "password", "alias12345",
+                "name", "Weak",
+                "surname", "User",
+                "alias", "alias");
 
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(payload)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("PASSWORD_WEAK"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("PASSWORD_WEAK"));
     }
 
     @Test
@@ -118,17 +117,18 @@ class UserControllerTests {
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basicUserPayload("new@test.com", "Clave#13579"))))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.email").value("new@test.com"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("new@test.com"));
 
         User saved = userRepository.findById("new@test.com").orElse(null);
         assertNotEquals("Clave#13579", saved.getPassword());
+        assertEquals(List.of("ACCION", "COMEDIA"), saved.getPreferences());
     }
 
     @Test
     void getUserByEmailRequiresAdminToken() throws Exception {
         mockMvc.perform(get("/api/users/test@test.com"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -137,8 +137,8 @@ class UserControllerTests {
 
         mockMvc.perform(get("/api/users/CASE@TEST.COM")
                 .cookie(adminCookie("admin@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.email").value("case@test.com"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("case@test.com"));
     }
 
     @Test
@@ -149,8 +149,8 @@ class UserControllerTests {
                 .cookie(adminCookie("admin@test.com"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"active\":\"false\"}"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.active").value(false));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
 
         assertEquals(false, userRepository.findById("active@test.com").get().isActive());
     }
@@ -160,25 +160,26 @@ class UserControllerTests {
         userRepository.save(buildUser("update@test.com"));
 
         Map<String, Object> payload = Map.of(
-            "name", "Updated",
-            "surname", "Surname",
-            "alias", "NewAlias",
-            "picture", "pic.png",
-            "active", true
-        );
+                "name", "Updated",
+                "surname", "Surname",
+                "alias", "NewAlias",
+                "picture", "pic.png",
+                "active", true,
+                "preferences", List.of("DRAMA"));
 
         mockMvc.perform(put("/api/users/update@test.com")
                 .cookie(adminCookie("admin@test.com"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(payload)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.alias").value("NewAlias"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alias").value("NewAlias"));
 
         User updated = userRepository.findById("update@test.com").orElseThrow();
         assertEquals("Updated", updated.getName());
         assertEquals("Surname", updated.getSurname());
         assertEquals("NewAlias", updated.getAlias());
         assertEquals("pic.png", updated.getPicture());
+        assertEquals(List.of("DRAMA"), updated.getPreferences());
     }
 
     @Test
@@ -187,16 +188,16 @@ class UserControllerTests {
 
         mockMvc.perform(get("/api/users/favorites")
                 .cookie(userCookie("favorites@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
     void addToFavoritesCreatesUserWhenMissing() throws Exception {
         mockMvc.perform(post("/api/users/favorites/content-1")
                 .cookie(userCookie("newuser@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Added to favorites"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Added to favorites"));
 
         User created = userRepository.findById("newuser@test.com").orElseThrow();
         assertEquals(List.of("content-1"), created.getFavorites());
@@ -212,8 +213,8 @@ class UserControllerTests {
 
         mockMvc.perform(post("/api/users/favorites/content-2")
                 .cookie(userCookie("dupFav@test.com")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Content already in favorites"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Content already in favorites"));
     }
 
     @Test
@@ -224,8 +225,8 @@ class UserControllerTests {
 
         mockMvc.perform(delete("/api/users/favorites/content-3")
                 .cookie(userCookie("remove@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.favorites", hasSize(0)));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.favorites", hasSize(0)));
     }
 
     @Test
@@ -233,7 +234,7 @@ class UserControllerTests {
         mockMvc.perform(post("/api/users/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"token\":\"abc\"}"))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -244,15 +245,14 @@ class UserControllerTests {
         userRepository.save(user);
 
         Map<String, Object> payload = Map.of(
-            "token", "expired-token",
-            "password", "Clave#13579"
-        );
+                "token", "expired-token",
+                "password", "Clave#13579");
 
         mockMvc.perform(post("/api/users/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(payload)))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Token expired")));
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Token expired")));
     }
 
     @Test
@@ -263,27 +263,27 @@ class UserControllerTests {
         userRepository.save(user);
 
         Map<String, Object> payload = Map.of(
-            "token", "valid-token",
-            "password", "NuevaClave#123"
-        );
+                "token", "valid-token",
+                "password", "NuevaClave#123");
 
         mockMvc.perform(post("/api/users/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(payload)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Password reset"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password reset"));
 
         User updated = userRepository.findById("reset@test.com").orElseThrow();
         assertNull(updated.getResetToken());
         assertNull(updated.getTokenExpiration());
         assertNotEquals("NuevaClave#123", updated.getPassword());
-        verify(emailService, times(1)).sendEmail("reset@test.com", "Password Reset", "Your password has been reset successfully.");
+        verify(emailService, times(1)).sendEmail("reset@test.com", "Password Reset",
+                "Your password has been reset successfully.");
     }
 
     @Test
     void getProfileRequiresAuthCookie() throws Exception {
         mockMvc.perform(get("/api/users/profile"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -292,8 +292,8 @@ class UserControllerTests {
 
         mockMvc.perform(get("/api/users/profile")
                 .cookie(userCookie("profile@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.email").value("profile@test.com"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("profile@test.com"));
     }
 
     @Test
@@ -305,28 +305,30 @@ class UserControllerTests {
         payload.setSurname("User");
         payload.setAlias("Alias");
         payload.setPicture("pic.png");
+        payload.setPreferences(List.of("TERROR", "CIENCIA_FICCION"));
 
         mockMvc.perform(put("/api/users/editUser")
                 .cookie(userCookie("edit@test.com"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(payload)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.alias").value("Alias"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alias").value("Alias"));
 
         User edited = userRepository.findById("edit@test.com").orElseThrow();
         assertEquals("Edit", edited.getName());
         assertEquals("User", edited.getSurname());
         assertEquals("Alias", edited.getAlias());
         assertEquals("pic.png", edited.getPicture());
+        assertEquals(List.of("TERROR", "CIENCIA_FICCION"), edited.getPreferences());
     }
 
     @Test
     void setupTwoFactorAuthValidatesEmailAndUser() throws Exception {
         mockMvc.perform(get("/api/users/2fa/setup").param("email", "invalid"))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(get("/api/users/2fa/setup").param("email", "missing@test.com"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -336,9 +338,9 @@ class UserControllerTests {
         userRepository.save(user);
 
         mockMvc.perform(get("/api/users/2fa/setup").param("email", "existing2fa@test.com"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("2FA ya está habilitado"))
-            .andExpect(jsonPath("$.secretKey").value("EXISTING"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("2FA ya está habilitado"))
+                .andExpect(jsonPath("$.secretKey").value("EXISTING"));
     }
 
     @Test
@@ -346,9 +348,9 @@ class UserControllerTests {
         userRepository.save(buildUser("new2fa@test.com"));
 
         mockMvc.perform(get("/api/users/2fa/setup").param("email", "new2fa@test.com"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.qrCodeBase64", notNullValue()))
-            .andExpect(jsonPath("$.secretKey", notNullValue()));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.qrCodeBase64", notNullValue()))
+                .andExpect(jsonPath("$.secretKey", notNullValue()));
 
         User updated = userRepository.findById("new2fa@test.com").orElseThrow();
         assertNotNull(updated.getTwoFactorSecretKey());
@@ -359,7 +361,7 @@ class UserControllerTests {
         userRepository.save(buildUser("delete@test.com"));
 
         mockMvc.perform(delete("/api/users/delete@test.com"))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         assertEquals(0, userRepository.count());
     }
@@ -367,13 +369,13 @@ class UserControllerTests {
     @Test
     void deleteUserReturnsNotFoundWhenMissing() throws Exception {
         mockMvc.perform(delete("/api/users/missing@test.com"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void vipUpgradeRequiresAuthentication() throws Exception {
         mockMvc.perform(post("/api/users/vip/upgrade"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -383,8 +385,8 @@ class UserControllerTests {
 
         mockMvc.perform(post("/api/users/vip/upgrade")
                 .cookie(userCookie("vip@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.vip").value(true));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vip").value(true));
 
         User upgraded = userRepository.findById("vip@test.com").orElseThrow();
         assertEquals(true, upgraded.isVip());
@@ -395,8 +397,8 @@ class UserControllerTests {
 
         mockMvc.perform(post("/api/users/vip/downgrade")
                 .cookie(userCookie("vip@test.com")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.vip").value(false));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vip").value(false));
 
         User downgraded = userRepository.findById("vip@test.com").orElseThrow();
         assertEquals(false, downgraded.isVip());
@@ -404,12 +406,12 @@ class UserControllerTests {
 
     private Map<String, Object> basicUserPayload(String email, String password) {
         return Map.of(
-            "email", email,
-            "password", password,
-            "name", "Test",
-            "surname", "User",
-            "alias", "Tester"
-        );
+                "email", email,
+                "password", password,
+                "name", "Test",
+                "surname", "User",
+                "alias", "Tester",
+                "preferences", List.of("ACCION", "COMEDIA"));
     }
 
     private User buildUser(String email) {
