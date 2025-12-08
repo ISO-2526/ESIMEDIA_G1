@@ -353,49 +353,81 @@ public class AuthController {
                 .body("Límite diario excedido. Puedes solicitar máximo 10 códigos por día.");
         }
 
-        var opt = userRepository.findById(email);
-        if (opt.isEmpty()) {
-            for (User u : userRepository.findAll()) {
-                if (u.getEmail() != null && u.getEmail().equalsIgnoreCase(email)) { opt = java.util.Optional.of(u); break; }
-            }
+Object account = null;
+    var adminOpt = findAdminByEmailIgnoreCase(email);
+    var creatorOpt = findCreatorByEmailIgnoreCase(email);
+    var userOpt = findUserByEmailIgnoreCase(email);
+
+    if (adminOpt.isPresent()) account = adminOpt.get();
+    else if (creatorOpt.isPresent()) account = creatorOpt.get();
+    else if (userOpt.isPresent()) account = userOpt.get();
+
+    if (account != null) {
+        String token = java.util.UUID.randomUUID().toString();
+        String hashedToken = TokenHasher.hashToken(token);
+        LocalDateTime expiration = LocalDateTime.now().plusMinutes(15);
+
+        // 2. Guardar token según el tipo de objeto encontrado
+        String name = "";
+        if (account instanceof Admin a) {
+            a.setResetToken(hashedToken);
+            a.setTokenExpiration(expiration);
+            adminRepository.save(a);
+            name = a.getName();
+        } else if (account instanceof ContentCreator c) {
+            c.setResetToken(hashedToken);
+            c.setTokenExpiration(expiration);
+            contentCreatorRepository.save(c);
+            name = c.getName();
+        } else if (account instanceof User u) {
+            u.setResetToken(hashedToken);
+            u.setTokenExpiration(expiration);
+            userRepository.save(u);
+            name = u.getName();
         }
-        if (opt.isPresent()) {
-            User user = opt.get();
-            String token= java.util.UUID.randomUUID().toString();
-            user.setResetToken(TokenHasher.hashToken(token));
-            user.setTokenExpiration(java.time.LocalDateTime.now().plusMinutes(15)); // token valid for 15 minutes
-            userRepository.save(user);
             // Send the user a link to reset their password
             String resetLink = "http://localhost:3000/#/reset-password?token=" + token;
             String subject = "Recuperación de contraseña";
-            String bodyEmail = "Hola " + user.getName() + ",\n\n" +
+            String bodyEmail = "Hola " + name + ",\n\n" +
                     "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.\n" +
                     "Por favor, haz clic en el siguiente enlace para restablecer tu contraseña:\n" +
                     resetLink + "\n" + "Este enlace es válido por 15 minutos." + "\n" +
                     "Si no solicitaste este cambio, puedes ignorar este correo electrónico.\n\n" +
                     "Saludos,\nEl equipo de ESIMEDIA";
             
-            emailService.sendEmail(user.getEmail(), subject, bodyEmail);
+            emailService.sendEmail(email, subject, bodyEmail);
         }
 
         // ✅ SIEMPRE devolver 200 OK con mensaje genérico (para no revelar si el usuario existe)
         return ResponseEntity.ok("Si el correo está registrado, recibirás un enlace de recuperación");
     }
 
-    // Validate reset token
     @GetMapping(path = "/validate-reset-token", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> validateResetToken(@RequestParam String token) {
-        if (token == null || token.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-        User user = userRepository.findByResetToken(TokenHasher.hashToken(token));
-        boolean isValid = (user != null && user.getTokenExpiration() != null && user.getTokenExpiration().isAfter(java.time.LocalDateTime.now()));
-        //printea el token y si es valido
+        if (token == null || token.isBlank()) return ResponseEntity.badRequest().build();
 
-        System.out.println("Validating token: " + token + " isValid: " + isValid);
-        Map<String, Boolean> resp = new HashMap<>();
-        resp.put("valid", isValid);
-        return ResponseEntity.ok(resp);
+        String hashed = TokenHasher.hashToken(token);
+        
+        // Búsqueda en cascada por token
+        Object found = null;
+        LocalDateTime expiration = null;
+
+        Admin a = adminRepository.findByResetToken(hashed);
+        if (a != null) { found = a; expiration = a.getTokenExpiration(); }
+        
+        if (found == null) {
+            ContentCreator c = contentCreatorRepository.findByResetToken(hashed);
+            if (c != null) { found = c; expiration = c.getTokenExpiration(); }
+        }
+        
+        if (found == null) {
+            User u = userRepository.findByResetToken(hashed);
+            if (u != null) { found = u; expiration = u.getTokenExpiration(); }
+        }
+
+        boolean isValid = (found != null && expiration != null && expiration.isAfter(LocalDateTime.now()));
+        
+        return ResponseEntity.ok(Map.of("valid", isValid));
     }
 
     @GetMapping("/protected-resource")
