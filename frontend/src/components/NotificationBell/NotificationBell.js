@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './NotificationBell.css';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -17,25 +17,8 @@ const NotificationBell = ({ userId }) => {
     console.log('[NotificationBell] userId:', userId);
   }, [userId]);
 
-  // Cargar contador de notificaciones no leídas
-  useEffect(() => {
-    if (userId) {
-      console.log('[NotificationBell] Fetching unread count for userId:', userId);
-      fetchUnreadCount();
-      // Refrescar cada 30 segundos
-      const interval = setInterval(fetchUnreadCount, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [userId]);
-
-  // Cargar notificaciones cuando se abre el dropdown
-  useEffect(() => {
-    if (showDropdown && userId) {
-      fetchNotifications();
-    }
-  }, [showDropdown, userId]);
-
-  const fetchUnreadCount = async () => {
+  // Función memoizada para cargar contador
+  const fetchUnreadCount = useCallback(async () => {
     try {
       const url = `/api/notifications/unread/count?userId=${userId}`;
       console.log('[NotificationBell] GET', url);
@@ -52,9 +35,10 @@ const NotificationBell = ({ userId }) => {
     } catch (error) {
       console.error('[NotificationBell] Error fetching unread count:', error);
     }
-  };
+  }, [userId]);
 
-  const fetchNotifications = async () => {
+  // Función memoizada para cargar notificaciones
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const url = `/api/notifications?userId=${userId}`;
@@ -74,7 +58,27 @@ const NotificationBell = ({ userId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  // Cargar contador de notificaciones no leídas
+  useEffect(() => {
+    if (userId) {
+      console.log('[NotificationBell] Fetching unread count for userId:', userId);
+      fetchUnreadCount();
+      // Refrescar cada 30 segundos
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [userId, fetchUnreadCount]);
+
+  // Cargar notificaciones cuando se abre el dropdown
+  useEffect(() => {
+    if (showDropdown && userId) {
+      fetchNotifications();
+    }
+  }, [showDropdown, userId, fetchNotifications]);
+
+
 
   const handleMarkAsRead = async (notificationId) => {
     try {
