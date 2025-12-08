@@ -15,8 +15,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'http',
     cleartext: true,
-    hostname: '10.0.2.2',
-    androidSchemeHttp: true
+    // NO especificar URL - la app se sirve desde archivos locales
+    allowNavigation: ['10.0.2.2:8080', 'localhost:8080']
   },
   
   plugins: {
@@ -35,9 +35,14 @@ const config: CapacitorConfig = {
     },
     SplashScreen: {
       launchAutoHide: true,
-      androidScaleType: 'CENTER_CROP',
+      launchShowDuration: 2000,
+      launchFadeOutDuration: 500,
+      backgroundColor: '#121212',
+      androidScaleType: 'CENTER_INSIDE',
       androidSplashResourceName: 'splash',
-      showSpinner: false
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
     }
   }
 };

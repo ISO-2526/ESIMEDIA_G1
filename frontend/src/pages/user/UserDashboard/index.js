@@ -400,7 +400,7 @@ function UserDashboard() {
   };
 
   // REEMPLAZO: logout unificado
-  const handleLogout = () => logoutCsrf('/login', history);
+  const handleLogout = () => logoutCsrf('/', history);
 
   // Separar contenido por tipo
   const getAudioContent = () => {
