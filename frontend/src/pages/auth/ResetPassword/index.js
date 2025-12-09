@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { IonPage, IonContent } from '@ionic/react';
 import api from '../../../api/axiosConfig';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -146,7 +147,7 @@ function ResetPassword() {
     );
   }
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="reset-wrapper">
         {/* Panel informativo lateral */}
@@ -275,6 +276,18 @@ function ResetPassword() {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 }
 
 export default ResetPassword;

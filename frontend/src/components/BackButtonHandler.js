@@ -15,8 +15,17 @@ const BackButtonHandler = () => {
     const backButtonListener = App.addListener('backButton', ({ canGoBack }) => {
       const currentPath = history.location.pathname;
       
+      // Rutas de autenticación 2FA/3FA - BLOQUEAR retroceso (redirigir al login)
+      const blockedRoutes = ['/validate-2fa', '/validate-3fa'];
+      
+      if (blockedRoutes.includes(currentPath)) {
+        // Redirigir al login en lugar de retroceder
+        history.push('/login');
+        return;
+      }
+      
       // Rutas principales - salir de la app
-      const mainRoutes = ['/', '/dashboard', '/login'];
+      const mainRoutes = ['/', '/dashboard', '/usuario'];
       
       if (mainRoutes.includes(currentPath) || !canGoBack) {
         // Mostrar confirmación antes de salir
@@ -24,7 +33,7 @@ const BackButtonHandler = () => {
           App.exitApp();
         }
       } else {
-        // En cualquier otra ruta, retroceder
+        // En cualquier otra ruta (incluyendo /login), retroceder
         history.goBack();
       }
     });

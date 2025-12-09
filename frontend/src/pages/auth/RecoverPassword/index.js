@@ -1,5 +1,6 @@
 //Pagina recuperar contraseña
 import React, { useState } from 'react';
+import { IonPage, IonContent } from '@ionic/react';
 import api from '../../../api/axiosConfig';
 import { useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -46,7 +47,7 @@ function RecoverPassword() {
     setMessageType('success');
   };
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="recover-wrapper">
         {/* Panel informativo lateral */}
@@ -104,6 +105,18 @@ function RecoverPassword() {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 }
 
 export default RecoverPassword;

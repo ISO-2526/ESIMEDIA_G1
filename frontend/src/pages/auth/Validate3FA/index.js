@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { IonPage, IonContent } from '@ionic/react';
 import { useLocation, useHistory } from "react-router-dom";
 import { useIonRouter } from '@ionic/react';
 import { Capacitor } from '@capacitor/core';
@@ -130,7 +131,7 @@ const Validate3FA = () => {
     }
   };
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="validate3fa-wrapper">
         {/* Panel informativo lateral */}
@@ -244,6 +245,18 @@ const Validate3FA = () => {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 };
 
 export default Validate3FA;

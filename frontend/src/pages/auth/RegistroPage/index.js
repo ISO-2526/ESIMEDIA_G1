@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { IonPage, IonContent } from '@ionic/react';
 import './RegistroPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
@@ -208,7 +209,7 @@ function RegistroPage() {
     }
   };
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="animated-bg"></div>
 
@@ -491,6 +492,18 @@ function RegistroPage() {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 }
 
 export default RegistroPage;

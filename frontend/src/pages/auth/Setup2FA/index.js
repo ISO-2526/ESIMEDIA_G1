@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { IonPage, IonContent } from '@ionic/react';
 import { useLocation, useHistory } from "react-router-dom";
 import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
@@ -51,7 +52,7 @@ const Setup2FA = () => {
     navigate('/login');
   };
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="setup2fa-wrapper">
         {/* Panel informativo lateral */}
@@ -138,6 +139,18 @@ const Setup2FA = () => {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 };
 
 export default Setup2FA;
