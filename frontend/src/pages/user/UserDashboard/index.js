@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
+import { IonPage, IonContent } from '@ionic/react';
 import ContentLayout from '../../../layouts/ContentLayout';
 import VideoPlayer from '../../../components/VideoPlayer';
 import AudioPlayer from '../../../components/AudioPlayer';
@@ -306,15 +307,8 @@ function UserDashboard() {
     setTimeout(() => setNotification(null), 3000);
   }, []);
 
-  useEffect(() => {
-    fetchContents();
-    fetchPlaylists();
-    fetchCreatorPlaylists();
-    loadUserProfile();
-  }, []);
-
   // ⚠️ HYBRID STRATEGY: Función para construir URLs absolutas en móvil
-  const getImageUrl = (path) => {
+  const getImageUrl = useCallback((path) => {
     if (!path) return '/pfp/avatar1.png'; // Fallback
     if (path.startsWith('http')) return path; // Ya es absoluta
     // Si es nativo y ruta relativa, usar backend android
@@ -322,29 +316,39 @@ function UserDashboard() {
       return `http://10.0.2.2:8080${path}`;
     }
     return path; // Web: usar ruta relativa
-  };
+  }, []);
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = useCallback(async () => {
     try {
       const response = await axios.get('/api/users/profile', {
         withCredentials: true
       });
       const profileData = response.data;
+      console.log('🖼️ UserDashboard - Cargando imagen:', profileData.picture);
+      const imageUrl = getImageUrl(profileData.picture);
+      console.log('🖼️ UserDashboard - URL procesada:', imageUrl);
       const updatedProfile = {
         name: profileData.name,
         surname: profileData.surname,
         email: profileData.email,
         alias: profileData.alias,
         dateOfBirth: profileData.dateOfBirth,
-        picture: getImageUrl(profileData.picture), // ✅ URL absoluta en móvil
+        picture: imageUrl, // ✅ URL absoluta en móvil
         vip: profileData.vip || false
       };
       setUserProfile(updatedProfile);
-      console.log('🖼️ Profile picture URL:', updatedProfile.picture);
+      console.log('🖼️ UserDashboard - Profile actualizado:', updatedProfile);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
-  };
+  }, [getImageUrl]);
+
+  useEffect(() => {
+    fetchContents();
+    fetchPlaylists();
+    fetchCreatorPlaylists();
+    loadUserProfile();
+  }, [loadUserProfile]);
 
   const fetchContents = async () => {
     try {
@@ -490,13 +494,13 @@ function UserDashboard() {
     );
   }
 
-  return (
+  const dashboardContent = (
     <div className="user-dashboard">
       <div className="animated-bg"></div>
       <div className="scroll-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
 
       {/* 📱 Renderizado condicional: Móvil vs Desktop */}
-      {Capacitor.isNativePlatform() ? (
+      {isMobile ? (
         <MobileHeader
           userProfile={userProfile}
           searchQuery={searchQuery}
@@ -642,6 +646,18 @@ function UserDashboard() {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {dashboardContent}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return dashboardContent;
 }
 
 export default UserDashboard;

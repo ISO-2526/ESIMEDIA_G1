@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { IonPage, IonContent } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
@@ -330,19 +331,32 @@ function UserProfilePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const loadUserProfile = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      const profileData = response.data;
+      console.log('🖼️ UserProfilePage - Cargando imagen:', profileData.picture);
+      const imageUrl = getImageUrl(profileData.picture);
+      console.log('🖼️ UserProfilePage - URL procesada:', imageUrl);
+      setUserProfile({
+        picture: imageUrl,
+        vip: profileData.vip || false
+      });
+    } catch (error) {
+      console.error('Error al cargar el perfil del usuario en UserProfilePage:', error);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       const data = await getProfileFromBackend();
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({
-          picture: getImageUrl(data.picture),
-          vip: data.vip || false
-        });
       }
+      await loadUserProfile();
     })();
-  }, []);
+  }, [loadUserProfile]);
 
   useEffect(() => {
     fetch3FAStatus(setThirdFactorEnabled);
@@ -451,11 +465,13 @@ function UserProfilePage() {
     }
   };
 
-  return (
+  const isMobile = Capacitor.isNativePlatform();
+
+  const profileContent = (
     <div className="user-profile-page">
       <div className="animated-bg"></div>
 
-      {Capacitor.isNativePlatform() ? (
+      {isMobile ? (
         <MobileHeader
           userProfile={userProfile}
           handleLogout={() => logoutWithCookies('/', history)}
@@ -526,6 +542,18 @@ function UserProfilePage() {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {profileContent}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return profileContent;
 }
 
 export default UserProfilePage;

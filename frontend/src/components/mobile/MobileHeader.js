@@ -17,7 +17,8 @@ import {
   warning,
   alertCircle,
   checkmarkCircle,
-  trashOutline
+  trashOutline,
+  homeOutline
 } from 'ionicons/icons';
 import useNavigate from '../../hooks/useNavigate';
 import MobileFilterModal from './MobileFilterModal';
@@ -251,9 +252,13 @@ const MobileHeader = ({
               id="filter-menu-trigger"
               className="mobile-icon-btn"
               onClick={() => {
-                setIsFilterOpen(!isFilterOpen);
-                setIsMenuOpen(false);
-                setIsNotificationsOpen(false);
+                if (isFilterOpen) {
+                  setIsFilterOpen(false);
+                } else {
+                  setIsFilterOpen(true);
+                  setIsMenuOpen(false);
+                  setIsNotificationsOpen(false);
+                }
               }}
             >
               <IonIcon icon={filterOutline} />
@@ -266,9 +271,13 @@ const MobileHeader = ({
               id="notifications-menu-trigger"
               className="mobile-icon-btn notification-btn-container"
               onClick={() => {
-                setIsNotificationsOpen(!isNotificationsOpen);
-                setIsMenuOpen(false);
-                setIsFilterOpen(false);
+                if (isNotificationsOpen) {
+                  setIsNotificationsOpen(false);
+                } else {
+                  setIsNotificationsOpen(true);
+                  setIsMenuOpen(false);
+                  setIsFilterOpen(false);
+                }
               }}
             >
               <IonIcon icon={notificationsOutline} />
@@ -286,9 +295,14 @@ const MobileHeader = ({
               className="mobile-icon-btn avatar-button"
               id="user-menu-trigger"
               onClick={() => {
-                setIsMenuOpen(!isMenuOpen);
-                setIsFilterOpen(false);
-                setIsNotificationsOpen(false);
+                // Si el menú está abierto, lo cierra; si está cerrado, lo abre y cierra los demás
+                if (isMenuOpen) {
+                  setIsMenuOpen(false);
+                } else {
+                  setIsMenuOpen(true);
+                  setIsFilterOpen(false);
+                  setIsNotificationsOpen(false);
+                }
               }}
             >
               <div className="mobile-avatar">
@@ -334,6 +348,17 @@ const MobileHeader = ({
         className="user-menu-popover"
       >
         <div className="user-menu-content">
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              navigate('/usuario');
+            }}
+          >
+            <IonIcon icon={homeOutline} />
+            <span>Inicio</span>
+          </button>
+
           <button
             className="user-menu-button"
             onClick={() => {

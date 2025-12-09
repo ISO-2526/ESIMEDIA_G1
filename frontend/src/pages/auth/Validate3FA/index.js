@@ -43,7 +43,7 @@ const Validate3FA = () => {
   const navigate = (path) => {
     console.log('🚀 Validate3FA navegando a:', path);
     if (isMobile && ionRouter) {
-      ionRouter.push(path, 'forward', 'push');
+      ionRouter.push(path, 'root', 'replace');
     } else {
       history.push(path);
     }
@@ -99,6 +99,8 @@ const Validate3FA = () => {
     setMessage("");
 
     try {
+      console.log('📱 Validando 3FA con:', { email, code });
+      
       const response = await axios.post("/api/auth/verify-3fa-code", {
         email,
         code,
@@ -106,21 +108,37 @@ const Validate3FA = () => {
         withCredentials: true
       });
 
+      console.log('✅ Validación 3FA exitosa:', response.data);
       const data = response.data;
 
+      // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
+      if (data.accessToken) {
+        localStorage.setItem('access_token', data.accessToken);
+        console.log('🔑 Token guardado en localStorage:', data.accessToken);
+      }
+
+      // ✅ Desactivar loading ANTES de navegar
+      setIsLoading(false);
+
+      // Pequeño delay para asegurar que localStorage se sincroniza
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Redirigir según el rol
+      console.log('🚀 Navegando a dashboard con role:', data.role);
       if (data.role === "admin") {
         navigate("/adminDashboard");
       } else if (data.role === "creator") {
         navigate("/creator");
-      } else {
+      } else if (data.role === "user") {
         navigate("/usuario");
+      } else {
+        navigate("/");
       }
     } catch (error) {
+      console.error("❌ Error al validar 3FA:", error);
       const errorMsg = error.response?.data?.error || "Código incorrecto. Inténtalo de nuevo.";
       setMessage(errorMsg);
       setMessageType("error");
-    } finally {
       setIsLoading(false);
     }
   };

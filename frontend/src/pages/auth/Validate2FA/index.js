@@ -35,8 +35,9 @@ const Validate2FA = () => {
 
   // Función de navegación híbrida
   const navigate = (path) => {
+    console.log('📍 Navegando a:', path, 'isMobile:', isMobile);
     if (isMobile && ionRouter) {
-      ionRouter.push(path, 'forward', 'push');
+      ionRouter.push(path, 'root', 'replace');
     } else {
       history.push(path);
     }

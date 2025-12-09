@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
+import { IonPage, IonContent } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import PlaylistCard from '../../../components/PlaylistCard';
@@ -26,7 +27,7 @@ function PlaylistsPage() {
   // Navegación híbrida
   const navigate = (path) => {
     if (isMobile && ionRouter) {
-      ionRouter.push(path, 'forward', 'push');
+      ionRouter.push(path, 'root', 'replace');
     } else {
       history.push(path);
     }
@@ -139,9 +140,9 @@ function PlaylistsPage() {
     );
   }
 
-  return (
+  const playlistsContent = (
     <div className="playlists-page">
-      {Capacitor.isNativePlatform() && (
+      {isMobile && (
         <MobileHeader
           userProfile={userProfile}
           handleLogout={handleLogout}
@@ -280,6 +281,18 @@ function PlaylistsPage() {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {playlistsContent}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return playlistsContent;
 }
 
 export default PlaylistsPage;

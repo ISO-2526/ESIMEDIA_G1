@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
+import { IonPage, IonContent } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './SubscriptionPage.css';
@@ -24,7 +25,7 @@ function SubscriptionPage() {
   // Navegación híbrida
   const navigate = (path) => {
     if (isMobile && ionRouter) {
-      ionRouter.push(path, 'forward', 'push');
+      ionRouter.push(path, 'root', 'replace');
     } else {
       history.push(path);
     }
@@ -95,25 +96,12 @@ function SubscriptionPage() {
 
   const loadUserProfile = async () => {
     try {
-      const email = localStorage.getItem('email');
-
-      if (email) {
-        const response = await axios.get('/api/users/profile', {
-          withCredentials: true,
-          headers: { 'email': email }
-        });
-        const profileData = response.data;
-        const updatedProfile = {
-          name: profileData.name,
-          surname: profileData.surname,
-          email: profileData.email,
-          alias: profileData.alias,
-          dateOfBirth: profileData.dateOfBirth,
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        };
-        setUserProfile(updatedProfile);
-      }
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      const profileData = response.data;
+      setUserProfile({
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      });
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -173,13 +161,13 @@ function SubscriptionPage() {
     return date.toLocaleDateString('es-ES', options);
   };
 
-  return (
+  const subscriptionContent = (
     <div className="subscription-page">
       {/* Animated Background */}
       <div className="animated-bg"></div>
 
       {/* Header */}
-      {Capacitor.isNativePlatform() ? (
+      {isMobile ? (
         <MobileHeader
           userProfile={userProfile}
           handleLogout={handleLogout}
@@ -440,6 +428,18 @@ function SubscriptionPage() {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {subscriptionContent}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return subscriptionContent;
 }
 
 export default SubscriptionPage;
