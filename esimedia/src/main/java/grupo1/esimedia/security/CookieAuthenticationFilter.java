@@ -1,6 +1,7 @@
 package grupo1.esimedia.security;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import grupo1.esimedia.Accounts.model.Token;
@@ -34,14 +36,18 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // No filtrar endpoints públicos
-        return path.startsWith("/api/auth/login") 
+        return path.startsWith("/api/auth/login") // Covers /login and /login/2fa
             || path.startsWith("/api/auth/register")
             || path.startsWith("/api/auth/recover")
-            || path.startsWith("/api/auth/reset-password")
+            || path.startsWith("/api/auth/reset-password") // Covers /reset-password
+            || path.startsWith("/api/users/reset-password") // Specific user reset password endpoint
             || path.startsWith("/api/auth/validate-reset-token")
             || path.startsWith("/api/auth/2fa/setup")
             || path.startsWith("/api/auth/send-3fa-code")
             || path.startsWith("/api/auth/verify-3fa-code")
+            || path.startsWith("/api/auth/validate-token") // Added from SecurityConfig
+            || path.startsWith("/api/auth/logout") // Added from SecurityConfig
+            || (path.equals("/api/users") && "POST".equalsIgnoreCase(request.getMethod())) // Specific for user creation
             || path.startsWith("/api/public")
             || path.startsWith("/health")
             || path.startsWith("/actuator")
@@ -82,14 +88,14 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
         
         if (token == null) {
             log.warn("⚠️ Token not found in database: {}", tokenId);
-            filterChain.doFilter(request, response);
+            writeUnauthorized(response, "session_expired", "Token inválido o no encontrado");
             return;
         }
 
         // 3. Verificar que no esté expirado
         if (token.getExpiration() == null || token.getExpiration().isBefore(LocalDateTime.now())) {
             log.warn("⚠️ Token expired: {} - Expiration: {}", tokenId, token.getExpiration());
-            filterChain.doFilter(request, response);
+            writeUnauthorized(response, "session_expired", "Token expirado");
             return;
         }
 
@@ -132,5 +138,13 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private void writeUnauthorized(HttpServletResponse res, String error, String message) throws IOException {
+        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        res.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        String body = String.format("{\"error\":\"%s\",\"message\":\"%s\"}", error, message);
+        res.getWriter().write(body);
     }
 }

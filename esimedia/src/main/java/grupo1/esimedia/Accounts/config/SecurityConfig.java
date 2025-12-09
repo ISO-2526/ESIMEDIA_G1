@@ -1,5 +1,6 @@
 package grupo1.esimedia.Accounts.config;
 
+import grupo1.esimedia.security.SessionTimeoutFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,20 +16,22 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import grupo1.esimedia.security.CookieAuthenticationFilter;
-import grupo1.esimedia.security.SessionTimeoutFilter;
 
 import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    
+
+    private final SessionTimeoutFilter sessionTimeoutFilter;
+
+
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    private final SessionTimeoutFilter sessionTimeoutFilter; 
     private final CookieAuthenticationFilter cookieAuthenticationFilter;
 
     public SecurityConfig(
@@ -53,6 +56,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 "/api/auth/register",
                 "/api/auth/recover",
                 "/api/auth/reset-password",
+                "/api/users/reset-password", // Endpoint de usuario para resetear
                 "/api/auth/validate-reset-token",
                 "/api/auth/2fa/setup",
                 "/api/auth/send-3fa-code",
