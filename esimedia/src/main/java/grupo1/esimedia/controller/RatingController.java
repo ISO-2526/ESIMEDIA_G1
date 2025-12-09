@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.dto.RatingRequestDTO;
 import grupo1.esimedia.dto.RatingResponseDTO;
 import grupo1.esimedia.dto.RatingStatsDTO;
@@ -34,6 +32,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/ratings")
 @PreAuthorize("hasRole('USER')")
 public class RatingController {
+
+    private static final String ERROR = "error";
 
     @Autowired
     private RatingService ratingService;
@@ -53,10 +53,10 @@ public class RatingController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                .body(Map.of("error", e.getMessage()));
+                .body(Map.of(ERROR, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al guardar la valoración: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al guardar la valoración: " + e.getMessage()));
         }
     }
 
@@ -78,7 +78,7 @@ public class RatingController {
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener la valoración: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener la valoración: " + e.getMessage()));
         }
     }
 
@@ -93,7 +93,7 @@ public class RatingController {
             return ResponseEntity.ok(ratings);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener las valoraciones: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener las valoraciones: " + e.getMessage()));
         }
     }
 
@@ -108,7 +108,7 @@ public class RatingController {
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener las estadísticas: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener las estadísticas: " + e.getMessage()));
         }
     }
 
@@ -127,7 +127,7 @@ public class RatingController {
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener el promedio: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener el promedio: " + e.getMessage()));
         }
     }
 
@@ -144,7 +144,7 @@ public class RatingController {
             return ResponseEntity.ok(trending);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener contenido trending: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener contenido trending: " + e.getMessage()));
         }
     }
 
@@ -164,11 +164,11 @@ public class RatingController {
                 return ResponseEntity.ok(Map.of("message", "Valoración eliminada correctamente"));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "No se encontró la valoración"));
+                    .body(Map.of(ERROR, "No se encontró la valoración"));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al eliminar la valoración: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al eliminar la valoración: " + e.getMessage()));
         }
     }
 
@@ -186,7 +186,7 @@ public class RatingController {
             return ResponseEntity.ok(ratings);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al obtener las valoraciones: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener las valoraciones: " + e.getMessage()));
         }
     }
 

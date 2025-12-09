@@ -164,7 +164,7 @@ public class CreatorPlaylistController {
         
         // 🔒 Validar que el creador es el propietario
         if (!p.getUserEmail().equals(email)) 
-            return ResponseEntity.status(403).body(Map.of("error", "No eres el propietario"));
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No eres el propietario"));
 
         String nuevoNombre = Optional.ofNullable((String) body.get("nombre")).map(String::trim).orElse(null);
         String nuevaDesc = (String) body.getOrDefault("descripcion", null);

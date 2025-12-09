@@ -1,7 +1,6 @@
 package grupo1.esimedia.Accounts.dto.response;
 
 import java.util.Map;
-import java.util.HashMap;
 
 public class LoginResponse {
     private boolean success;

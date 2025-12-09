@@ -480,17 +480,6 @@ void deleteUserReturnsNotFoundWhenMissing() throws Exception {
         assertEquals(false, downgraded.isVip());
     }
 
-private Map<String, Object> basicUserPayload(String email, String password) {
-    return Map.of(
-        "email", email,
-        "password", password,
-        "name", "Test",
-        "surname", "User",
-        "alias", "Tester",
-        "dateOfBirth", "1990-01-01"  // ✅ Añadir
-    );
-}
-
     private User buildUser(String email) {
         User user = new User();
         user.setEmail(email);

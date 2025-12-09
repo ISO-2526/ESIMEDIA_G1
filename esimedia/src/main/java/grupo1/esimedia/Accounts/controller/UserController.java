@@ -41,6 +41,23 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
+    private static final String ERROR = "error";
+
+    private static final String MESSAGE = "message";
+
+    private static final String ACTIVE =  "active";
+
+    private static final String FAVORITES = "favorites";
+
+    private static final String USUARIONOENCONTRADO = "Usuario no encontrado";
+
+    private static final String SURNAME = "surname";
+
+    private static final String ALIAS = "alias";
+
+    private static final String PICTURE = "picture";
+
     
     @Autowired
     private UserRepository userRepository;
@@ -80,8 +97,8 @@ public class UserController {
         
         if (!passwordErrors.isEmpty()) {
             return ResponseEntity.status(400).body(Map.of(
-                "error", "PASSWORD_WEAK",
-                "message", passwordErrors.get(0)
+                ERROR, "PASSWORD_WEAK",
+                MESSAGE, passwordErrors.get(0)
             ));
         }
 
@@ -126,7 +143,7 @@ public class UserController {
     @PutMapping(path = "/{email:.+}/active", consumes = "application/json")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> setUserActive(@PathVariable String email, @RequestBody Map<String, Object> body) {
-        Object activeObj = body.get("active");
+        Object activeObj = body.get(ACTIVE);
         if (activeObj == null) return ResponseEntity.badRequest().body("Missing 'active' field");
         final boolean active = (activeObj instanceof Boolean) ? (Boolean) activeObj : Boolean.parseBoolean(activeObj.toString());
         var opt = userRepository.findById(email);
@@ -193,7 +210,7 @@ public class UserController {
             newUser.setFavorites(new ArrayList<>());
             newUser.getFavorites().add(contentId);
             userRepository.save(newUser);
-            return ResponseEntity.ok(Map.of("message", "Added to favorites", "favorites", newUser.getFavorites()));
+            return ResponseEntity.ok(Map.of(MESSAGE, "Added to favorites", FAVORITES, newUser.getFavorites()));
         }
         
         User user = opt.get();
@@ -204,14 +221,14 @@ public class UserController {
         
         // Check if already in favorites
         if (favorites.contains(contentId)) {
-            return ResponseEntity.status(400).body(Map.of("error", "Content already in favorites"));
+            return ResponseEntity.status(400).body(Map.of(ERROR, "Content already in favorites"));
         }
         
         favorites.add(contentId);
         user.setFavorites(favorites);
         userRepository.save(user);
         
-        return ResponseEntity.ok(Map.of("message", "Added to favorites", "favorites", favorites));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Added to favorites", FAVORITES, favorites));
     }
 
     // Remove content from favorites
@@ -236,7 +253,7 @@ public class UserController {
         user.setFavorites(favorites);
         userRepository.save(user);
         
-        return ResponseEntity.ok(Map.of("message", "Removed from favorites", "favorites", favorites));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Removed from favorites", FAVORITES, favorites));
     }
 
     //Reset password functionality(obsoleto)
@@ -270,7 +287,7 @@ public class UserController {
         emailService.sendEmail(user.getEmail(), "Password Reset", "Your password has been reset successfully.");
         userRepository.save(user);
 
-        return ResponseEntity.ok(Map.of("message", "Password reset"));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Password reset"));
     }
 
     @GetMapping("/profile")
@@ -280,7 +297,7 @@ public class UserController {
         String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
         return ResponseEntity.ok(toUserResponseDTO(user));
     }
@@ -292,7 +309,7 @@ public class UserController {
         String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         // Actualizar los campos permitidos
@@ -309,20 +326,20 @@ public class UserController {
     public ResponseEntity<Map<String, String>> setupTwoFactorAuth(@RequestParam String email) {
         // Validar formato del correo electrónico
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Correo electrónico inválido"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR, "Correo electrónico inválido"));
         }
 
         // Buscar usuario
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(ERROR, USUARIONOENCONTRADO));
         }
 
         try {
             // Verificar si ya existe una clave secreta
             String existingSecretKey = user.getTwoFactorSecretKey();
             if (existingSecretKey != null && !existingSecretKey.isEmpty()) {
-                return ResponseEntity.ok(Map.of("message", "2FA ya está habilitado", "secretKey", existingSecretKey));
+                return ResponseEntity.ok(Map.of(MESSAGE, "2FA ya está habilitado", "secretKey", existingSecretKey));
             }
 
             // Generar nueva clave secreta
@@ -349,7 +366,7 @@ public class UserController {
             return ResponseEntity.ok(Map.of("qrCodeBase64", base64QrCode, "secretKey", key.getKey()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al generar el código QR: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al generar el código QR: " + e.getMessage()));
         }
     }
 
@@ -371,17 +388,17 @@ public class UserController {
         if (body.containsKey("name") && body.get("name") instanceof String) {
             existing.setName(((String) body.get("name")).trim());
         }
-        if (body.containsKey("surname") && body.get("surname") instanceof String) {
-            existing.setSurname(((String) body.get("surname")).trim());
+        if (body.containsKey(SURNAME) && body.get(SURNAME) instanceof String) {
+            existing.setSurname(((String) body.get(SURNAME)).trim());
         }
-        if (body.containsKey("alias") && body.get("alias") instanceof String) {
-            existing.setAlias(((String) body.get("alias")).trim());
+        if (body.containsKey(ALIAS) && body.get(ALIAS) instanceof String) {
+            existing.setAlias(((String) body.get(ALIAS)).trim());
         }
-        if (body.containsKey("picture") && body.get("picture") instanceof String) {
-            existing.setPicture(((String) body.get("picture")).trim());
+        if (body.containsKey(PICTURE) && body.get(PICTURE) instanceof String) {
+            existing.setPicture(((String) body.get(PICTURE)).trim());
         }
-        if (body.containsKey("active")) {
-            updateActiveField(existing, body.get("active"));
+        if (body.containsKey(ACTIVE)) {
+            updateActiveField(existing, body.get(ACTIVE));
         }
     }
 
@@ -410,14 +427,14 @@ public class UserController {
         String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         user.setVip(true);
         user.setVipSince(LocalDateTime.now());
         userRepository.save(user);
 
-        return ResponseEntity.ok(Map.of("message", "Usuario actualizado a VIP", "vip", true));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Usuario actualizado a VIP", "vip", true));
     }
 
     @PostMapping("/vip/downgrade")
@@ -427,7 +444,7 @@ public class UserController {
         String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         user.setVip(false);
@@ -435,7 +452,7 @@ public class UserController {
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of(
-            "message", "Usuario actualizado a NORMAL. El contenido VIP permanecerá en tus listas pero no podrás acceder hasta que vuelvas a ser VIP", 
+            MESSAGE, "Usuario actualizado a NORMAL. El contenido VIP permanecerá en tus listas pero no podrás acceder hasta que vuelvas a ser VIP", 
             "vip", false
         ));
     }

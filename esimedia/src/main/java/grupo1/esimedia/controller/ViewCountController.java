@@ -19,6 +19,10 @@ public class ViewCountController {
     @Autowired
     private ContentService contentService;
 
+    private static final String CONTENTID = "contentId";
+    private static final String TOTALVIEWS = "totalViews";
+    private static final String ERROR = "error";
+
     /**
      * Registra una reproducción de contenido (incrementa contador en Content).
      * POST /api/views/{contentId}
@@ -30,12 +34,12 @@ public class ViewCountController {
             Long newCount = contentService.getViewCount(contentId);
             return ResponseEntity.ok(Map.of(
                 "message", "Reproducción registrada", 
-                "contentId", contentId,
-                "totalViews", newCount
+                CONTENTID, contentId,
+                TOTALVIEWS, newCount
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                .body(Map.of("error", "Error al registrar reproducción: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al registrar reproducción: " + e.getMessage()));
         }
     }
 
@@ -48,12 +52,12 @@ public class ViewCountController {
         try {
             Long totalViews = contentService.getViewCount(contentId);
             return ResponseEntity.ok(Map.of(
-                "contentId", contentId,
-                "totalViews", totalViews
+                CONTENTID, contentId,
+                TOTALVIEWS, totalViews
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                .body(Map.of("error", "Error al obtener reproducciones: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener reproducciones: " + e.getMessage()));
         }
     }
 
@@ -65,10 +69,10 @@ public class ViewCountController {
     public ResponseEntity<?> getTotalViews(@PathVariable String contentId) {
         try {
             Long total = contentService.getViewCount(contentId);
-            return ResponseEntity.ok(Map.of("contentId", contentId, "totalViews", total));
+            return ResponseEntity.ok(Map.of(CONTENTID, contentId, TOTALVIEWS, total));
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                .body(Map.of("error", "Error al obtener total de reproducciones: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al obtener total de reproducciones: " + e.getMessage()));
         }
     }
 }

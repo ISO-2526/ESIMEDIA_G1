@@ -1,7 +1,6 @@
 package grupo1.esimedia.Accounts.controller;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
 
@@ -42,7 +40,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -1041,18 +1038,5 @@ void resetPasswordUpdatesUserCredentials() throws Exception {
     assertNull(refreshed.getResetToken());
 }
 
-    private RequestPostProcessor authenticatedUser(String email, String role) {
-    return request -> {
-        Token token = new Token();
-        token.setId(UUID.randomUUID().toString());
-        token.setAccountId(email);
-        token.setRole(role);
-        token.setExpiration(LocalDateTime.now().plusHours(1));
-        tokenRepository.save(token);
-        
-        Cookie accessCookie = new Cookie("access_token", token.getId());
-        request.setCookies(accessCookie);
-        return request;
-    };
-}
+
 }
