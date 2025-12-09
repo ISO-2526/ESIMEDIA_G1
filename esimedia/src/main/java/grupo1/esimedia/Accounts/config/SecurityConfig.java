@@ -63,6 +63,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()  // ✅ Solo POST público
 
             .requestMatchers("/api/public/**", "/health", "/actuator/**").permitAll()
+            .requestMatchers("/api/notifications/test/**").permitAll() // 🧪 Testing de notificaciones
             
             // Todos los demás endpoints requieren autenticación
             .anyRequest().authenticated()

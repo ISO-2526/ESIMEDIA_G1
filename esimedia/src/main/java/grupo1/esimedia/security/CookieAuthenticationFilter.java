@@ -43,6 +43,7 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
             || path.startsWith("/api/auth/send-3fa-code")
             || path.startsWith("/api/auth/verify-3fa-code")
             || path.startsWith("/api/public")
+            || path.startsWith("/api/notifications/test") // 🧪 Testing de notificaciones
             || path.startsWith("/health")
             || path.startsWith("/actuator")
             || path.startsWith("/cover/")
