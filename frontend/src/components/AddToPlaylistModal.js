@@ -3,6 +3,8 @@ import './AddToPlaylistModal.css';
 import CustomModal from './CustomModal';
 import { useModal } from '../utils/useModal';
 
+import axios from '../api/axiosConfig';
+
 function AddToPlaylistModal({ isOpen, onClose, content }) {
   const { modalState, closeModal, showSuccess, showError, showConfirm } = useModal();
   const [playlists, setPlaylists] = useState([]);
@@ -19,21 +21,18 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const fetchPlaylists = async () => {
     try {
-      const response = await fetch('/api/playlists', { credentials: 'include' });
+      const response = await axios.get('/api/playlists', { withCredentials: true });
+      const data = response.data;
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Separar la lista "Favoritos" y las demás
-        const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
-        const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
-        
-        // Si existe "Favoritos", ponerla primero
-        if (favoritosPlaylist) {
-          setPlaylists([favoritosPlaylist, ...otherPlaylists]);
-        } else {
-          setPlaylists(data);
-        }
+      // Separar la lista "Favoritos" y las demás
+      const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
+      const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
+
+      // Si existe "Favoritos", ponerla primero
+      if (favoritosPlaylist) {
+        setPlaylists([favoritosPlaylist, ...otherPlaylists]);
+      } else {
+        setPlaylists(data);
       }
     } catch (error) {
       console.error('Error fetching playlists:', error);
@@ -47,7 +46,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const handlePlaylistClick = (playlist) => {
     const isInPlaylist = isContentInPlaylist(playlist);
-    
+
     if (isInPlaylist) {
       // Eliminar de la lista
       showConfirm(
@@ -67,17 +66,12 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const addToPlaylist = async (playlistId) => {
     try {
-      const response = await fetch(`/api/playlists/${playlistId}/content/${content.id}`, {
-        method: 'POST',
-        credentials: 'include'
+      await axios.post(`/api/playlists/${playlistId}/content/${content.id}`, {}, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        showSuccess(`"${content.titulo}" añadido a la lista`);
-        fetchPlaylists(); // Actualizar la lista
-      } else {
-        showError('Error al añadir el contenido');
-      }
+      showSuccess(`"${content.titulo}" añadido a la lista`);
+      fetchPlaylists(); // Actualizar la lista
     } catch (error) {
       console.error('Error:', error);
       showError('Error al añadir el contenido');
@@ -86,17 +80,12 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const removeFromPlaylist = async (playlistId) => {
     try {
-      const response = await fetch(`/api/playlists/${playlistId}/content/${content.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      await axios.delete(`/api/playlists/${playlistId}/content/${content.id}`, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        showSuccess('Contenido eliminado de la lista');
-        fetchPlaylists(); // Actualizar la lista
-      } else {
-        showError('Error al eliminar el contenido');
-      }
+      showSuccess('Contenido eliminado de la lista');
+      fetchPlaylists(); // Actualizar la lista
     } catch (error) {
       console.error('Error:', error);
       showError('Error al eliminar el contenido');
@@ -105,66 +94,50 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const createFavoritosPlaylist = async () => {
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: 'Favoritos',
-          descripcion: 'Lista permanente de favoritos',
-          isPermanent: true
-        })
+      await axios.post('/api/playlists', {
+        nombre: 'Favoritos',
+        descripcion: 'Lista permanente de favoritos',
+        isPermanent: true
+      }, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       });
 
-      if (response.ok) {
-        showSuccess('Lista de Favoritos creada');
-        fetchPlaylists();
-      } else {
-        const errorData = await response.json();
-        if (errorData.error && errorData.error.includes('Ya existe')) {
-          showError('Ya tienes una lista de Favoritos');
-        } else {
-          showError('Error al crear la lista de Favoritos');
-        }
-      }
+      showSuccess('Lista de Favoritos creada');
+      fetchPlaylists();
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al crear la lista de Favoritos');
+      const errorData = error.response?.data;
+      if (errorData?.error && errorData.error.includes('Ya existe')) {
+        showError('Ya tienes una lista de Favoritos');
+      } else {
+        showError('Error al crear la lista de Favoritos');
+      }
     }
   };
 
   const handleCreatePlaylist = async (e) => {
     e.preventDefault();
-    
+
     if (!newPlaylistName.trim()) {
       showError('Por favor, ingresa un nombre para la lista');
       return;
     }
 
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: newPlaylistName,
-          descripcion: newPlaylistDescription || ''
-        })
+      await axios.post('/api/playlists', {
+        nombre: newPlaylistName,
+        descripcion: newPlaylistDescription || ''
+      }, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       });
 
-      if (response.ok) {
-        showSuccess('Lista creada exitosamente');
-        setShowCreateForm(false);
-        setNewPlaylistName('');
-        setNewPlaylistDescription('');
-        fetchPlaylists();
-      } else {
-        showError('Error al crear la lista');
-      }
+      showSuccess('Lista creada exitosamente');
+      setShowCreateForm(false);
+      setNewPlaylistName('');
+      setNewPlaylistDescription('');
+      fetchPlaylists();
     } catch (error) {
       console.error('Error:', error);
       showError('Error al crear la lista');
@@ -173,9 +146,9 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const getFilteredPlaylists = () => {
     if (!searchTerm.trim()) return playlists;
-    
+
     const search = searchTerm.toLowerCase();
-    return playlists.filter(playlist => 
+    return playlists.filter(playlist =>
       playlist.nombre.toLowerCase().includes(search) ||
       (playlist.descripcion && playlist.descripcion.toLowerCase().includes(search))
     );
@@ -185,16 +158,16 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   return (
     <>
-      <div 
-        className="add-to-playlist-modal-overlay" 
+      <div
+        className="add-to-playlist-modal-overlay"
         onClick={onClose}
         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
         role="button"
         tabIndex={0}
         aria-label="Cerrar modal"
       >
-        <div 
-          className="add-to-playlist-modal" 
+        <div
+          className="add-to-playlist-modal"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
           role="dialog"
@@ -221,7 +194,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
             {/* Botón para crear Favoritos si no existe */}
             {!playlists.some(p => p.nombre === 'Favoritos' && p.isPermanent) && (
-              <button 
+              <button
                 className="new-playlist-btn favoritos-create-btn"
                 onClick={createFavoritosPlaylist}
               >
@@ -232,7 +205,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
             {/* Botón Nueva Lista */}
             {!showCreateForm && (
-              <button 
+              <button
                 className="new-playlist-btn"
                 onClick={() => setShowCreateForm(true)}
               >
@@ -289,10 +262,10 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
                   const isInPlaylist = isContentInPlaylist(playlist);
                   const itemCount = playlist.items ? playlist.items.length : 0;
                   const isFavoritos = playlist.nombre === 'Favoritos' && playlist.isPermanent;
-                  
+
                   return (
-                    <div 
-                      key={playlist.id} 
+                    <div
+                      key={playlist.id}
                       className={`playlist-item ${isInPlaylist ? 'in-playlist' : ''} ${isFavoritos ? 'favoritos-permanent' : ''}`}
                       onClick={() => handlePlaylistClick(playlist)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlaylistClick(playlist); } }}

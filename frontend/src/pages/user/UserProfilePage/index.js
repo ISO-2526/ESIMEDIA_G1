@@ -100,29 +100,9 @@ const getProfileFromBackend = async () => {
   }
 };
 
-const parseActivationResponseMessage = async (response) => {
-  let message = '';
-  const ct = (response.headers.get('content-type') || '').toLowerCase();
-  try {
-    if (ct.includes('application/json')) {
-      const data = await response.json();
-      message = typeof data === 'string' ? data : (data?.message || '');
-    } else {
-      message = await response.text();
-    }
-  } catch {
-    // Ignorar parse errores
-  }
-  return message;
-};
-
 const activateOrDeactivate3FA = async ({ email, activate }) => {
-  return fetch('/api/auth/activate-3fa', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, activate })
-  });
+  // Axios throw on 4xx/5xx, so we just return the promise
+  return axios.post('/api/auth/activate-3fa', { email, activate });
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
@@ -130,8 +110,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
-        <button 
-          onClick={() => window.location.href='/usuario'}
+        <button
+          onClick={() => window.location.href = '/usuario'}
           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           aria-label="Ir a inicio"
         >
@@ -145,8 +125,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
       </nav>
       <div className="header-right">
         <div className="user-menu-container">
-          <div 
-            className="user-avatar-profile" 
+          <div
+            className="user-avatar-profile"
             onClick={onToggleMenu}
             onKeyDown={(event) => handleKeyboardActivation(event, onToggleMenu)}
             role="button"
@@ -310,8 +290,6 @@ const ProfileActions = ({ isEditing, onEdit, onDelete, onSave, onCancel }) => (
   </div>
 );
 
-
-
 /* ---------- Refactor de UserProfilePage (reducción complejidad) ---------- */
 function UserProfilePage() {
   const history = useHistory();
@@ -335,8 +313,8 @@ function UserProfilePage() {
   };
 
   const availableAvatars = [
-    '/pfp/avatar1.png','/pfp/avatar2.png','/pfp/avatar3.png','/pfp/avatar4.png','/pfp/avatar5.png',
-    '/pfp/avatar6.png','/pfp/avatar7.png','/pfp/avatar8.png','/pfp/avatar9.png','/pfp/avatar10.png'
+    '/pfp/avatar1.png', '/pfp/avatar2.png', '/pfp/avatar3.png', '/pfp/avatar4.png', '/pfp/avatar5.png',
+    '/pfp/avatar6.png', '/pfp/avatar7.png', '/pfp/avatar8.png', '/pfp/avatar9.png', '/pfp/avatar10.png'
   ];
 
   const [profileData, setProfileData] = useState({
@@ -358,9 +336,9 @@ function UserProfilePage() {
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({ 
+        setUserProfile({
           picture: getImageUrl(data.picture),
-          vip: data.vip || false 
+          vip: data.vip || false
         });
       }
     })();
@@ -443,17 +421,13 @@ function UserProfilePage() {
       if (!email) return;
 
       const nextState = !thirdFactorEnabled;
+      // Axios call
       const response = await activateOrDeactivate3FA({ email, activate: nextState });
 
-      if (!response.ok) {
-        let errText = '';
-        try { errText = await response.text(); } catch {}
-        showError(errText || 'No se pudo cambiar el estado del 3FA');
-        setStatusMessage(errText || 'No se pudo cambiar el estado del 3FA');
-        return;
-      }
+      // If we are here, status is 2xx
+      const data = response.data;
+      const message = typeof data === 'string' ? data : (data?.message || '');
 
-      const message = await parseActivationResponseMessage(response);
       setThirdFactorEnabled(nextState);
       const fallback = nextState
         ? 'Tercer factor activado correctamente.'
@@ -463,8 +437,17 @@ function UserProfilePage() {
       showSuccess(finalMsg);
     } catch (error) {
       console.error('Error al cambiar el estado del 3FA:', error);
-      setStatusMessage('Error al cambiar el estado del 3FA.');
-      showError('Error al cambiar el estado del 3FA.');
+      let errText = 'No se pudo cambiar el estado del 3FA';
+
+      if (error.response) {
+        const data = error.response.data;
+        if (typeof data === 'string') errText = data;
+        else if (data?.message) errText = data.message;
+        else if (data?.error) errText = data.error;
+      }
+
+      setStatusMessage(errText);
+      showError(errText);
     }
   };
 
@@ -495,16 +478,16 @@ function UserProfilePage() {
         <div className="profile-box">
           <h1>Mi Perfil</h1>
 
-            <ProfilePhotoSection
-              isEditing={isEditing}
-              previewImage={previewImage}
-              profilePicture={profileData.picture}
-              showAvatarSelector={showAvatarSelector}
-              onToggleSelector={() => setShowAvatarSelector(s => !s)}
-              availableAvatars={availableAvatars}
-              tempData={tempData}
-              handleAvatarSelect={handleAvatarSelect}
-            />
+          <ProfilePhotoSection
+            isEditing={isEditing}
+            previewImage={previewImage}
+            profilePicture={profileData.picture}
+            showAvatarSelector={showAvatarSelector}
+            onToggleSelector={() => setShowAvatarSelector(s => !s)}
+            availableAvatars={availableAvatars}
+            tempData={tempData}
+            handleAvatarSelect={handleAvatarSelect}
+          />
 
           <div className="profile-form">
             {renderFormField('Nombre *', 'name', profileData.name, isEditing, tempData.name, handleInputChange)}

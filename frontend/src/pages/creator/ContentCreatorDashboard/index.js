@@ -11,6 +11,8 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 
+import axios from '../../../api/axiosConfig';
+
 export default function ContentCreatorDashboard() {
   const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showConfirm } = useModal();
@@ -34,9 +36,8 @@ export default function ContentCreatorDashboard() {
   // Sesión basada en cookie
   const fetchSession = async () => {
     try {
-      const res = await fetch('/api/auth/validate-token', { credentials: 'include' });
-      if (!res.ok) return null;
-      return await res.json();
+      const res = await axios.get('/api/auth/validate-token', { withCredentials: true });
+      return res.data;
     } catch (e) {
       console.error('Error obteniendo sesión:', e);
       return null;
@@ -73,23 +74,17 @@ export default function ContentCreatorDashboard() {
         return;
       }
 
-      const response = await fetch(`/api/creators/profile?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get(`/api/creators/profile?email=${encodeURIComponent(email)}`, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        const profileData = await response.json();
-        if (profileData.alias) setCreatorAlias(profileData.alias);
-        if (profileData.contentType) setCreatorContentType(String(profileData.contentType).toUpperCase());
-        if (profileData.picture) {
-          setCreatorPhoto(profileData.picture);
-        } else {
-          setCreatorPhoto('/pfp/avatar1.png');
-        }
+      const profileData = response.data;
+      if (profileData.alias) setCreatorAlias(profileData.alias);
+      if (profileData.contentType) setCreatorContentType(String(profileData.contentType).toUpperCase());
+      if (profileData.picture) {
+        setCreatorPhoto(profileData.picture);
       } else {
-        console.error('Error al obtener el perfil desde la BD:', response.status, response.statusText);
+        setCreatorPhoto('/pfp/avatar1.png');
       }
     } catch (error) {
       console.error('Error al cargar el perfil del creador desde la BD:', error);
@@ -115,11 +110,8 @@ export default function ContentCreatorDashboard() {
 
   async function loadCreatorPlaylists() {
     try {
-      const response = await fetch('/api/creator/playlists/all', { credentials: 'include' });
-      if (response.ok) {
-        const data = await response.json();
-        setCreatorPlaylists(data);
-      }
+      const response = await axios.get('/api/creator/playlists/all', { withCredentials: true });
+      setCreatorPlaylists(response.data);
     } catch (error) {
       console.error('Error loading playlists:', error);
     }
@@ -147,19 +139,16 @@ export default function ContentCreatorDashboard() {
     const formData = new FormData();
     formData.append('file', audioFile);
 
-    const uploadResponse = await fetch('/api/upload/audio', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    });
-
-    if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.json();
+    try {
+      const uploadResponse = await axios.post('/api/upload/audio', formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return uploadResponse.data.filename;
+    } catch (error) {
+      const errorData = error.response?.data || {};
       throw new Error(errorData.error || 'Error al subir el archivo de audio');
     }
-
-    const uploadResult = await uploadResponse.json();
-    return uploadResult.filename;
   };
 
   const createContentBody = (payload, audioFileName, creatorAlias) => ({
@@ -287,28 +276,24 @@ export default function ContentCreatorDashboard() {
     }
 
     try {
-      const response = await fetch(`/api/creator/playlists/${selectedPlaylistId}/content/${selectedContent.id}`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      const response = await axios.post(
+        `/api/creator/playlists/${selectedPlaylistId}/content/${selectedContent.id}`,
+        {},
+        { withCredentials: true }
+      );
 
-      if (response.status === 409) {
+      showSuccess('Contenido añadido a la lista');
+      setShowAddToPlaylistModal(false);
+      setSelectedContent(null);
+      setSelectedPlaylistId('');
+      await loadCreatorPlaylists();
+    } catch (error) {
+      console.error('Error:', error);
+      if (error.response?.status === 409) {
         showError('Este contenido ya está en la lista');
-        return;
-      }
-
-      if (response.ok) {
-        showSuccess('Contenido añadido a la lista');
-        setShowAddToPlaylistModal(false);
-        setSelectedContent(null);
-        setSelectedPlaylistId('');
-        await loadCreatorPlaylists();
       } else {
         showError('Error al añadir contenido a la lista');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      showError('Error al añadir contenido a la lista');
     }
   }
 
@@ -339,9 +324,9 @@ export default function ContentCreatorDashboard() {
         />
 
         <h2 className="section-title">Panel del creador</h2>
-        
+
         <CreatorTabs />
-        
+
         <p>Gestiona tus contenidos: crea, edita o elimina.</p>
 
         <ContentFilters
@@ -383,16 +368,16 @@ export default function ContentCreatorDashboard() {
 
       {/* Modal para añadir a lista */}
       {showAddToPlaylistModal && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={() => setShowAddToPlaylistModal(false)}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowAddToPlaylistModal(false); }}
           role="button"
           tabIndex={0}
           aria-label="Cerrar modal"
         >
-          <div 
-            className="modal-content" 
+          <div
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="dialog"
@@ -430,9 +415,9 @@ export default function ContentCreatorDashboard() {
               <button type="button" className="btn-cancel" onClick={() => setShowAddToPlaylistModal(false)}>
                 Cancelar
               </button>
-              <button 
-                type="button" 
-                className="btn-save" 
+              <button
+                type="button"
+                className="btn-save"
                 onClick={handleConfirmAddToPlaylist}
                 disabled={!selectedPlaylistId}
               >

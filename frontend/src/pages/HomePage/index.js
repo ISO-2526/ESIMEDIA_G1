@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
+import { IonContent, IonPage } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
 import 'swiper/css/pagination';
@@ -22,44 +24,44 @@ function HomePage() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const contenidos = [
-    { 
-      id: 1, 
-      titulo: 'Deportes', 
-      imagen: poster, 
+    {
+      id: 1,
+      titulo: 'Deportes',
+      imagen: poster,
       categoria: 'Serie',
       videoUrl: 'https://www.youtube.com/watch?v=Do_z07ptlro' // Video de ejemplo
     },
-    { 
-      id: 2, 
-      titulo: 'Acción Extrema', 
-      imagen: postertiburon, 
+    {
+      id: 2,
+      titulo: 'Acción Extrema',
+      imagen: postertiburon,
       categoria: 'Película',
       videoUrl: 'https://www.youtube.com/watch?v=udm5jUA-2bs' // Video de ejemplo
     },
-    { 
-      id: 3, 
-      titulo: 'Carreras', 
-      imagen: posternano, 
+    {
+      id: 3,
+      titulo: 'Carreras',
+      imagen: posternano,
       categoria: 'Carreras',
       videoUrl: 'https://www.youtube.com/watch?v=H4qYzIrxRds' // Video de ejemplo
     },
-    { 
-      id: 4, 
-      titulo: 'Tecnología', 
-      imagen: posterhacker, 
+    {
+      id: 4,
+      titulo: 'Tecnología',
+      imagen: posterhacker,
       categoria: 'Hacking',
       videoUrl: 'https://www.youtube.com/watch?v=N6HGuJC--rk' // Video de ejemplo
     },
-    { 
-      id: 5, 
-      titulo: 'Infantil', 
-      imagen: posterinfantil, 
+    {
+      id: 5,
+      titulo: 'Infantil',
+      imagen: posterinfantil,
       categoria: 'Infantil',
       videoUrl: 'https://www.youtube.com/watch?v=-49OU1O7lmo' // Video de ejemplo
     },
@@ -73,18 +75,18 @@ function HomePage() {
     setSelectedVideo(null);
   };
 
-  return (
+  const content = (
     <div className="homepage">
       {/* Animated Background */}
       <div className="animated-bg"></div>
-      
+
       {/* Navbar simplificada para landing page */}
       <nav className={`navbar-premium ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <div className="nav-left">
             <img src={logo} className="logo-premium" alt="ESIMEDIA" />
           </div>
-          
+
           <div className="nav-right">
             <div className="nav-slogan-landing">Tu contenido, tu creatividad</div>
           </div>
@@ -94,7 +96,7 @@ function HomePage() {
       {/* Hero Section Mejorado */}
       <section className="hero-premium">
         <div className="hero-overlay"></div>
-        
+
         <div className="hero-content-wrapper">
           {/* Carousel Premium */}
           <div className="carousel-premium">
@@ -126,8 +128,8 @@ function HomePage() {
             >
               {contenidos.map((contenido) => (
                 <SwiperSlide key={contenido.id}>
-                  <div 
-                    className="slide-content" 
+                  <div
+                    className="slide-content"
                     onClick={() => handleVideoClick(contenido)}
                     onKeyPress={(e) => e.key === 'Enter' && handleVideoClick(contenido)}
                     role="button"
@@ -157,12 +159,12 @@ function HomePage() {
             <p className="hero-subtitle-premium">
               Plataforma profesional de contenido multimedia para creadores
             </p>
-            
+
             <div className="cta-question-premium">
               <i className="fas fa-rocket"></i>
               <span>¿Aún no tienes cuenta? ¿A qué estás esperando?</span>
             </div>
-            
+
             <div className="cta-buttons-premium">
               <Link to="/registro" className="btn-premium btn-primary-premium">
                 <span className="btn-shine"></span>
@@ -174,7 +176,7 @@ function HomePage() {
                 Iniciar sesión
               </Link>
             </div>
-            
+
             <div className="features-badges">
               <div className="badge-item">
                 <i className="fas fa-check-circle"></i>
@@ -204,7 +206,7 @@ function HomePage() {
 
       {/* Scroll to top button */}
       {scrolled && (
-        <button 
+        <button
           className="scroll-top-btn"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
@@ -223,6 +225,18 @@ function HomePage() {
       )}
     </div>
   );
+
+  if (Capacitor.isNativePlatform()) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 }
 
 export default HomePage;

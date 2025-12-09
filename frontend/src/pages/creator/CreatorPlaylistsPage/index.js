@@ -7,6 +7,8 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 
+import axios from '../../../api/axiosConfig';
+
 function CreatorPlaylistsPage() {
   const history = useHistory();
   const { modalState, closeModal, showError, showWarning, showSuccess } = useModal();
@@ -23,11 +25,9 @@ function CreatorPlaylistsPage() {
   // Cargar foto de perfil
   const loadCreatorPhoto = async () => {
     try {
-      const res = await fetch('/api/creators/profile', { credentials: 'include' });
-      if (res.ok) {
-        const profile = await res.json();
-        if (profile?.picture) setCreatorPhoto(profile.picture);
-      }
+      const res = await axios.get('/api/creators/profile', { withCredentials: true });
+      const profile = res.data;
+      if (profile?.picture) setCreatorPhoto(profile.picture);
     } catch (error) {
       console.error('Error cargando foto de perfil:', error);
     }
@@ -44,11 +44,11 @@ function CreatorPlaylistsPage() {
   const loadData = async () => {
     try {
       // Usar endpoint /all para ver todas las listas de todos los creadores (visibles y ocultas)
-      const response = await fetch('/api/creator/playlists/all', { credentials: 'include' });
-      if (!response.ok) throw new Error('No se pudieron cargar las listas');
-      setPlaylists(await response.json());
+      const response = await axios.get('/api/creator/playlists/all', { withCredentials: true });
+      setPlaylists(response.data);
     } catch (e) {
-      showError(e.message);
+      console.error(e);
+      showError('No se pudieron cargar las listas');
     } finally {
       setLoading(false);
     }
@@ -68,28 +68,16 @@ function CreatorPlaylistsPage() {
     }
 
     try {
-      const response = await fetch('/api/creator/playlists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: newName,
-          descripcion: newDescription,
-          visible: visible
-        })
+      const response = await axios.post('/api/creator/playlists', {
+        nombre: newName,
+        descripcion: newDescription,
+        visible: visible
+      }, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       });
 
-      if (response.status === 409) {
-        showError('Nombre de lista ya existe');
-        return;
-      }
-      if (!response.ok) {
-        const body = await response.text();
-        showError(`Error al crear: ${body}`);
-        return;
-      }
-
-      const created = await response.json();
+      const created = response.data;
       setPlaylists(prev => [...prev, created]);
       setShowCreatePanel(false);
       setNewName('');
@@ -97,7 +85,12 @@ function CreatorPlaylistsPage() {
       setVisible(true);
       showSuccess('Lista creada correctamente');
     } catch (e) {
-      showError(e.message);
+      if (e.response?.status === 409) {
+        showError('Nombre de lista ya existe');
+      } else {
+        const msg = e.response?.data ? (typeof e.response.data === 'string' ? e.response.data : JSON.stringify(e.response.data)) : e.message;
+        showError(`Error al crear: ${msg}`);
+      }
     }
   };
 
@@ -138,17 +131,17 @@ function CreatorPlaylistsPage() {
 
         <CreatorTabs />
 
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12, marginBottom:16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
             <span className="help-text" style={{ fontSize: 16 }}>Total: {playlists.length}</span>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               className="input"
               placeholder="Buscar por nombre o descripción..."
               value={query}
               onChange={e => setQuery(e.target.value)}
-              style={{ minWidth:260 }}
+              style={{ minWidth: 260 }}
             />
             <button className="btn btn-primary" onClick={() => setShowCreatePanel(s => !s)}>
               {showCreatePanel ? 'Cerrar' : 'Nueva lista'}
@@ -157,8 +150,8 @@ function CreatorPlaylistsPage() {
         </div>
 
         {showCreatePanel && (
-          <div className="form-card" style={{ marginBottom:24 }}>
-            <h3 style={{ marginTop:0 }}>Crear lista</h3>
+          <div className="form-card" style={{ marginBottom: 24 }}>
+            <h3 style={{ marginTop: 0 }}>Crear lista</h3>
             <form onSubmit={handleCreate}>
               <div className="form-row">
                 <label htmlFor="playlist-name">Nombre <span className="required">*</span></label>
@@ -168,7 +161,7 @@ function CreatorPlaylistsPage() {
                 <label htmlFor="playlist-description">Descripción</label>
                 <textarea id="playlist-description" className="textarea" value={newDescription} onChange={e => setNewDescription(e.target.value)} maxLength={200} rows={3} />
               </div>
-              <div style={{ display:'flex', gap:8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 <button type="submit" className="btn btn-primary">Crear</button>
                 <button type="button" className="btn btn-neutral" onClick={() => setShowCreatePanel(false)}>Cancelar</button>
               </div>
@@ -193,12 +186,12 @@ function CreatorPlaylistsPage() {
                 </tr>
               </thead>
               <tbody>
-              {filteredPlaylists.map(p => {
-                return (
+                {filteredPlaylists.map(p => {
+                  return (
                     <tr key={p.id}>
                       <td>{p.nombre}</td>
-                      <td style={{ maxWidth:320 }}>
-                        {(p.descripcion || '-').length > 60 ? (p.descripcion || '-').slice(0,60) + '…' : (p.descripcion || '-')}
+                      <td style={{ maxWidth: 320 }}>
+                        {(p.descripcion || '-').length > 60 ? (p.descripcion || '-').slice(0, 60) + '…' : (p.descripcion || '-')}
                       </td>
                       <td>{p.creatorAlias || 'Desconocido'}</td>
                       <td>{p.visible ? 'Sí' : 'No'}</td>

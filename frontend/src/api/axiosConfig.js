@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { Capacitor } from '@capacitor/core';
 
 const axiosInstance = axios.create({
-  baseURL: Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080' : 'http://localhost:8080',
+  baseURL: API_BASE_URL,
   withCredentials: true, // ✅ CRÍTICO: Enviar cookies en TODAS las peticiones (para Web)
   headers: {
     'Content-Type': 'application/json',
