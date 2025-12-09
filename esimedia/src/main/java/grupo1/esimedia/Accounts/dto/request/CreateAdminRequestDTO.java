@@ -24,7 +24,7 @@ public class CreateAdminRequestDTO {
     @NotBlank(message = "El apellido es obligatorio")
     private String surname;
 
-    @NotBlank(message = "El departamento es obligatorio")
+    @NotNull(message = "El departamento es obligatorio")
     private Department department;
 
     private String picture;

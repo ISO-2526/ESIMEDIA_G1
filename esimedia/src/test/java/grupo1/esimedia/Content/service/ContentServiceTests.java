@@ -248,13 +248,16 @@ class ContentServiceTests {
         CreateContentRequestDTO createReq = new CreateContentRequestDTO();
         createReq.setType(ContentType.VIDEO);
         createReq.setTitle("Original");
+        createReq.setDescription("Desc");
         createReq.setTags(Arrays.asList("tag1"));
         createReq.setDurationMinutes(60);
         createReq.setEdadMinima(0);
         createReq.setUrl("https://example.com/video.mp4");
         createReq.setResolution("1080p");
         createReq.setCreatorAlias("creator");
-
+        Content mockSaved = buildContent(ContentType.VIDEO);
+        mockSaved.setId("new-id");
+        when(repository.save(any(Content.class))).thenReturn(mockSaved);
         Content created = service.create(createReq, ContentType.VIDEO);
 
         // Intentar actualizar con título muy largo
@@ -262,6 +265,7 @@ class ContentServiceTests {
         updateReq.setTitle("a".repeat(201));
 
         String contentId = created.getId();
+        when(repository.findById(contentId)).thenReturn(Optional.of(mockSaved));
         assertThrows(ResponseStatusException.class, () -> {
             service.update(contentId, updateReq, ContentType.VIDEO);
         });

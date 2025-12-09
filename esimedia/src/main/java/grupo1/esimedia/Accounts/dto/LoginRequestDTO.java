@@ -1,5 +1,7 @@
 package grupo1.esimedia.Accounts.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,6 +15,7 @@ public class LoginRequestDTO {
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
 
+    @JsonProperty("2fa_code")
     private String twoFactorCode; // 2fa_code
 
     public LoginRequestDTO() {}

@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 @Service
 public class RatingService {
 
+    private static final String AVERAGERATINGS = "averageRating";
+    private static final String TOTALRATINGS = "totalRatings";
+
     @Autowired
     private RatingRepository ratingRepository;
 
@@ -124,8 +127,8 @@ public class RatingService {
                 
                 Map<String, Object> map = new HashMap<>();
                 map.put("contentId", entry.getKey());
-                map.put("averageRating", Math.round(average * 10.0) / 10.0);
-                map.put("totalRatings", (long) contentRatings.size());
+                map.put(AVERAGERATINGS, Math.round(average * 10.0) / 10.0);
+                map.put(TOTALRATINGS, (long) contentRatings.size());
                 contentStats.add(map);
             }
         }
@@ -133,13 +136,13 @@ public class RatingService {
         // Ordenar por promedio descendente y luego por total
         contentStats.sort((a, b) -> {
             int avgCompare = Double.compare(
-                (Double) b.get("averageRating"), 
-                (Double) a.get("averageRating")
+                (Double) b.get(AVERAGERATINGS), 
+                (Double) a.get(AVERAGERATINGS)
             );
             if (avgCompare != 0) return avgCompare;
             return Long.compare(
-                (Long) b.get("totalRatings"), 
-                (Long) a.get("totalRatings")
+                (Long) b.get(TOTALRATINGS), 
+                (Long) a.get(TOTALRATINGS)
             );
         });
         
