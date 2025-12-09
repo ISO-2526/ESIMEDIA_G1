@@ -100,10 +100,17 @@ function ResetPassword() {
       setMessageType('success');
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      console.error('Error al resetear contraseña:', error.response?.data || error.message);
-      setMessage('Error al resetear la contraseña. Inténtalo de nuevo.');
-      setMessageType('error');
-    }
+        // El backend devuelve el string directamente en el body
+        // Axios coloca ese string en error.response.data
+        const errorMessage = error.response?.data;
+        
+        // Si errorMessage es un string (como el que envía el backend), úsalo. 
+        // Si no, usa el mensaje genérico por si falla la red.
+        setMessage(typeof errorMessage === 'string' ? errorMessage : 'Error al resetear la contraseña.');
+        setMessageType('error');
+        
+        console.error('Error del servidor:', errorMessage);
+      }
   };
 
   if (isValidToken === null) {

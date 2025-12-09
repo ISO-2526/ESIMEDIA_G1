@@ -1,5 +1,6 @@
 package grupo1.esimedia.Accounts.controller;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -69,13 +70,15 @@ public class AdminController {
         Admin admin = new Admin();
         admin.setEmail(adminDTO.getEmail());
         admin.setPassword(adminDTO.getPassword());
+
         admin.setName(adminDTO.getName());
         admin.setSurname(adminDTO.getSurname());
         admin.setDepartment(adminDTO.getDepartment());
         admin.setPicture(adminDTO.getPicture());
 
         admin.setPassword(passwordUtils.hashPassword(admin.getPassword()));
-        
+        admin.setLastPasswordChangeAt(Instant.now());
+        admin.addPasswordToHistory(admin.getPassword());
         String key = twoFactorAuthService.generateSecretKey();
         admin.setTwoFactorSecretKey(key);
         admin.setThirdFactorEnabled(true);
@@ -107,6 +110,8 @@ public class AdminController {
         creator.setContentType(creatorDTO.getContentType());
 
         creator.setPassword(passwordUtils.hashPassword(creator.getPassword()));
+        creator.setLastPasswordChangeAt(Instant.now());
+        creator.addPasswordToHistory(creator.getPassword());
         
         String key = twoFactorAuthService.generateSecretKey();
         creator.setTwoFactorSecretKey(key);
