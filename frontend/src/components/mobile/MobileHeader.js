@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
+import {
   IonIcon,
   IonPopover
 } from '@ionic/react';
-import { 
-  searchOutline, 
+import {
+  searchOutline,
   filterOutline,
   notificationsOutline,
   listOutline,
@@ -13,14 +13,14 @@ import {
   closeOutline,
   person
 } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import useNavigate from '../../hooks/useNavigate';
 import MobileFilterModal from './MobileFilterModal';
 import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
 
-const MobileHeader = ({ 
-  userProfile, 
-  searchQuery, 
+const MobileHeader = ({
+  userProfile,
+  searchQuery,
   setSearchQuery,
   handleLogout,
   currentFilters,
@@ -34,7 +34,7 @@ const MobileHeader = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const history = useHistory();
+  const { navigate } = useNavigate();
 
   // Prevenir scroll cuando se abren los menus
   React.useEffect(() => {
@@ -105,7 +105,7 @@ const MobileHeader = ({
 
           {/* Filtros - solo si showFiltersProp es true */}
           {showFiltersProp && (
-            <button 
+            <button
               id="filter-menu-trigger"
               className="mobile-icon-btn"
               onClick={() => {
@@ -120,7 +120,7 @@ const MobileHeader = ({
 
           {/* Notificaciones - solo si showNotificationsProp es true y búsqueda no está activa */}
           {showNotificationsProp && !showSearch && (
-            <button 
+            <button
               id="notifications-menu-trigger"
               className="mobile-icon-btn"
               onClick={() => {
@@ -135,8 +135,8 @@ const MobileHeader = ({
 
           {/* Avatar con menú - se oculta cuando búsqueda está activa */}
           {!showSearch && (
-            <button 
-              className="mobile-icon-btn avatar-button" 
+            <button
+              className="mobile-icon-btn avatar-button"
               id="user-menu-trigger"
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
@@ -146,9 +146,9 @@ const MobileHeader = ({
             >
               <div className="mobile-avatar">
                 {userProfile?.picture && !imageError ? (
-                  <img 
-                    src={userProfile.picture} 
-                    alt="Avatar" 
+                  <img
+                    src={userProfile.picture}
+                    alt="Avatar"
                     onError={() => setImageError(true)}
                   />
                 ) : (
@@ -191,7 +191,7 @@ const MobileHeader = ({
             className="user-menu-button"
             onClick={() => {
               setIsMenuOpen(false);
-              history.push('/perfil');
+              navigate('/perfil');
             }}
           >
             <IonIcon icon={person} />
@@ -202,7 +202,7 @@ const MobileHeader = ({
             className="user-menu-button"
             onClick={() => {
               setIsMenuOpen(false);
-              history.push('/playlists');
+              navigate('/playlists');
             }}
           >
             <IonIcon icon={listOutline} />
@@ -213,7 +213,7 @@ const MobileHeader = ({
             className="user-menu-button"
             onClick={() => {
               setIsMenuOpen(false);
-              history.push('/suscripcion');
+              navigate('/suscripcion');
             }}
           >
             <IonIcon icon={cardOutline} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import PlaylistCard from '../../../components/PlaylistCard';
@@ -8,9 +9,29 @@ import './PlaylistsPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 
+import axios from '../../../api/axiosConfig';
+
 function PlaylistsPage() {
   const history = useHistory();
   const location = useLocation();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +39,7 @@ function PlaylistsPage() {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistDescription, setNewPlaylistDescription] = useState('');
   const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
 
   // Función para obtener URL absoluta en Android
   const getImageUrl = (path) => {
@@ -41,19 +63,12 @@ function PlaylistsPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      const profileData = response.data;
+      setUserProfile({
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -61,30 +76,22 @@ function PlaylistsPage() {
 
   const fetchPlaylists = async () => {
     try {
-      const response = await fetch('/api/playlists', { credentials: 'include' });
+      const response = await axios.get('/api/playlists', { withCredentials: true });
+      const data = response.data;
+      console.log('Playlists recibidas:', data);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Playlists recibidas:', data);
-        data.forEach(p => {
-          console.log(`  - ${p.nombre}: ${p.items ? p.items.length : 0} items`, p.items);
-        });
-        
-        // Separar la lista "Favoritos" y las demás
-        const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
-        const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
-        
-        // Si existe "Favoritos", ponerla primero
-        if (favoritosPlaylist) {
-          setPlaylists([favoritosPlaylist, ...otherPlaylists]);
-        } else {
-          setPlaylists(data);
-        }
+      // Separar la lista "Favoritos" y las demás
+      const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
+      const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
+
+      // Si existe "Favoritos", ponerla primero
+      if (favoritosPlaylist) {
+        setPlaylists([favoritosPlaylist, ...otherPlaylists]);
       } else {
-        console.error('Error fetching playlists');
+        setPlaylists(data);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching playlists:', error);
     } finally {
       setLoading(false);
     }
@@ -92,34 +99,25 @@ function PlaylistsPage() {
 
   const handleCreatePlaylist = async (e) => {
     e.preventDefault();
-    
+
     if (!newPlaylistName.trim()) {
       showError('Por favor, ingresa un nombre para la lista');
       return;
     }
 
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: newPlaylistName,
-          descripcion: newPlaylistDescription || ''
-        })
+      await axios.post('/api/playlists', {
+        nombre: newPlaylistName,
+        descripcion: newPlaylistDescription || ''
+      }, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        showSuccess('Lista de reproducción creada exitosamente');
-        setShowCreateModal(false);
-        setNewPlaylistName('');
-        setNewPlaylistDescription('');
-        fetchPlaylists(); // Recargar las listas
-      } else {
-        showError('Error al crear la lista de reproducción');
-      }
+      showSuccess('Lista de reproducción creada exitosamente');
+      setShowCreateModal(false);
+      setNewPlaylistName('');
+      setNewPlaylistDescription('');
+      fetchPlaylists(); // Recargar las listas
     } catch (error) {
       console.error('Error:', error);
       showError('Error al crear la lista de reproducción');
@@ -127,7 +125,7 @@ function PlaylistsPage() {
   };
 
   const handlePlaylistClick = (playlistId) => {
-    history.push(`/playlists/${playlistId}`);
+    navigate(`/playlists/${playlistId}`);
   };
 
   if (loading) {
@@ -154,7 +152,7 @@ function PlaylistsPage() {
       )}
       <div className="playlists-header">
         <div className="playlists-header-left">
-          <button className="back-button" onClick={() => history.push('/usuario')}>
+          <button className="back-button" onClick={() => navigate('/usuario')}>
             <i className="fas fa-arrow-left"></i>
           </button>
           <div className="header-content">
@@ -191,7 +189,7 @@ function PlaylistsPage() {
 
       {showCreateModal && (
         <button
-          className="modal-overlay" 
+          className="modal-overlay"
           onClick={() => setShowCreateModal(false)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
@@ -209,7 +207,7 @@ function PlaylistsPage() {
             height: '100%'
           }}
         >
-          <div 
+          <div
             className="modal-content"
             role="dialog"
             aria-modal="true"

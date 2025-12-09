@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import api from '../../../api/axiosConfig';
 import { useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import './RecoverPassword.css';
 
 function RecoverPassword() {
@@ -9,19 +11,36 @@ function RecoverPassword() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' o 'error'
   const history = useHistory();
-  
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    
-    
+
+
+
     try {
       await api.post('/api/auth/recover', { email });
     } catch (error) {
-        // Simular delay de 2 segundos
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simular delay de 2 segundos
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-    
+
     // Siempre mostrar el mismo mensaje
     setMessage('Instrucciones enviadas a tu correo electrónico.');
     setMessageType('success');
@@ -48,7 +67,7 @@ function RecoverPassword() {
           <p className="page-subtitle">
             Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
           </p>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="form-field">
               <label htmlFor="recover-email" className="form-label required">Correo Electrónico</label>
@@ -73,10 +92,10 @@ function RecoverPassword() {
           )}
 
           <div className="recover-form-footer">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="recover-link-btn"
-              onClick={() => history.push('/login')}
+              onClick={() => navigate('/login')}
             >
               ← Volver al inicio de sesión
             </button>

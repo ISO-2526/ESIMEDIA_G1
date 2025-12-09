@@ -4,6 +4,24 @@ import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Capacitor } from '@capacitor/core';
 import BackButtonHandler from './components/BackButtonHandler';
+import { MobilePage } from './components/MobilePage';
+
+/* Core CSS required for Ionic components to work properly */
+import '@ionic/react/css/core.css';
+
+/* Basic CSS for apps built with Ionic */
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
+
+/* Optional CSS utils that can be commented out */
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/display.css';
+
 import './App.css';
 import './styles.css';
 
@@ -49,7 +67,7 @@ function App() {
   console.log('App component rendered');
 
   if (isMobile) {
-    // App móvil: Solo rutas de usuario
+    // App móvil: Solo rutas de usuario - TODAS envueltas en MobilePage para IonPage/IonContent
     return (
       <IonApp>
         <IonReactRouter>
@@ -57,68 +75,88 @@ function App() {
           <IonRouterOutlet>
             {/* Rutas públicas */}
             <Route exact path="/" render={() => (
-              <ProtectedRouteAfterLogin>
-                <HomePage />
-              </ProtectedRouteAfterLogin>
+              <MobilePage>
+                <ProtectedRouteAfterLogin>
+                  <HomePage />
+                </ProtectedRouteAfterLogin>
+              </MobilePage>
             )} />
             <Route path="/login" render={() => (
-              <ProtectedRouteAfterLogin>
-                <LoginPage />
-              </ProtectedRouteAfterLogin>
+              <MobilePage>
+                <ProtectedRouteAfterLogin>
+                  <LoginPage />
+                </ProtectedRouteAfterLogin>
+              </MobilePage>
             )} />
             <Route path="/registro" render={() => (
-              <ProtectedRouteAfterLogin>
-                <RegistroPage />
-              </ProtectedRouteAfterLogin>
+              <MobilePage>
+                <ProtectedRouteAfterLogin>
+                  <RegistroPage />
+                </ProtectedRouteAfterLogin>
+              </MobilePage>
             )} />
-            <Route path="/recuperar" component={RecoverPassword} />
-            <Route path="/reset-password" component={ResetPassword} />
+            <Route path="/recuperar" render={() => (
+              <MobilePage><RecoverPassword /></MobilePage>
+            )} />
+            <Route path="/reset-password" render={() => (
+              <MobilePage><ResetPassword /></MobilePage>
+            )} />
             <Route path="/setup-2fa" render={() => (
-              <ProtectedRouteAfterLogin>
-                <Setup2FA />
-              </ProtectedRouteAfterLogin>
+              <MobilePage>
+                <ProtectedRouteAfterLogin>
+                  <Setup2FA />
+                </ProtectedRouteAfterLogin>
+              </MobilePage>
             )} />
             <Route path="/validate-2fa" render={() => (
-              <ProtectedRouteAfterLogin>
-                <Validate2FA />
-              </ProtectedRouteAfterLogin>
+              <MobilePage><Validate2FA /></MobilePage>
             )} />
             <Route path="/validate-3fa" render={() => (
-              <ProtectedRouteAfterLogin>
-                <Validate3FA />
-              </ProtectedRouteAfterLogin>
+              <MobilePage><Validate3FA /></MobilePage>
             )} />
 
             {/* Rutas de Usuario */}
             <Route path="/usuario" render={() => (
-              <ProtectedRoute allowedRoles={['user']}>
-                <UserDashboard />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute allowedRoles={['user']}>
+                  <UserDashboard />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
             <Route path="/perfil" render={() => (
-              <ProtectedRoute>
-                <UserProfilePage />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute>
+                  <UserProfilePage />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
             <Route path="/suscripcion" render={() => (
-              <ProtectedRoute>
-                <SubscriptionPage />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute>
+                  <SubscriptionPage />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
             <Route exact path="/playlists" render={() => (
-              <ProtectedRoute>
-                <PlaylistsPage />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute>
+                  <PlaylistsPage />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
             <Route path="/playlists/:id" render={() => (
-              <ProtectedRoute>
-                <PlaylistDetailPage />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute>
+                  <PlaylistDetailPage />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
             <Route path="/creator-playlists/:id" render={() => (
-              <ProtectedRoute>
-                <CreatorPlaylistViewPage />
-              </ProtectedRoute>
+              <MobilePage>
+                <ProtectedRoute>
+                  <CreatorPlaylistViewPage />
+                </ProtectedRoute>
+              </MobilePage>
             )} />
           </IonRouterOutlet>
         </IonReactRouter>

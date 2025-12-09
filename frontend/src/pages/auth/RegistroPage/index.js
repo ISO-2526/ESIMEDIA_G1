@@ -4,6 +4,8 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import api from '../../../api/axiosConfig';
 import { useHistory } from 'react-router-dom'; // Importar useHistory
+import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 import { TAGS } from '../../../creator/components/constants';
 
@@ -45,6 +47,30 @@ function RegistroPage() {
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
   const history = useHistory(); // Hook para redirección
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path, state = null) => {
+    if (isMobile && ionRouter) {
+      if (state) {
+        sessionStorage.setItem('navigationState', JSON.stringify(state));
+      }
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      if (state) {
+        history.push({ pathname: path, state });
+      } else {
+        history.push(path);
+      }
+    }
+  };
 
   // Asegurar que el scroll comience desde arriba
   useEffect(() => {
@@ -166,22 +192,19 @@ function RegistroPage() {
     const user = buildUserObject();
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
+      const response = await api.post('/api/users', user);
 
-      if (response.ok) {
-        history.push('/setup-2fa', { state: { email: form.email } });
+      if (response.status === 201 || response.status === 200) {
+        navigate('/setup-2fa', { email: form.email });
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        const errorData = response.data;
         console.error('Error del servidor:', errorData);
         showError(errorData.error || 'Error al crear usuario. Por favor, verifica los datos e intenta de nuevo.');
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      showError('Error de conexión con el servidor. Por favor, intenta más tarde.');
+      const errorData = error.response?.data || { error: 'Error desconocido' };
+      showError(errorData.error || errorData.message || 'Error de conexión con el servidor. Por favor, intenta más tarde.');
     }
   };
 

@@ -1,18 +1,52 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import axios from "axios";
+import { useIonRouter } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
+import axios from "../../../api/axiosConfig";
 import './Validate3FA.css';
 
 const Validate3FA = () => {
   const location = useLocation();
   const history = useHistory();
-  const email = location.state?.email || "";
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) {
+    // No está en IonReactRouter context
+  }
+
+  // Leer email de location.state o sessionStorage (móvil)
+  const getEmail = () => {
+    if (location.state?.email) return location.state.email;
+    try {
+      const navState = JSON.parse(sessionStorage.getItem('navigationState') || '{}');
+      return navState.email || '';
+    } catch {
+      return '';
+    }
+  };
+
+  const email = getEmail();
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("info"); // 'success', 'error', 'info'
   const [sending, setSending] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    console.log('🚀 Validate3FA navegando a:', path);
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
 
   // Guard para evitar doble envío en StrictMode
   const sentOnceRef = useRef(false);
@@ -24,15 +58,15 @@ const Validate3FA = () => {
       setSending(true);
       setMessage("Enviando código al correo...");
       setMessageType("info");
-      
+
       await axios.post("/api/auth/send-3fa-code", { email }, {
         withCredentials: true
       });
-      
+
       setMessage("Código enviado. Revisa tu correo.");
       setMessageType("success");
       setResendDisabled(true);
-      
+
       // Deshabilitar reenvío durante 60s para evitar spam
       setTimeout(() => setResendDisabled(false), 60000);
     } catch (err) {
@@ -75,11 +109,11 @@ const Validate3FA = () => {
 
       // Redirigir según el rol
       if (data.role === "admin") {
-        history.push("/adminDashboard");
+        navigate("/adminDashboard");
       } else if (data.role === "creator") {
-        history.push("/creator");
+        navigate("/creator");
       } else {
-        history.push("/usuario");
+        navigate("/usuario");
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error || "Código incorrecto. Inténtalo de nuevo.";
@@ -105,7 +139,7 @@ const Validate3FA = () => {
             <div className="validate3fa-info-icon">📧</div>
             <h2 className="validate3fa-info-title">Verificación por Email</h2>
             <p className="validate3fa-info-description">
-              Hemos enviado un código de seguridad a tu correo electrónico. 
+              Hemos enviado un código de seguridad a tu correo electrónico.
               Revisa tu bandeja de entrada e ingresa el código para completar el inicio de sesión.
             </p>
             <div className="validate3fa-info-tips">
@@ -165,13 +199,13 @@ const Validate3FA = () => {
           <div className="validate3fa-info-box">
             <span className="validate3fa-info-box-icon">💡</span>
             <div>
-              Copia y pega el código exactamente como aparece en tu correo. 
+              Copia y pega el código exactamente como aparece en tu correo.
               Si no recibes el código en unos minutos, puedes reenviarlo.
             </div>
           </div>
 
           <div className="validate3fa-buttons">
-            <button 
+            <button
               onClick={handleValidate3FA}
               disabled={isLoading || !code.trim()}
               className="validate3fa-submit-btn"
@@ -179,7 +213,7 @@ const Validate3FA = () => {
               {isLoading ? "Verificando..." : "Validar Código"}
             </button>
 
-            <button 
+            <button
               onClick={sendCode}
               disabled={sending || resendDisabled}
               className="validate3fa-resend-btn"
@@ -198,10 +232,10 @@ const Validate3FA = () => {
           )}
 
           <div className="validate3fa-footer">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="validate3fa-link-btn"
-              onClick={() => history.push('/login')}
+              onClick={() => navigate('/login')}
             >
               ← Volver al inicio de sesión
             </button>

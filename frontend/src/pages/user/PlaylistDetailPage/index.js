@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
@@ -13,9 +14,29 @@ import { useModal } from '../../../utils/useModal';
 import { determineCategoryFromTags } from '../../../utils/contentUtils';
 import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
 
+import axios from '../../../api/axiosConfig';
+
 function PlaylistDetailPage() {
   const { id } = useParams();
   const history = useHistory();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
@@ -56,19 +77,12 @@ function PlaylistDetailPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      const profileData = response.data;
+      setUserProfile({
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -90,17 +104,14 @@ function PlaylistDetailPage() {
         const content = allContents.find(c => c.id === item.contentId);
         return content?.coverFileName ? `/cover/${content.coverFileName}` : '/cover/default.png';
       });
-    
+
     setContentCovers(covers);
   };
 
   const fetchAllContents = async () => {
     try {
-      const response = await fetch('/api/public/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setAllContents(data);
-      }
+      const response = await axios.get('/api/public/contents');
+      setAllContents(response.data);
     } catch (error) {
       console.error('Error fetching all contents:', error);
     }
@@ -108,23 +119,19 @@ function PlaylistDetailPage() {
 
   const fetchPlaylistDetails = async () => {
     try {
-      const response = await fetch(`/api/playlists/${id}`, { credentials: 'include' });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPlaylist(data);
-        setEditName(data.nombre);
-        setEditDescription(data.descripcion || '');
-      } else if (response.status === 403) {
-        showWarning('No tienes permiso para ver esta lista');
-        history.push('/playlists');
-      } else {
-        showError('Error al cargar la lista');
-        history.push('/playlists');
-      }
+      const response = await axios.get(`/api/playlists/${id}`, { withCredentials: true });
+      const data = response.data;
+      setPlaylist(data);
+      setEditName(data.nombre);
+      setEditDescription(data.descripcion || '');
     } catch (error) {
       console.error('Error:', error);
-      history.push('/playlists');
+      if (error.response?.status === 403) {
+        showWarning('No tienes permiso para ver esta lista');
+      } else {
+        showError('Error al cargar la lista');
+      }
+      navigate('/playlists');
     } finally {
       setLoading(false);
     }
@@ -151,7 +158,7 @@ function PlaylistDetailPage() {
     }
 
     const isVipContentUnavailable = content.vipOnly && !userProfile.vip;
-    
+
     return {
       id: content.id,
       titulo: getContentTitle(content, isVipContentUnavailable),
@@ -185,7 +192,7 @@ function PlaylistDetailPage() {
           return transformContentItem(item, content);
         })
         .filter(Boolean);
-      
+
       setContents(playlistContents);
     } catch (error) {
       console.error('Error fetching contents:', error);
@@ -231,18 +238,13 @@ function PlaylistDetailPage() {
 
   const removeContentFromPlaylist = async (contentId) => {
     try {
-      const response = await fetch(`/api/playlists/${id}/content/${contentId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await axios.delete(`/api/playlists/${id}/content/${contentId}`, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        setContents(contents.filter(c => c.id !== contentId));
-        setPlaylist(await response.json());
-        showSuccess('Contenido eliminado de la lista');
-      } else {
-        showError('Error al eliminar el contenido');
-      }
+      setContents(contents.filter(c => c.id !== contentId));
+      setPlaylist(response.data);
+      showSuccess('Contenido eliminado de la lista');
     } catch (error) {
       console.error('Error:', error);
       showError('Error al eliminar el contenido');
@@ -266,26 +268,18 @@ function PlaylistDetailPage() {
 
   const handleUpdatePlaylist = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await fetch(`/api/playlists/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: editName,
-          descripcion: editDescription
-        })
+      const response = await axios.put(`/api/playlists/${id}`, {
+        nombre: editName,
+        descripcion: editDescription
+      }, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        const updated = await response.json();
-        setPlaylist(updated);
-        setShowEditModal(false);
-        showSuccess('Lista actualizada correctamente');
-      } else {
-        showError('Error al actualizar la lista');
-      }
+      setPlaylist(response.data);
+      setShowEditModal(false);
+      showSuccess('Lista actualizada correctamente');
     } catch (error) {
       console.error('Error:', error);
       showError('Error al actualizar la lista');
@@ -298,19 +292,13 @@ function PlaylistDetailPage() {
         '¿Estás seguro de que deseas eliminar esta lista? Esta acción no se puede deshacer.',
         async () => {
           try {
-            const response = await fetch(`/api/playlists/${id}`, {
-              method: 'DELETE',
-              credentials: 'include'
+            await axios.delete(`/api/playlists/${id}`, {
+              withCredentials: true
             });
 
-            if (response.ok) {
-              showSuccess('Lista eliminada correctamente');
-              history.push('/playlists');
-              resolve(true);
-            } else {
-              showError('Error al eliminar la lista');
-              resolve(false);
-            }
+            showSuccess('Lista eliminada correctamente');
+            navigate('/playlists');
+            resolve(true);
           } catch (error) {
             console.error('Error:', error);
             showError('Error al eliminar la lista');
@@ -340,7 +328,7 @@ function PlaylistDetailPage() {
 
   const handleVipUpgrade = () => {
     setShowVipModal(false);
-    history.push('/suscripcion');
+    navigate('/suscripcion');
   };
 
   const handleClosePlayer = () => {
@@ -383,9 +371,9 @@ function PlaylistDetailPage() {
           showNotifications={true}
         />
       )}
-      <button 
-        className="floating-back-button" 
-        onClick={() => history.push('/playlists')}
+      <button
+        className="floating-back-button"
+        onClick={() => navigate('/playlists')}
         aria-label="Volver a listas de reproducción"
       >
         <i className="fas fa-arrow-left"></i>
@@ -394,24 +382,24 @@ function PlaylistDetailPage() {
       <div className="playlist-hero-section">
         <div className="playlist-hero-background">
           {contentCovers.length > 0 && (
-            <div 
-              className="hero-cover-blur" 
+            <div
+              className="hero-cover-blur"
               style={{ backgroundImage: `url(${contentCovers[0]})` }}
             />
           )}
         </div>
-        
+
         <div className="playlist-hero-content">
           <div className="playlist-hero-covers">
             {contentCovers.slice(0, 4).map((cover, index) => (
-              <div 
+              <div
                 key={index}
                 className={`hero-cover-item cover-position-${index + 1}`}
                 style={{ backgroundImage: `url(${cover})` }}
               />
             ))}
           </div>
-          
+
           <div className="playlist-hero-info">
             <span className="playlist-badge">
               <i className="fas fa-list"></i> Mi Lista de Reproducción
@@ -434,17 +422,17 @@ function PlaylistDetailPage() {
             <div className="playlist-hero-actions">
               {!isPermanentFavoritos && (
                 <>
-                  <button 
-                    className="btn-edit" 
-                    onClick={() => setShowEditModal(true)} 
+                  <button
+                    className="btn-edit"
+                    onClick={() => setShowEditModal(true)}
                     title="Editar lista"
                     aria-label="Editar lista"
                   >
                     <i className="fas fa-edit"></i> Editar
                   </button>
-                  <button 
-                    className="btn-delete" 
-                    onClick={() => setShowDeleteConfirm(true)} 
+                  <button
+                    className="btn-delete"
+                    onClick={() => setShowDeleteConfirm(true)}
                     title="Eliminar lista"
                     aria-label="Eliminar lista"
                   >
@@ -462,9 +450,9 @@ function PlaylistDetailPage() {
           <div className="playlist-controls">
             <div className="sort-controls">
               <label htmlFor="sort-select">Ordenar por:</label>
-              <select 
-                id="sort-select" 
-                value={sortBy} 
+              <select
+                id="sort-select"
+                value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Ordenar contenidos por"
                 className="sort-select"
@@ -481,9 +469,9 @@ function PlaylistDetailPage() {
               <i className="fas fa-film" aria-hidden="true"></i>
               <h2>Esta lista está vacía</h2>
               <p>Añade contenidos navegando por el catálogo y haciendo clic en el botón "+"</p>
-              <button 
-                className="browse-btn" 
-                onClick={() => history.push('/usuario')}
+              <button
+                className="browse-btn"
+                onClick={() => navigate('/usuario')}
                 aria-label="Explorar catálogo de contenidos"
               >
                 <i className="fas fa-search" aria-hidden="true"></i> Explorar Contenidos
@@ -507,8 +495,8 @@ function PlaylistDetailPage() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               setShowEditModal(false);
@@ -520,8 +508,8 @@ function PlaylistDetailPage() {
           tabIndex={0}
           aria-label="Cerrar modal de edición"
         >
-          <div 
-            className="modal-content" 
+          <div
+            className="modal-content"
             onKeyDown={editDialogHandlers.onDialogKeyDown}
             onKeyUp={editDialogHandlers.onDialogKeyUp}
             role="dialog"
@@ -531,8 +519,8 @@ function PlaylistDetailPage() {
           >
             <div className="modal-header">
               <h2 id="edit-modal-title">Editar Lista</h2>
-              <button 
-                className="modal-close" 
+              <button
+                className="modal-close"
                 onClick={() => setShowEditModal(false)}
                 aria-label="Cerrar modal de edición"
               >
@@ -564,16 +552,16 @@ function PlaylistDetailPage() {
                 />
               </div>
               <div className="modal-actions">
-                <button 
-                  type="button" 
-                  className="btn-cancel" 
+                <button
+                  type="button"
+                  className="btn-cancel"
                   onClick={() => setShowEditModal(false)}
                   aria-label="Cancelar edición"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn-save"
                   aria-label="Guardar cambios"
                 >
@@ -587,8 +575,8 @@ function PlaylistDetailPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               setShowDeleteConfirm(false);
@@ -600,8 +588,8 @@ function PlaylistDetailPage() {
           tabIndex={0}
           aria-label="Cerrar modal de confirmación"
         >
-          <div 
-            className="modal-content confirm-modal" 
+          <div
+            className="modal-content confirm-modal"
             onKeyDown={deleteDialogHandlers.onDialogKeyDown}
             onKeyUp={deleteDialogHandlers.onDialogKeyUp}
             role="dialog"
@@ -611,8 +599,8 @@ function PlaylistDetailPage() {
           >
             <div className="modal-header">
               <h2 id="delete-modal-title">¿Eliminar lista?</h2>
-              <button 
-                className="modal-close" 
+              <button
+                className="modal-close"
                 onClick={() => setShowDeleteConfirm(false)}
                 aria-label="Cerrar modal de confirmación"
               >
@@ -621,15 +609,15 @@ function PlaylistDetailPage() {
             </div>
             <p>Esta acción no se puede deshacer. Se eliminará la lista "{playlist.nombre}" y todos sus contenidos.</p>
             <div className="modal-actions">
-              <button 
-                className="btn-cancel" 
+              <button
+                className="btn-cancel"
                 onClick={() => setShowDeleteConfirm(false)}
                 aria-label="Cancelar eliminación"
               >
                 Cancelar
               </button>
-              <button 
-                className="btn-delete" 
+              <button
+                className="btn-delete"
                 onClick={handleDeletePlaylist}
                 aria-label="Confirmar eliminación de lista"
               >

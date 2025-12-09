@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
+import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import axios from "axios";
 import './Setup2FA.css';
 
@@ -11,6 +13,24 @@ const Setup2FA = () => {
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
 
   const handleSetup2FA = async () => {
     setIsButtonDisabled(true);
@@ -28,7 +48,7 @@ const Setup2FA = () => {
   };
 
   const handleContinue = () => {
-    history.push('/login');
+    navigate('/login');
   };
 
   return (
@@ -40,7 +60,7 @@ const Setup2FA = () => {
             <div className="setup2fa-info-icon">🔐</div>
             <h2 className="setup2fa-info-title">Autenticación de Dos Factores</h2>
             <p className="setup2fa-info-description">
-              Protege tu cuenta con una capa adicional de seguridad. La autenticación de dos factores 
+              Protege tu cuenta con una capa adicional de seguridad. La autenticación de dos factores
               añade una protección extra contra accesos no autorizados.
             </p>
             <div className="setup2fa-info-steps">
@@ -75,14 +95,14 @@ const Setup2FA = () => {
             <div className="setup2fa-info-box">
               <span className="setup2fa-info-box-icon">💡</span>
               <div>
-                Haz clic en el botón para generar tu código de configuración. 
+                Haz clic en el botón para generar tu código de configuración.
                 Necesitarás tener Google Authenticator instalado en tu dispositivo móvil.
               </div>
             </div>
           )}
 
-          <button 
-            onClick={handleSetup2FA} 
+          <button
+            onClick={handleSetup2FA}
             disabled={isButtonDisabled}
             className="setup2fa-generate-btn"
           >
@@ -95,7 +115,7 @@ const Setup2FA = () => {
               <p className="setup2fa-instruction">
                 Introduce la siguiente clave secreta en Google Authenticator manualmente:
               </p>
-              
+
               <div className="setup2fa-secret-container">
                 <span className="setup2fa-secret-label">Clave Secreta</span>
                 <div className="setup2fa-secret-key" title="Haz clic para seleccionar">

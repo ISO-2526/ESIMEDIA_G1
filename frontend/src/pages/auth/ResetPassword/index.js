@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../api/axiosConfig';
 import { useHistory, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import './ResetPassword.css';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 
@@ -18,6 +20,24 @@ function ResetPassword() {
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
 
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
@@ -28,7 +48,7 @@ function ResetPassword() {
       try {
         // ✅ Hacemos GET con el token en la query, como espera tu backend
         const response = await api.get(`/api/auth/validate-reset-token?token=${(token)}`);
-        
+
         // ✅ Usamos el valor devuelto por el backend
         if (response.data?.valid === true) {
           setIsValidToken(true);
@@ -47,7 +67,7 @@ function ResetPassword() {
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    
+
     // Validar contraseña en tiempo real
     const errors = validatePasswordStrength(value);
     if (errors.length > 0) {
@@ -78,7 +98,7 @@ function ResetPassword() {
       const response = await api.post('/api/auth/reset-password', { token, password });
       setMessage(response.data.message || 'Contraseña restablecida correctamente. Redirigiendo al inicio de sesión...');
       setMessageType('success');
-      setTimeout(() => history.push('/login'), 3000);
+      setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
       console.error('Error al resetear contraseña:', error.response?.data || error.message);
       setMessage('Error al resetear la contraseña. Inténtalo de nuevo.');
@@ -106,9 +126,9 @@ function ResetPassword() {
             <p className="reset-invalid-token">
               ⚠️ El enlace de restablecimiento no es válido o ha expirado.
             </p>
-            <button 
+            <button
               className="reset-submit-btn"
-              onClick={() => history.push('/recover-password')}
+              onClick={() => navigate('/recover-password')}
               style={{ marginTop: '20px' }}
             >
               Solicitar nuevo enlace
@@ -130,7 +150,7 @@ function ResetPassword() {
             <p className="reset-info-description">
               Crea una contraseña segura para proteger tu cuenta.
             </p>
-            
+
             <div className="reset-info-features">
               <div className="reset-feature-item">
                 <span className="reset-feature-icon">✓</span>
@@ -154,7 +174,7 @@ function ResetPassword() {
           <p className="page-subtitle">
             Introduce tu nueva contraseña a continuación.
           </p>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="form-field">
               <label htmlFor="reset-password" className="form-label required">Nueva Contraseña</label>
@@ -232,8 +252,8 @@ function ResetPassword() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="reset-submit-btn"
               disabled={!password || !confirmPassword || password !== confirmPassword}
             >

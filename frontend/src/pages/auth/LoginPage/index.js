@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useHistory, Link } from 'react-router-dom';
+import { IonPage, IonContent } from '@ionic/react';
+import { useIonRouter } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import axios from '../../../api/axiosConfig';
 import './LoginPage.css';
 
@@ -9,6 +12,27 @@ function LoginPage() {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const history = useHistory();
+  const ionRouter = useIonRouter();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Función de navegación híbrida
+  const navigate = (path, state = null) => {
+    console.log('🚀 Navegando a:', path, 'con state:', state);
+    if (isMobile && ionRouter) {
+      // En móvil, usar ionRouter con state en sessionStorage
+      if (state) {
+        sessionStorage.setItem('navigationState', JSON.stringify(state));
+      }
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      // En web, usar history normal
+      if (state) {
+        history.push({ pathname: path, state });
+      } else {
+        history.push(path);
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,9 +42,9 @@ function LoginPage() {
       console.log('Base URL configurada:', axios.defaults.baseURL);
       console.log('URL completa a la que se va a hacer la petición:', '/api/auth/login');
 
-      const res = await axios.post('/api/auth/login', { 
-        email, 
-        password 
+      const res = await axios.post('/api/auth/login', {
+        email,
+        password
       }, {
         withCredentials: true
       });
@@ -30,22 +54,21 @@ function LoginPage() {
       // Login exitoso sin 2FA/3FA requerido
       const data = res.data;
       const role = data?.role ?? data?.data?.role;
-      
+
       // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
       if (data.accessToken) {
         localStorage.setItem('access_token', data.accessToken);
         console.log('🔑 Token guardado en localStorage:', data.accessToken);
-        console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
       }
-      
+
       // Pequeño delay para asegurar que localStorage se sincroniza
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       console.log('🚀 Navegando a dashboard con role:', role);
-      if (role === 'admin') history.push('/adminDashboard');
-      else if (role === 'creator') history.push('/creator');
-      else if (role === 'user') history.push('/usuario');
-      else history.push('/');
+      if (role === 'admin') navigate('/adminDashboard');
+      else if (role === 'creator') navigate('/creator');
+      else if (role === 'user') navigate('/usuario');
+      else navigate('/');
 
     } catch (err) {
       console.error('Error al iniciar sesión:', err);
@@ -54,19 +77,15 @@ function LoginPage() {
       // ✅ Manejar código 428: Requiere 2FA o 3FA
       if (err.response?.status === 428) {
         const responseData = err.response.data;
-        
+
         console.log('🔐 Requiere 2FA/3FA - Data recibida:', responseData);
-        
+
         // Verificar si tiene los datos necesarios
         if (responseData && (responseData.email || responseData.role)) {
-          // ✅ CORRECTO: Pasar state dentro de un objeto
-          history.push({
-            pathname: '/validate-2fa',
-            state: {
-              email: responseData.email || email, 
-              password: password,
-              role: responseData.role
-            }
+          navigate('/validate-2fa', {
+            email: responseData.email || email,
+            password: password,
+            role: responseData.role
           });
           return;
         }
@@ -90,11 +109,11 @@ function LoginPage() {
     }
   };
 
-  return (
+  const content = (
     <div className="page-container">
       <div className="animated-bg"></div>
       <div className="login-wrapper">
-          {/* Panel lateral informativo */}
+        {/* Panel lateral informativo */}
         <div className="info-panel">
           <div className="info-content">
             <h2 className="info-title">¡Bienvenido de vuelta!</h2>
@@ -191,7 +210,7 @@ function LoginPage() {
             </button>
 
             <div className="form-footer">
-              <button type="button" className="link-btn" onClick={() => history.push('/recuperar')}>
+              <button type="button" className="link-btn" onClick={() => navigate('/recuperar')}>
                 ¿Olvidaste tu contraseña?
               </button>
               <div className="register-link">
@@ -204,6 +223,18 @@ function LoginPage() {
       </div>
     </div>
   );
+
+  if (Capacitor.isNativePlatform()) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          {content}
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return content;
 }
 
 export default LoginPage;

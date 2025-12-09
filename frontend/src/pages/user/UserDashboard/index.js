@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import ContentLayout from '../../../layouts/ContentLayout';
 import VideoPlayer from '../../../components/VideoPlayer';
 import AudioPlayer from '../../../components/AudioPlayer';
@@ -98,7 +99,7 @@ function DashboardHeader({
             <Link to="/playlists"><i className="fas fa-list"></i> Mis Listas</Link>
           </nav>
 
-            <ContentFilters onFiltersChange={handleFiltersChange} />
+          <ContentFilters onFiltersChange={handleFiltersChange} />
 
           <div className="search-container-dashboard">
             <input
@@ -252,6 +253,24 @@ function CreatorPlaylistsSlider({ creatorPlaylists, navigate }) {
 
 function UserDashboard() {
   const history = useHistory();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   const { modalState, closeModal } = useModal();
   const { scrolled, scrollProgress } = useScrollInfo();
   const [searchQuery, setSearchQuery] = useState('');
@@ -373,7 +392,7 @@ function UserDashboard() {
       setShowVipModal(true);
       return;
     }
-    
+
     setSelectedContent(content);
     setShowPlaylistModal(true);
   };
@@ -430,7 +449,7 @@ function UserDashboard() {
 
   const handleVipUpgrade = () => {
     setShowVipModal(false);
-    history.push('/suscripcion');
+    navigate('/suscripcion');
   };
 
   const handleShowInfo = (content) => {
@@ -518,7 +537,7 @@ function UserDashboard() {
       <main className="dashboard-main">
         <CreatorPlaylistsSlider
           creatorPlaylists={creatorPlaylists}
-          navigate={history}
+          navigate={navigate}
         />
 
         <ContentLayout
@@ -570,19 +589,18 @@ function UserDashboard() {
       {/* Notification Toast */}
       {notification && (
         <div className={`notification-toast ${notification.type}`}>
-          <i className={`fas ${
-            notification.type === 'success' ? 'fa-check-circle' : 
-            notification.type === 'error' ? 'fa-exclamation-circle' : 
-            notification.type === 'warning' ? 'fa-exclamation-triangle' : 
-            'fa-info-circle'
-          }`}></i>
+          <i className={`fas ${notification.type === 'success' ? 'fa-check-circle' :
+            notification.type === 'error' ? 'fa-exclamation-circle' :
+              notification.type === 'warning' ? 'fa-exclamation-triangle' :
+                'fa-info-circle'
+            }`}></i>
           <span>{notification.message}</span>
         </div>
       )}
 
       {/* Scroll to Top Button */}
       {scrolled && (
-        <button 
+        <button
           className="scroll-top-btn"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >

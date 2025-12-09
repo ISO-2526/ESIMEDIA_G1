@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { useIonRouter } from '@ionic/react';
 import MobileHeader from '../../../components/mobile/MobileHeader';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
@@ -11,9 +12,29 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
 
+import axios from '../../../api/axiosConfig';
+
 function CreatorPlaylistViewPage() {
   const { id } = useParams();
   const history = useHistory();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Intentar obtener ionRouter para móvil
+  let ionRouter = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ionRouter = useIonRouter();
+  } catch (e) { }
+
+  // Navegación híbrida
+  const navigate = (path) => {
+    if (isMobile && ionRouter) {
+      ionRouter.push(path, 'forward', 'push');
+    } else {
+      history.push(path);
+    }
+  };
+
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
@@ -37,19 +58,12 @@ function CreatorPlaylistViewPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      const profileData = response.data;
+      setUserProfile({
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -85,17 +99,14 @@ function CreatorPlaylistViewPage() {
         const content = allContents.find(c => c.id === item.contentId);
         return content?.coverFileName ? `/cover/${content.coverFileName}` : '/cover/default.png';
       });
-    
+
     setContentCovers(covers);
   };
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch('/api/users/favorites', { credentials: 'include' });
-      if (response.ok) {
-        const data = await response.json();
-        setFavorites(data);
-      }
+      const response = await axios.get('/api/users/favorites', { withCredentials: true });
+      setFavorites(response.data);
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
@@ -103,11 +114,8 @@ function CreatorPlaylistViewPage() {
 
   const fetchAllContents = async () => {
     try {
-      const response = await fetch('/api/public/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setAllContents(data);
-      }
+      const response = await axios.get('/api/public/contents');
+      setAllContents(response.data);
     } catch (error) {
       console.error('Error fetching all contents:', error);
     }
@@ -115,25 +123,20 @@ function CreatorPlaylistViewPage() {
 
   const fetchPlaylistDetails = async () => {
     try {
-      const response = await fetch(`/api/creator/playlists/public`);
+      const response = await axios.get(`/api/creator/playlists/public`);
+      const data = response.data;
+      const foundPlaylist = data.find(p => p.id === id);
 
-      if (response.ok) {
-        const data = await response.json();
-        const foundPlaylist = data.find(p => p.id === id);
-        
-        if (foundPlaylist && foundPlaylist.visible) {
-          setPlaylist(foundPlaylist);
-        } else {
-          showWarning('Esta lista no está disponible');
-          history.push('/usuario');
-        }
+      if (foundPlaylist && foundPlaylist.visible) {
+        setPlaylist(foundPlaylist);
       } else {
-        showError('Error al cargar la lista');
-        history.push('/usuario');
+        showWarning('Esta lista no está disponible');
+        navigate('/usuario');
       }
     } catch (error) {
       console.error('Error:', error);
-      history.push('/usuario');
+      showError('Error al cargar la lista');
+      navigate('/usuario');
     } finally {
       setLoading(false);
     }
@@ -141,7 +144,7 @@ function CreatorPlaylistViewPage() {
 
   const transformContentItem = (item, content) => {
     if (!content) return null;
-    
+
     return {
       id: content.id,
       titulo: content.title,
@@ -189,31 +192,25 @@ function CreatorPlaylistViewPage() {
   };
 
   const removeFavorite = async (contentId) => {
-    const response = await fetch(`/api/users/favorites/${contentId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-
-    if (response.ok) {
+    try {
+      await axios.delete(`/api/users/favorites/${contentId}`, {
+        withCredentials: true
+      });
       setFavorites(favorites.filter(id => id !== contentId));
       showSuccess('Eliminado de favoritos');
-    } else {
+    } catch (error) {
       showError('Error al eliminar de favoritos');
     }
   };
 
   const addFavorite = async (contentId) => {
-    const response = await fetch('/api/users/favorites', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ contentId })
-    });
-
-    if (response.ok) {
+    try {
+      await axios.post('/api/users/favorites', { contentId }, {
+        withCredentials: true
+      });
       setFavorites([...favorites, contentId]);
       showSuccess('Añadido a favoritos');
-    } else {
+    } catch (error) {
       showError('Error al añadir a favoritos');
     }
   };
@@ -296,31 +293,31 @@ function CreatorPlaylistViewPage() {
           showNotifications={true}
         />
       )}
-      <button className="floating-back-button" onClick={() => history.push('/usuario')}>
+      <button className="floating-back-button" onClick={() => navigate('/usuario')}>
         <i className="fas fa-arrow-left"></i>
       </button>
 
       <div className="playlist-hero-section">
         <div className="playlist-hero-background">
           {contentCovers.length > 0 && (
-            <div 
-              className="hero-cover-blur" 
+            <div
+              className="hero-cover-blur"
               style={{ backgroundImage: `url(${contentCovers[0]})` }}
             />
           )}
         </div>
-        
+
         <div className="playlist-hero-content">
           <div className="playlist-hero-covers">
             {contentCovers.slice(0, 4).map((cover, index) => (
-              <div 
+              <div
                 key={index}
                 className={`hero-cover-item cover-position-${index + 1}`}
                 style={{ backgroundImage: `url(${cover})` }}
               />
             ))}
           </div>
-          
+
           <div className="playlist-hero-info">
             <span className="playlist-badge">
               <i className="fas fa-star"></i> Lista de Creador
@@ -355,9 +352,9 @@ function CreatorPlaylistViewPage() {
           <div className="playlist-controls">
             <div className="sort-controls">
               <label htmlFor="sort">Ordenar por:</label>
-              <select 
+              <select
                 id="sort"
-                value={sortBy} 
+                value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="sort-select"
               >
@@ -394,8 +391,8 @@ function CreatorPlaylistViewPage() {
 
       {/* Modal de información del contenido */}
       {shouldShowInfoModal && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               handleCloseInfo();
@@ -407,8 +404,8 @@ function CreatorPlaylistViewPage() {
           tabIndex={0}
           aria-label="Cerrar información del contenido"
         >
-          <div 
-            className="modal-content content-info-modal" 
+          <div
+            className="modal-content content-info-modal"
             onKeyDown={infoDialogHandlers.onDialogKeyDown}
             onKeyUp={infoDialogHandlers.onDialogKeyUp}
             role="dialog"
@@ -420,9 +417,9 @@ function CreatorPlaylistViewPage() {
             </button>
 
             <div className="content-info-header">
-              <img 
-                src={selectedContent.imagen} 
-                alt={selectedContent.titulo} 
+              <img
+                src={selectedContent.imagen}
+                alt={selectedContent.titulo}
                 className="content-info-image"
               />
               <div className="content-info-overlay">
@@ -440,7 +437,7 @@ function CreatorPlaylistViewPage() {
 
             <div className="content-info-body">
               <p>{selectedContent.description}</p>
-              
+
               {selectedContent.tags && selectedContent.tags.length > 0 && (
                 <div className="content-tags">
                   {selectedContent.tags.map((tag, index) => (
@@ -451,7 +448,7 @@ function CreatorPlaylistViewPage() {
             </div>
 
             <div className="content-info-actions">
-              <button 
+              <button
                 className="btn-primary"
                 onClick={() => {
                   handleCloseInfo();
@@ -460,11 +457,11 @@ function CreatorPlaylistViewPage() {
               >
                 <i className="fas fa-play"></i> Reproducir
               </button>
-              <button 
+              <button
                 className={`btn-secondary ${isContentFavorite ? 'active' : ''}`}
                 onClick={() => handleToggleFavorite(selectedContent.id)}
               >
-                <i className={`fa${isContentFavorite ? 's' : 'r'} fa-heart`}></i> 
+                <i className={`fa${isContentFavorite ? 's' : 'r'} fa-heart`}></i>
                 {isContentFavorite ? 'En Favoritos' : 'Añadir a Favoritos'}
               </button>
 
