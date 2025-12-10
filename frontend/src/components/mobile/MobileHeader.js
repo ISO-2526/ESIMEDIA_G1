@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   IonIcon,
   IonPopover
@@ -13,7 +13,7 @@ import {
   closeOutline,
   person
 } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import MobileFilterModal from './MobileFilterModal';
 import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
@@ -35,9 +35,19 @@ const MobileHeader = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const history = useHistory();
+  const location = useLocation();
+
+  // Cerrar todos los menús al cambiar de página
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsFilterOpen(false);
+    setIsNotificationsOpen(false);
+    setShowSearch(false);
+    setSearchQuery('');
+  }, [location.pathname, setSearchQuery]);
 
   // Prevenir scroll cuando se abren los menus
-  React.useEffect(() => {
+  useEffect(() => {
     if (isMenuOpen || isFilterOpen || isNotificationsOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
