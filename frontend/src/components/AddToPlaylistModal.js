@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './AddToPlaylistModal.css';
 import CustomModal from './CustomModal';
 import { useModal } from '../utils/useModal';
+import axios from '../api/axiosConfig';
 
 function AddToPlaylistModal({ isOpen, onClose, content }) {
   const { modalState, closeModal, showSuccess, showError, showConfirm } = useModal();
@@ -19,21 +20,18 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const fetchPlaylists = async () => {
     try {
-      const response = await fetch('/api/playlists', { credentials: 'include' });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Separar la lista "Favoritos" y las demás
-        const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
-        const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
-        
-        // Si existe "Favoritos", ponerla primero
-        if (favoritosPlaylist) {
-          setPlaylists([favoritosPlaylist, ...otherPlaylists]);
-        } else {
-          setPlaylists(data);
-        }
+      const response = await axios.get('/api/playlists', { withCredentials: true });
+      const data = response.data;
+      
+      // Separar la lista "Favoritos" y las demás
+      const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
+      const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
+      
+      // Si existe "Favoritos", ponerla primero
+      if (favoritosPlaylist) {
+        setPlaylists([favoritosPlaylist, ...otherPlaylists]);
+      } else {
+        setPlaylists(data);
       }
     } catch (error) {
       console.error('Error fetching playlists:', error);
@@ -67,17 +65,9 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const addToPlaylist = async (playlistId) => {
     try {
-      const response = await fetch(`/api/playlists/${playlistId}/content/${content.id}`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        showSuccess(`"${content.titulo}" añadido a la lista`);
-        fetchPlaylists(); // Actualizar la lista
-      } else {
-        showError('Error al añadir el contenido');
-      }
+      await axios.post(`/api/playlists/${playlistId}/content/${content.id}`, {}, { withCredentials: true });
+      showSuccess(`"${content.titulo}" añadido a la lista`);
+      fetchPlaylists(); // Actualizar la lista
     } catch (error) {
       console.error('Error:', error);
       showError('Error al añadir el contenido');
@@ -86,17 +76,9 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const removeFromPlaylist = async (playlistId) => {
     try {
-      const response = await fetch(`/api/playlists/${playlistId}/content/${content.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        showSuccess('Contenido eliminado de la lista');
-        fetchPlaylists(); // Actualizar la lista
-      } else {
-        showError('Error al eliminar el contenido');
-      }
+      await axios.delete(`/api/playlists/${playlistId}/content/${content.id}`, { withCredentials: true });
+      showSuccess('Contenido eliminado de la lista');
+      fetchPlaylists(); // Actualizar la lista
     } catch (error) {
       console.error('Error:', error);
       showError('Error al eliminar el contenido');
@@ -105,33 +87,21 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
 
   const createFavoritosPlaylist = async () => {
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: 'Favoritos',
-          descripcion: 'Lista permanente de favoritos',
-          isPermanent: true
-        })
-      });
-
-      if (response.ok) {
-        showSuccess('Lista de Favoritos creada');
-        fetchPlaylists();
-      } else {
-        const errorData = await response.json();
-        if (errorData.error && errorData.error.includes('Ya existe')) {
-          showError('Ya tienes una lista de Favoritos');
-        } else {
-          showError('Error al crear la lista de Favoritos');
-        }
-      }
+      await axios.post('/api/playlists', {
+        nombre: 'Favoritos',
+        descripcion: 'Lista permanente de favoritos',
+        isPermanent: true
+      }, { withCredentials: true });
+      
+      showSuccess('Lista de Favoritos creada');
+      fetchPlaylists();
     } catch (error) {
       console.error('Error:', error);
-      showError('Error al crear la lista de Favoritos');
+      if (error.response?.data?.error?.includes('Ya existe')) {
+        showError('Ya tienes una lista de Favoritos');
+      } else {
+        showError('Error al crear la lista de Favoritos');
+      }
     }
   };
 
@@ -144,27 +114,16 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
     }
 
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: newPlaylistName,
-          descripcion: newPlaylistDescription || ''
-        })
-      });
-
-      if (response.ok) {
-        showSuccess('Lista creada exitosamente');
-        setShowCreateForm(false);
-        setNewPlaylistName('');
-        setNewPlaylistDescription('');
-        fetchPlaylists();
-      } else {
-        showError('Error al crear la lista');
-      }
+      await axios.post('/api/playlists', {
+        nombre: newPlaylistName,
+        descripcion: newPlaylistDescription || ''
+      }, { withCredentials: true });
+      
+      showSuccess('Lista creada exitosamente');
+      setShowCreateForm(false);
+      setNewPlaylistName('');
+      setNewPlaylistDescription('');
+      fetchPlaylists();
     } catch (error) {
       console.error('Error:', error);
       showError('Error al crear la lista');

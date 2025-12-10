@@ -117,12 +117,10 @@ const parseActivationResponseMessage = async (response) => {
 };
 
 const activateOrDeactivate3FA = async ({ email, activate }) => {
-  return fetch('/api/auth/activate-3fa', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, activate })
-  });
+  return axios.post('/api/auth/activate-3fa', 
+    { email, activate },
+    { withCredentials: true }
+  );
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
