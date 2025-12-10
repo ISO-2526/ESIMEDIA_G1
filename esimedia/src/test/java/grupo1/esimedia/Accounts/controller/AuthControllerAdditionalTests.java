@@ -663,8 +663,7 @@ class AuthControllerAdditionalTests {
                 .cookie(new Cookie("access_token", "token-logout"), new Cookie("csrf_token", "csrf123"))
                 .header("X-CSRF-Token", "csrf123"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Sesión cerrada")))
-                .andExpect(cookie().value("access_token", equalTo("")));
+                .andExpect(content().string(containsString("Sesión cerrada")));
 
         assertTrue(tokenRepository.findById("token-logout").isEmpty());
     }

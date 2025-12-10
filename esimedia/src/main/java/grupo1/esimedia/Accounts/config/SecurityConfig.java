@@ -21,6 +21,8 @@ import java.util.Arrays;
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+    private static final String IPANDROIDEMULATOR = "10.0.2.2";
     
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
