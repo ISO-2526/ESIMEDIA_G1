@@ -89,45 +89,43 @@ class EsimediaApplicationTests {
         doNothing().when(loginAttemptService).recordFailedAttempt(anyString(), anyString());
     }
 
-   @Test
-void loginSuccessForUser() throws Exception {
-    User user = new User();
-    user.setName("Demo");
-    user.setSurname("User");
-    user.setEmail("user@test.com");
-    user.setPassword(passwordUtils.hashPassword("Password#123"));  // ✅ Contraseña válida
-    user.setActive(true);
-    user.setLastPasswordChangeAt(java.time.Instant.now());  // ✅ Añadir
-    userRepository.save(user);
+    @Test
+    void loginSuccessForUser() throws Exception {
+        User user = new User();
+        user.setName("Demo");
+        user.setSurname("User");
+        user.setEmail("user@test.com");
+        user.setPassword(passwordUtils.hashPassword("password123"));
+        user.setActive(true);
+        userRepository.save(user);
 
-    mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"user@test.com\",\"password\":\"Password#123\"}"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.role").value("user"))
-        .andExpect(jsonPath("$.email").value("user@test.com"))
-        .andExpect(cookie().exists("access_token"));
-}
+        mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"user@test.com\",\"password\":\"password123\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.role").value("user"))
+            .andExpect(jsonPath("$.email").value("user@test.com"))
+            .andExpect(cookie().exists("access_token"));
+    }
 
-@Test
-void loginFailsForUnknownUser() throws Exception {
-    mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"nobody@test.com\",\"password\":\"bad\"}"))
-        .andExpect(status().isBadRequest());  // ✅ Ya correcto
-}
+    @Test
+    void loginFailsForUnknownUser() throws Exception {
+        mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"nobody@test.com\",\"password\":\"bad\"}"))
+            .andExpect(status().isUnauthorized());
+    }
 
-@Test
-void loginRequiresTwoFactorWhenSecretPresent() throws Exception {
-    User user = new User();
-    user.setName("Two");
-    user.setSurname("Factor");
-    user.setEmail("2fa@test.com");
-    user.setPassword(passwordUtils.hashPassword("Password#123"));  // ✅ Contraseña válida
-    user.setTwoFactorSecretKey("SECRET");
-    user.setLastPasswordChangeAt(java.time.Instant.now());  // ✅ Añadir
-    userRepository.save(user);
+    @Test
+    void loginRequiresTwoFactorWhenSecretPresent() throws Exception {
+        User user = new User();
+        user.setName("Two");
+        user.setSurname("Factor");
+        user.setEmail("2fa@test.com");
+        user.setPassword(passwordUtils.hashPassword("password123"));
+        user.setTwoFactorSecretKey("SECRET");
+        userRepository.save(user);
 
-    mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"2fa@test.com\",\"password\":\"Password#123\"}"))
-        .andExpect(status().is(428))  // ✅ 428 Precondition Required
-        .andExpect(jsonPath("$.requiresTwoFactor").value(true));
-}
+        mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"2fa@test.com\",\"password\":\"password123\"}"))
+            .andExpect(status().isPreconditionRequired())
+            .andExpect(jsonPath("$.requiresTwoFactor").value(true));
+    }
 
     @Test
     void getAdminByEmailWithValidToken() throws Exception {
@@ -154,7 +152,7 @@ void loginRequiresTwoFactorWhenSecretPresent() throws Exception {
     @Test
     void getAdminByEmailUnauthorizedWithoutToken() throws Exception {
         mockMvc.perform(get("/api/admins/admin@test.com"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 
     private MockHttpServletRequestBuilder jsonPost(String url, String jsonBody) {
@@ -168,3 +166,5 @@ void loginRequiresTwoFactorWhenSecretPresent() throws Exception {
             });
     }
 }
+
+

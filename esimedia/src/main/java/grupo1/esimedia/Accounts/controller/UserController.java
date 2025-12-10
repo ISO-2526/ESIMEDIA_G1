@@ -35,7 +35,6 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 import java.util.stream.Collectors;
-import java.time.Instant;
 import java.time.LocalDate;
 
 @RestController
@@ -89,8 +88,6 @@ public class UserController {
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setPassword(passwordUtils.hashPassword(dto.getPassword()));
-        user.setLastPasswordChangeAt(Instant.now());
-        user.addPasswordToHistory(user.getPassword());
         user.setName(dto.getName());
         user.setSurname(dto.getSurname());
         user.setAlias(dto.getAlias());
@@ -263,8 +260,6 @@ public class UserController {
         //Set the password from the inputs of the method
         password = passwordUtils.hashPassword(password);
         user.setPassword(password);
-        user.setLastPasswordChangeAt(Instant.now());
-        user.addPasswordToHistory(user.getPassword());
         user.setResetToken(null);
         user.setTokenExpiration(null);
         emailService.sendEmail(user.getEmail(), "Password Reset", "Your password has been reset successfully.");

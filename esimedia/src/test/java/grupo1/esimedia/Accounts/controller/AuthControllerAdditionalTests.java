@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
 
@@ -42,7 +41,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -140,47 +138,46 @@ class AuthControllerAdditionalTests {
         Files.deleteIfExists(Path.of("qrCode.png"));
     }
 
-@Test
+    @Test
     void loginReturnsTooManyRequestsWhenRateLimitExceeded() throws Exception {
         when(rateLimitService.allowLogin(anyString(), anyString())).thenReturn(false);
 
-        // CORRECCIÓN: Usar contraseña válida para pasar la validación @Valid y llegar al RateLimit
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"limit@test.com\",\"password\":\"SecurePass1!\"}"))
+                .content("{\"email\":\"limit@test.com\",\"password\":\"pwd\"}"))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(content().string(containsString("Demasiados intentos")));
 
         verify(emailService, times(1)).sendRateLimitExceededEmail("limit@test.com");
     }
 
-@Test
+    @Test
     void loginReturnsLockoutPayloadWhenAccountLocked() throws Exception {
         when(loginAttemptService.isLocked(anyString(), anyString())).thenReturn(true);
         when(loginAttemptService.getLockoutTime(anyString(), anyString())).thenReturn(120L);
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"locked@test.com\",\"password\":\"SecurePass1!\"}"))
-                .andExpect(status().isTooManyRequests()); // CORRECCIÓN: El servidor devuelve 429 cuando está bloqueado
-                // Quitamos las aserciones de JSON específicas si el 429 devuelve un cuerpo diferente o genérico
+                .content("{\"email\":\"locked@test.com\",\"password\":\"pwd\"}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.locked", is(true)))
+                .andExpect(jsonPath("$.lockoutTime", is(120)));
     }
-    
-@Test
-void loginRequiresEmailAndPassword() throws Exception {
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"missing@test.com\"}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("contraseña"))); // ✅ Más genérico
-}
+
+    @Test
+    void loginRequiresEmailAndPassword() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"missing@test.com\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString("Email y contraseña")));
+    }
 
     @Test
     void loginRejectsInactiveAdminAccount() throws Exception {
         Admin admin = new Admin();
         admin.setEmail("inactive@login.com");
         admin.setPassword(passwordUtils.hashPassword("Clave#13579"));
-        admin.setLastPasswordChangeAt(java.time.Instant.now());
         admin.setDepartment(Department.HUMAN_RESOURCES);
         admin.setActive(false);
         adminRepository.save(admin);
@@ -199,7 +196,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         Admin admin = new Admin();
         admin.setEmail("wrongpass@login.com");
         admin.setPassword(passwordUtils.hashPassword("Correct#123"));
-        admin.setLastPasswordChangeAt(java.time.Instant.now());
         admin.setDepartment(Department.LEGAL_TEAM);
         adminRepository.save(admin);
 
@@ -219,7 +215,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         Admin admin = new Admin();
         admin.setEmail("CaseSensitive@Test.com");
         admin.setPassword(passwordUtils.hashPassword("Clave#Case"));
-        admin.setLastPasswordChangeAt(java.time.Instant.now());
         admin.setDepartment(Department.CUSTOMER_SUPPORT);
         adminRepository.save(admin);
 
@@ -252,7 +247,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         User user = new User();
         user.setEmail("2fail@test.com");
         user.setPassword(passwordUtils.hashPassword("Seguro#456"));
-        user.setLastPasswordChangeAt(java.time.Instant.now());
         user.setTwoFactorSecretKey("TF-SECRET");
         userRepository.save(user);
 
@@ -273,7 +267,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         Admin admin = new Admin();
         admin.setEmail("format@test.com");
         admin.setPassword(passwordUtils.hashPassword("Seguro#654"));
-        admin.setLastPasswordChangeAt(java.time.Instant.now());
         admin.setTwoFactorSecretKey("ADMINSECRET");
         admin.setDepartment(Department.LEGAL_TEAM);
         adminRepository.save(admin);
@@ -293,7 +286,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         User user = new User();
         user.setEmail("third@test.com");
         user.setPassword(passwordUtils.hashPassword("Seguro#789"));
-        user.setLastPasswordChangeAt(java.time.Instant.now());
         user.setThirdFactorEnabled(true);
         userRepository.save(user);
 
@@ -322,15 +314,13 @@ void loginRequiresEmailAndPassword() throws Exception {
 
     @Test
     void loginFallsBackToRealIpAndRemoteAddr() throws Exception {
-        String complexPassword = "SecurePass1!";
-
         mockMvc.perform(post("/api/auth/login")
                 .header("X-Real-IP", "198.51.100.77")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                         "email", "ghost-real@test.com",
-                        "password", complexPassword))))
-                .andExpect(status().isUnauthorized()); // CORRECCIÓN: Esperaba 400 pero fue 401
+                        "password", "Nope"))))
+                .andExpect(status().isUnauthorized());
 
         verify(loginAttemptService).recordFailedAttempt("ghost-real@test.com", "198.51.100.77");
 
@@ -342,8 +332,8 @@ void loginRequiresEmailAndPassword() throws Exception {
                 })
                 .content(mapper.writeValueAsString(Map.of(
                         "email", "ghost-remote@test.com",
-                        "password", complexPassword))))
-                .andExpect(status().isUnauthorized()); // CORRECCIÓN: Esperaba 400 pero fue 401
+                        "password", "Nope"))))
+                .andExpect(status().isUnauthorized());
 
         verify(loginAttemptService).recordFailedAttempt("ghost-remote@test.com", "192.0.2.99");
     }
@@ -352,18 +342,16 @@ void loginRequiresEmailAndPassword() throws Exception {
     void loginReturnsSuccessPayloadForAdmin() throws Exception {
         Admin admin = new Admin();
         admin.setEmail("boss@login.com");
-        admin.setPassword(passwordUtils.hashPassword("Clave#12345long"));
+        admin.setPassword(passwordUtils.hashPassword("Clave#12345"));
         admin.setPicture("admin.png");
-        admin.setLastPasswordChangeAt(java.time.Instant.now());
         admin.setDepartment(Department.CUSTOMER_SUPPORT);
         adminRepository.save(admin);
 
-        // CORRECCIÓN: La contraseña enviada coincide con la guardada
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                         "email", "boss@login.com",
-                        "password", "Clave#12345long"))))
+                        "password", "Clave#12345"))))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("access_token"))
                 .andExpect(jsonPath("$.role", is("admin")))
@@ -376,7 +364,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         creator.setEmail("creator@login.com");
         creator.setPassword(passwordUtils.hashPassword("Clave#54321"));
         creator.setAlias("videostar");
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
         creator.setSpecialty(Specialty.GAMING);
         creator.setContentType(ContentType.VIDEO);
         creator.setPicture("creator.png");
@@ -398,7 +385,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         ContentCreator creator = new ContentCreator();
         creator.setEmail("inactive@creator.com");
         creator.setPassword(passwordUtils.hashPassword("Clave#12345"));
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
         creator.setSpecialty(Specialty.ART);
         creator.setContentType(ContentType.VIDEO);
         creator.setActive(false);
@@ -417,8 +403,7 @@ void loginRequiresEmailAndPassword() throws Exception {
     void loginRejectsCreatorWithWrongPassword() throws Exception {
         ContentCreator creator = new ContentCreator();
         creator.setEmail("wrong@creator.com");
-        creator.setPassword(passwordUtils.hashPassword("Correct#1234long"));
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
+        creator.setPassword(passwordUtils.hashPassword("Correct#123"));
         creator.setSpecialty(Specialty.MUSIC_CONCERTS);
         creator.setContentType(ContentType.AUDIO);
         creatorRepository.save(creator);
@@ -427,7 +412,7 @@ void loginRequiresEmailAndPassword() throws Exception {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                         "email", "wrong@creator.com",
-                        "password", "Bad#1234long"))))
+                        "password", "Bad#123"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error", containsString("Credenciales")));
     }
@@ -437,7 +422,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         ContentCreator creator = new ContentCreator();
         creator.setEmail("2fa@creator.com");
         creator.setPassword(passwordUtils.hashPassword("Seguro#222"));
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
         creator.setSpecialty(Specialty.GAMING);
         creator.setContentType(ContentType.VIDEO);
         creator.setTwoFactorSecretKey("CREATORSECRET");
@@ -458,7 +442,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         ContentCreator creator = new ContentCreator();
         creator.setEmail("pass2fa@creator.com");
         creator.setPassword(passwordUtils.hashPassword("Seguro#777"));
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
         creator.setSpecialty(Specialty.COMEDY);
         creator.setContentType(ContentType.VIDEO);
         creator.setTwoFactorSecretKey("CREATORSECRET");
@@ -481,7 +464,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         ContentCreator creator = new ContentCreator();
         creator.setEmail("CreatorCase@Test.com");
         creator.setPassword(passwordUtils.hashPassword("Creator#Case"));
-        creator.setLastPasswordChangeAt(java.time.Instant.now());
         creator.setAlias("CaseAlias");
         creator.setSpecialty(Specialty.COMEDY);
         creator.setContentType(ContentType.VIDEO);
@@ -501,7 +483,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         User user = new User();
         user.setEmail("user@login.com");
         user.setPassword(passwordUtils.hashPassword("Clave#67890"));
-        user.setLastPasswordChangeAt(java.time.Instant.now());
         user.setPicture("user.png");
         userRepository.save(user);
 
@@ -521,7 +502,6 @@ void loginRequiresEmailAndPassword() throws Exception {
         User user = new User();
         user.setEmail("UserCase@Test.com");
         user.setPassword(passwordUtils.hashPassword("User#Case"));
-        user.setLastPasswordChangeAt(java.time.Instant.now());
         userRepository.save(user);
 
         mockMvc.perform(post("/api/auth/login")
@@ -544,78 +524,77 @@ void loginRequiresEmailAndPassword() throws Exception {
                 .andExpect(content().string(containsString("Demasiados intentos")));
     }
 
-@Test
-void recoverPasswordValidatesInputAndDailyLimit() throws Exception {
-    mockMvc.perform(post("/api/auth/recover")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("obligatorio")));  // ✅ Más genérico
+    @Test
+    void recoverPasswordValidatesInputAndDailyLimit() throws Exception {
+        mockMvc.perform(post("/api/auth/recover")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Email es requerido")));
 
-    when(rateLimitService.allowOtpDaily("daily@test.com")).thenReturn(false);
+        when(rateLimitService.allowOtpDaily("daily@test.com")).thenReturn(false);
 
-    mockMvc.perform(post("/api/auth/recover")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"daily@test.com\"}"))
-            .andExpect(status().isTooManyRequests())
-            .andExpect(content().string(containsString("diario")));  // ✅ Más genérico
-}
+        mockMvc.perform(post("/api/auth/recover")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"daily@test.com\"}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(content().string(containsString("Límite diario")));
+    }
 
-@Test
-void recoverPasswordGeneratesTokenAndExpiration() throws Exception {
-    User user = new User();
-    user.setEmail("alice@test.com");
-    user.setPassword(passwordUtils.hashPassword("Secure123!"));
-    user.setName("Alice");
-    userRepository.save(user);
+    @Test
+    void recoverPasswordGeneratesTokenAndExpiration() throws Exception {
+        User user = new User();
+        user.setEmail("alice@test.com");
+        user.setPassword(passwordUtils.hashPassword("Secure123!"));
+        user.setName("Alice");
+        userRepository.save(user);
 
-    mockMvc.perform(post("/api/auth/recover")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"alice@test.com\"}"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("Si el correo está registrado")));  // ✅ Cambiado
+        mockMvc.perform(post("/api/auth/recover")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"alice@test.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("correo de recuperación")));
 
-    User refreshed = userRepository.findById("alice@test.com").orElseThrow();
-    assertNotNull(refreshed.getResetToken());
-    assertNotNull(refreshed.getTokenExpiration());
-    verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
-}
+        User refreshed = userRepository.findById("alice@test.com").orElseThrow();
+        assertNotNull(refreshed.getResetToken());
+        assertNotNull(refreshed.getTokenExpiration());
+        verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
+    }
 
-@Test
-void recoverPasswordFindsUserIgnoringCase() throws Exception {
-    User user = new User();
-    user.setEmail("mixedCase@test.com");
-    user.setPassword(passwordUtils.hashPassword("Secure123!"));
-    user.setName("Test");
-    userRepository.save(user);
+    @Test
+    void recoverPasswordFindsUserIgnoringCase() throws Exception {
+        User user = new User();
+        user.setEmail("mixedCase@test.com");
+        user.setPassword(passwordUtils.hashPassword("Secure123!"));
+        userRepository.save(user);
 
-    mockMvc.perform(post("/api/auth/recover")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"MIXEDCASE@TEST.COM\"}"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("Si el correo está registrado")));  // ✅ Cambiado
-}
+        mockMvc.perform(post("/api/auth/recover")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"MIXEDCASE@TEST.COM\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("correo de recuperación")));
+    }
 
-@Test
-void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
-    mockMvc.perform(post("/api/auth/recover")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"email\":\"missing@test.com\"}"))
-            .andExpect(status().isOk())  // ✅ Cambiar a 200 (por seguridad, no revelar usuarios)
-            .andExpect(content().string(containsString("Si el correo está registrado")));  // ✅ Mensaje genérico
-}
+    @Test
+    void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
+        mockMvc.perform(post("/api/auth/recover")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"missing@test.com\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Usuario no encontrado")));
+    }
 
     @Test
     void validateResetTokenEndpointReflectsStoredState() throws Exception {
         User user = new User();
         user.setEmail("token@test.com");
-        user.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("valid-token"));
+        user.setResetToken("valid-token");
         user.setTokenExpiration(LocalDateTime.now().plusMinutes(10));
         userRepository.save(user);
 
         mockMvc.perform(get("/api/auth/validate-reset-token").param("token", "valid-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid", is(true))); // This should now pass
+                .andExpect(jsonPath("$.valid", is(true)));
     }
 
     @Test
@@ -623,7 +602,7 @@ void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
         User user = new User();
         user.setEmail("expired-token@test.com");
         user.setResetToken("expired-token");
-        user.setTokenExpiration(LocalDateTime.now().minusMinutes(1)); // Hashed token won't be found, but logic is the same
+        user.setTokenExpiration(LocalDateTime.now().minusMinutes(1));
         userRepository.save(user);
 
         mockMvc.perform(get("/api/auth/validate-reset-token").param("token", "expired-token"))
@@ -640,7 +619,7 @@ void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
     @Test
     void protectedResourceRequiresValidCookie() throws Exception {
         mockMvc.perform(get("/api/auth/protected-resource"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         Token token = new Token();
         token.setId("token-1");
@@ -650,8 +629,8 @@ void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
         tokenRepository.save(token);
 
         mockMvc.perform(get("/api/auth/protected-resource").cookie(new Cookie("access_token", "token-1")))
-                .andExpect(status().isForbidden()) // CORRECCIÓN: Token expirado devuelve 401 (no 403)
-                .andExpect(content().string(containsString("session_expired")));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("inválido")));
 
         token.setExpiration(LocalDateTime.now().plusMinutes(30));
         tokenRepository.save(token);
@@ -661,18 +640,18 @@ void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
                 .andExpect(content().string(containsString("Recurso protegido")));
     }
 
-@Test
+    @Test
     void protectedResourceRejectsUnknownTokenId() throws Exception {
         mockMvc.perform(get("/api/auth/protected-resource").cookie(new Cookie("access_token", "missing")))
-                .andExpect(status().isForbidden()) // CORRECCIÓN: Token desconocido devuelve 401 (no 403)
-                .andExpect(content().string(containsString("session_expired")));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("inválido")));
     }
 
-
-@Test
+    @Test
     void logoutValidatesCsrfAndClearsCookies() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(containsString("CSRF")));
 
         Token token = new Token();
         token.setId("token-logout");
@@ -681,43 +660,53 @@ void recoverPasswordReturnsNotFoundForUnknownUser() throws Exception {
         token.setExpiration(LocalDateTime.now().plusHours(1));
         tokenRepository.save(token);
 
-        // Si el servidor devuelve 403 incluso con los tokens, ajustamos el test a la realidad del servidor
-        // y quitamos las verificaciones de éxito (cookie limpia, mensaje cerrada)
         mockMvc.perform(post("/api/auth/logout")
                 .cookie(new Cookie("access_token", "token-logout"), new Cookie("csrf_token", "csrf123"))
                 .header("X-CSRF-Token", "csrf123"))
-                .andExpect(status().isOk()); // CORRECCIÓN: El servidor devuelve 403
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Sesión cerrada")))
+                .andExpect(cookie().value("access_token", equalTo("")));
+
+        assertTrue(tokenRepository.findById("token-logout").isEmpty());
     }
 
-@Test
-void logoutHandlesMissingTokenRecord() throws Exception {
-    mockMvc.perform(post("/api/auth/logout")
-            .cookie(new Cookie("access_token", "missing-token"), new Cookie("csrf_token", "csrf456"))
-            .header("X-CSRF-Token", "csrf456"))
-            .andExpect(status().isForbidden());  // ✅ Token inválido, pero logout debe limpiar cookies y retornar OK
-}
-
-@Test
-void logoutRejectsMismatchedCsrfHeader() throws Exception {
-    Token token = new Token();
-    token.setId("token-csrf");
-    token.setAccountId("user@test.com");
-    token.setRole("user");
-    token.setExpiration(LocalDateTime.now().plusHours(1));
-    tokenRepository.save(token);
-    
-    mockMvc.perform(post("/api/auth/logout")
-            .cookie(new Cookie("access_token", "token-csrf"), new Cookie("csrf_token", "cookie"))
-            .header("X-CSRF-Token", "different"))
-            .andExpect(status().isForbidden());
+    @Test
+    void logoutHandlesMissingTokenRecord() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .cookie(new Cookie("access_token", "missing-token"), new Cookie("csrf_token", "csrf456"))
+                .header("X-CSRF-Token", "csrf456"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Sesión cerrada")));
     }
-@Test
+
+    @Test
+    void logoutRejectsMismatchedCsrfHeader() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .cookie(new Cookie("csrf_token", "cookie"))
+                .header("X-CSRF-Token", "different"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(containsString("CSRF")));
+    }
+
+    @Test
     void validateTokenEndpointRequiresCookie() throws Exception {
         mockMvc.perform(get("/api/auth/validate-token"))
-                .andExpect(status().isUnauthorized()); // CORRECCIÓN: Falta de cookie devuelve 401
+                .andExpect(status().isUnauthorized());
+
+        Token token = new Token();
+        token.setId("token-validate");
+        token.setAccountId("admin@test.com");
+        token.setRole("admin");
+        token.setExpiration(LocalDateTime.now().plusHours(2));
+        tokenRepository.save(token);
+
+        mockMvc.perform(get("/api/auth/validate-token").cookie(new Cookie("access_token", "token-validate")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role", is("admin")))
+                .andExpect(jsonPath("$.email", is("admin@test.com")));
     }
 
-@Test
+    @Test
     void validateTokenRejectsExpiredEntry() throws Exception {
         Token token = new Token();
         token.setId("expired-token");
@@ -728,7 +717,7 @@ void logoutRejectsMismatchedCsrfHeader() throws Exception {
 
         mockMvc.perform(get("/api/auth/validate-token").cookie(new Cookie("access_token", "expired-token")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("No autenticado"))); // CORRECCIÓN: Texto real devuelto por la API
+                .andExpect(content().string(containsString("expirado")));
     }
 
     @Test
@@ -759,71 +748,47 @@ void logoutRejectsMismatchedCsrfHeader() throws Exception {
         assertTrue(Files.exists(Path.of(file)));
     }
 
-@Test
-void activateThirdFactorUpdatesEntities() throws Exception {
-    User user = new User();
-    user.setEmail("feature@test.com");
-    userRepository.save(user);
-    
-    Token userToken = new Token();
-    userToken.setId("user-token-3fa");
-    userToken.setAccountId("feature@test.com");
-    userToken.setRole("user");
-    userToken.setExpiration(LocalDateTime.now().plusHours(1));
-    tokenRepository.save(userToken);
+    @Test
+    void activateThirdFactorUpdatesEntities() throws Exception {
+        User user = new User();
+        user.setEmail("feature@test.com");
+        userRepository.save(user);
 
-    Admin admin = new Admin();
-    admin.setEmail("feature-admin@test.com");
-    admin.setDepartment(Department.MODERATION);
-    adminRepository.save(admin);
-    
-    Token adminToken = new Token();
-    adminToken.setId("admin-token-3fa");
-    adminToken.setAccountId("feature-admin@test.com");
-    adminToken.setRole("admin");
-    adminToken.setExpiration(LocalDateTime.now().plusHours(1));
-    tokenRepository.save(adminToken);
+        Admin admin = new Admin();
+        admin.setEmail("feature-admin@test.com");
+        admin.setDepartment(Department.MODERATION);
+        adminRepository.save(admin);
 
-    ContentCreator creator = new ContentCreator();
-    creator.setEmail("feature-creator@test.com");
-    creator.setAlias("featCreator");
-    creator.setSpecialty(Specialty.ART);
-    creator.setContentType(ContentType.AUDIO);
-    creatorRepository.save(creator);
-    
-    Token creatorToken = new Token();
-    creatorToken.setId("creator-token-3fa");
-    creatorToken.setAccountId("feature-creator@test.com");
-    creatorToken.setRole("creator");
-    creatorToken.setExpiration(LocalDateTime.now().plusHours(1));
-    tokenRepository.save(creatorToken);
+        ContentCreator creator = new ContentCreator();
+        creator.setEmail("feature-creator@test.com");
+        creator.setAlias("featCreator");
+        creator.setSpecialty(Specialty.ART);
+        creator.setContentType(ContentType.AUDIO);
+        creatorRepository.save(creator);
 
-    mockMvc.perform(post("/api/auth/activate-3fa")
-            .cookie(new Cookie("access_token", "user-token-3fa"))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("email", "feature@test.com", "activate", "true"))))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("activado")));
+        mockMvc.perform(post("/api/auth/activate-3fa")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("email", "feature@test.com", "activate", "true"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("activado")));
 
-    assertTrue(userRepository.findById("feature@test.com").orElseThrow().isThirdFactorEnabled());
+        assertTrue(userRepository.findById("feature@test.com").orElseThrow().isThirdFactorEnabled());
 
-    mockMvc.perform(post("/api/auth/activate-3fa")
-            .cookie(new Cookie("access_token", "admin-token-3fa"))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("email", "feature-admin@test.com", "activate", "false"))))
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("desactivado")));
+        mockMvc.perform(post("/api/auth/activate-3fa")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("email", "feature-admin@test.com", "activate", "false"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("desactivado")));
 
-    assertFalse(adminRepository.findById("feature-admin@test.com").orElseThrow().isThirdFactorEnabled());
+        assertFalse(adminRepository.findById("feature-admin@test.com").orElseThrow().isThirdFactorEnabled());
 
-    mockMvc.perform(post("/api/auth/activate-3fa")
-            .cookie(new Cookie("access_token", "creator-token-3fa"))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("email", "feature-creator@test.com", "activate", "true"))))
-            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/activate-3fa")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("email", "feature-creator@test.com", "activate", "true"))))
+                .andExpect(status().isOk());
 
-    assertTrue(creatorRepository.findById("feature-creator@test.com").orElseThrow().isThirdFactorEnabled());
-}
+        assertTrue(creatorRepository.findById("feature-creator@test.com").orElseThrow().isThirdFactorEnabled());
+    }
 
     @Test
     void sendThirdFactorCodeValidatesInputAndSendsMail() throws Exception {
@@ -936,123 +901,107 @@ void activateThirdFactorUpdatesEntities() throws Exception {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void resetPasswordUpdatesUserCredentials() throws Exception {
+        User user = new User();
+        user.setEmail("reset@test.com");
+        user.setName("Reset");
+        user.setSurname("User");
+        user.setAlias("resetAlias");
+        user.setResetToken("reset-token");
+        user.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
 
-@Test
-void resetPasswordRejectsExpiredTokenForUser() throws Exception {
-    User user = new User();
-    user.setEmail("expired@test.com");
-    user.setName("Expired");
-    user.setSurname("User");
-    user.setAlias("expAlias");
-    user.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("expired-token"));
-    user.setTokenExpiration(LocalDateTime.now().minusMinutes(1));
-    userRepository.save(user);
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("token", "reset-token", "password", "Seguro#123"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("restablecida")));
 
-    mockMvc.perform(post("/api/auth/reset-password")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("token", "expired-token", "password", "ValidPass#123"))))  // ✅ Contraseña válida
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("expirado")));
-}
+        User refreshed = userRepository.findById("reset@test.com").orElseThrow();
+        assertNotNull(refreshed.getPassword());
+        assertNull(refreshed.getResetToken());
+    }
 
-@Test
+    @Test
+    void resetPasswordRejectsExpiredTokenForUser() throws Exception {
+        User user = new User();
+        user.setEmail("expired@test.com");
+        user.setName("Expired");
+        user.setSurname("User");
+        user.setAlias("expAlias");
+        user.setResetToken("expired-token");
+        user.setTokenExpiration(LocalDateTime.now().minusMinutes(1));
+        userRepository.save(user);
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("token", "expired-token", "password", "Clave#Nueva99"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("ha expirado")));
+    }
+
+    @Test
     void resetPasswordRejectsPersonalInfoPasswords() throws Exception {
         User user = new User();
         user.setEmail("info@test.com");
         user.setName("Info");
         user.setSurname("User");
         user.setAlias("infoAlias");
-        user.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("info-token"));
+        user.setResetToken("info-token");
         user.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
         userRepository.save(user);
 
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(Map.of("token", "info-token", "password", "PasswordContainsinfoAlias1!"))))
+                .content(mapper.writeValueAsString(Map.of("token", "info-token", "password", "info@test.com"))))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("email"))); // CORRECCIÓN: Mensaje real "La contraseña no puede contener tu email"
+                .andExpect(content().string(containsString("email")));
     }
 
-@Test
-void resetPasswordUpdatesAdminCredentials() throws Exception {
-    Admin admin = new Admin();
-    admin.setEmail("admin-reset@test.com");
-    admin.setName("Ada");
-    admin.setSurname("Root");
-    admin.setDepartment(Department.DATA_ANALYTICS);
-    admin.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("admin-token"));
-    admin.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
-    adminRepository.save(admin);
+    @Test
+    void resetPasswordUpdatesAdminCredentials() throws Exception {
+        Admin admin = new Admin();
+        admin.setEmail("admin-reset@test.com");
+        admin.setName("Ada");
+        admin.setSurname("Root");
+        admin.setDepartment(Department.DATA_ANALYTICS);
+        admin.setResetToken("admin-token");
+        admin.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
+        adminRepository.save(admin);
 
-    mockMvc.perform(post("/api/auth/reset-password")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("token", "admin-token", "password", "Nuev@Segura90!"))))  // ✅ Contraseña válida con especial
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("restablecida")));
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("token", "admin-token", "password", "Nuev@Segura90"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("restablecida")));
 
-    Admin refreshed = adminRepository.findById("admin-reset@test.com").orElseThrow();
-    assertNotNull(refreshed.getPassword());
-    assertNull(refreshed.getResetToken());
-}
+        Admin refreshed = adminRepository.findById("admin-reset@test.com").orElseThrow();
+        assertNotNull(refreshed.getPassword());
+        assertNull(refreshed.getResetToken());
+    }
 
-@Test
-void resetPasswordUpdatesCreatorCredentials() throws Exception {
-    ContentCreator creator = new ContentCreator();
-    creator.setEmail("creator-reset@test.com");
-    creator.setName("Caro");
-    creator.setSurname("Vid");
-    creator.setAlias("resetAlias2");
-    creator.setSpecialty(Specialty.ART);
-    creator.setContentType(ContentType.AUDIO);
-    creator.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("creator-token"));
-    creator.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
-    creatorRepository.save(creator);
+    @Test
+    void resetPasswordUpdatesCreatorCredentials() throws Exception {
+        ContentCreator creator = new ContentCreator();
+        creator.setEmail("creator-reset@test.com");
+        creator.setName("Caro");
+        creator.setSurname("Vid");
+        creator.setAlias("resetAlias2");
+        creator.setSpecialty(Specialty.ART);
+        creator.setContentType(ContentType.AUDIO);
+        creator.setResetToken("creator-token");
+        creator.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
+        creatorRepository.save(creator);
 
-    mockMvc.perform(post("/api/auth/reset-password")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("token", "creator-token", "password", "Cl@veSolida77!"))))  // ✅ Contraseña válida
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("restablecida")));
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("token", "creator-token", "password", "Cl@veSolida77"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("restablecida")));
 
-    ContentCreator refreshed = creatorRepository.findById("creator-reset@test.com").orElseThrow();
-    assertNotNull(refreshed.getPassword());
-    assertNull(refreshed.getResetToken());
-}
-
-@Test
-void resetPasswordUpdatesUserCredentials() throws Exception {
-    User user = new User();
-    user.setEmail("reset@test.com");
-    user.setName("Reset");
-    user.setSurname("User");
-    user.setAlias("resetAlias");
-    user.setResetToken(grupo1.esimedia.utils.TokenHasher.hashToken("reset-token"));
-    user.setTokenExpiration(LocalDateTime.now().plusMinutes(5));
-    userRepository.save(user);
-
-    mockMvc.perform(post("/api/auth/reset-password")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(Map.of("token", "reset-token", "password", "Seguro#123!Long"))))  // ✅ Contraseña válida, 14 chars
-            .andExpect(status().isOk())
-            .andExpect(content().string(containsString("restablecida")));
-
-    User refreshed = userRepository.findById("reset@test.com").orElseThrow();
-    assertNotNull(refreshed.getPassword());
-    assertNull(refreshed.getResetToken());
-}
-
-    private RequestPostProcessor authenticatedUser(String email, String role) {
-    return request -> {
-        Token token = new Token();
-        token.setId(UUID.randomUUID().toString());
-        token.setAccountId(email);
-        token.setRole(role);
-        token.setExpiration(LocalDateTime.now().plusHours(1));
-        tokenRepository.save(token);
-        
-        Cookie accessCookie = new Cookie("access_token", token.getId());
-        request.setCookies(accessCookie);
-        return request;
-    };
-}
+        ContentCreator refreshed = creatorRepository.findById("creator-reset@test.com").orElseThrow();
+        assertNotNull(refreshed.getPassword());
+        assertNull(refreshed.getResetToken());
+    }
 }

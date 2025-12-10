@@ -83,7 +83,7 @@ class AdminControllerAdditionalTests {
         mockMvc.perform(post("/api/admins/admin")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -93,12 +93,13 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "new-admin@test.com",
-                    "password", "Password#2025!",
+                    "password", "Clave#12345",
                     "name", "New",
                     "department", "MODERATION"
                 ))))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.fields.surname").value("El apellido es obligatorio"));    }
+            .andExpect(content().string(containsString("Missing required fields")));
+    }
 
     @Test
     void createAdminRejectsDuplicateEmailAcrossRepositories() throws Exception {
@@ -109,7 +110,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "dup@test.com",
-                    "password", "Password#2025!",
+                    "password", "Clave#12345",
                     "name", "Dup",
                     "surname", "User",
                     "department", "MODERATION"
@@ -125,7 +126,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "another@test.com",
-                    "password", "Password#2025!",
+                    "password", "Clave#98765",
                     "name", "Another",
                     "surname", "Admin",
                     "department", "MODERATION"
@@ -134,7 +135,7 @@ class AdminControllerAdditionalTests {
             .andExpect(jsonPath("$.email").value("another@test.com"));
 
         Admin saved = adminRepository.findById("another@test.com").orElseThrow();
-        assertNotEquals("Password#2025!", saved.getPassword());
+        assertNotEquals("Clave#98765", saved.getPassword());
         assertEquals("STATIC-SECRET", saved.getTwoFactorSecretKey());
         assertTrue(saved.isThirdFactorEnabled());
     }
@@ -144,7 +145,7 @@ class AdminControllerAdditionalTests {
         mockMvc.perform(post("/api/admins/creator")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -158,7 +159,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "newcreator@test.com",
-                    "password", "Password#2025!",
+                    "password", "Clave#1122",
                     "name", "Creator",
                     "surname", "Dup",
                     "alias", "repeatAlias",
@@ -176,7 +177,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "creator@test.com",
-                    "password", "Password#2025!",
+                    "password", "Clave#1122",
                     "name", "Creator",
                     "surname", "Name",
                     "alias", "CreatorAlias",
@@ -187,7 +188,7 @@ class AdminControllerAdditionalTests {
             .andExpect(jsonPath("$.email").value("creator@test.com"));
 
         ContentCreator saved = creatorRepository.findById("creator@test.com").orElseThrow();
-        assertNotEquals("Password#2025!", saved.getPassword());
+        assertNotEquals("Clave#1122", saved.getPassword());
         assertEquals("STATIC-SECRET", saved.getTwoFactorSecretKey());
         assertTrue(saved.isThirdFactorEnabled());
     }
@@ -233,7 +234,8 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("El campo active es obligatorio")));    }
+            .andExpect(content().string(containsString("Missing 'active' field")));
+    }
 
     @Test
     void setAdminActivePreventsDisablingLastAdmin() throws Exception {
@@ -305,7 +307,8 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("El campo active es obligatorio")));    }
+            .andExpect(content().string(containsString("Missing 'active' field")));
+    }
 
     @Test
     void setCreatorActiveFindsCaseInsensitiveMatch() throws Exception {
