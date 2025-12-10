@@ -10,6 +10,90 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const history = useHistory();
 
+  // Helper: Guardar token de acceso en localStorage
+  const saveAccessToken = (data) => {
+    if (data.accessToken) {
+      localStorage.setItem('access_token', data.accessToken);
+      console.log('🔑 Token guardado en localStorage:', data.accessToken);
+      console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
+    }
+  };
+
+  // Helper: Redireccionar según el rol del usuario
+  const redirectByRole = (role) => {
+    console.log('🚀 Navegando a dashboard con role:', role);
+    const routes = {
+      admin: '/adminDashboard',
+      creator: '/creator',
+      user: '/usuario'
+    };
+    history.push(routes[role] || '/');
+  };
+
+  // Helper: Manejar respuesta de login exitoso
+  const handleLoginSuccess = async (res) => {
+    console.log('✅ Login exitoso:', res.data);
+    const data = res.data;
+    const role = data?.role ?? data?.data?.role;
+    
+    saveAccessToken(data);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    redirectByRole(role);
+  };
+
+  // Helper: Manejar requerimiento de 2FA/3FA
+  const handle2FARequired = (responseData) => {
+    console.log('🔐 Requiere 2FA/3FA - Data recibida:', responseData);
+    
+    if (responseData && (responseData.email || responseData.role)) {
+      history.push({
+        pathname: '/validate-2fa',
+        state: {
+          email: responseData.email || email, 
+          password: password,
+          role: responseData.role
+        }
+      });
+      return true;
+    }
+    return false;
+  };
+
+  // Helper: Obtener mensaje de error según status HTTP
+  const getErrorMessage = (status, data) => {
+    const errorMessages = {
+      403: 'Usuario bloqueado. Contacta con soporte.',
+      429: 'Demasiados intentos. Por favor, espera antes de intentar de nuevo.'
+    };
+
+    if (errorMessages[status]) {
+      return errorMessages[status];
+    }
+
+    if (status === 401) {
+      if (data && data.remainingAttempts !== undefined) {
+        return `Credenciales inválidas. Intentos restantes: ${data.remainingAttempts}`;
+      }
+      return 'Credenciales inválidas';
+    }
+
+    return data?.message || data?.error || 'Error en el servidor';
+  };
+
+  // Helper: Manejar errores de login
+  const handleLoginError = (err) => {
+    console.error('Error al iniciar sesión:', err);
+    console.log('Error response:', err.response);
+
+    if (err.response?.status === 428) {
+      const handled = handle2FARequired(err.response.data);
+      if (handled) return;
+    }
+
+    const errorMsg = getErrorMessage(err.response?.status, err.response?.data);
+    setError(errorMsg);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -25,68 +109,9 @@ function LoginPage() {
         withCredentials: true
       });
 
-      console.log('✅ Login exitoso:', res.data);
-
-      // Login exitoso sin 2FA/3FA requerido
-      const data = res.data;
-      const role = data?.role ?? data?.data?.role;
-      
-      // ⚠️ HYBRID STRATEGY: Guardar token para móvil (respaldo si fallan cookies)
-      if (data.accessToken) {
-        localStorage.setItem('access_token', data.accessToken);
-        console.log('🔑 Token guardado en localStorage:', data.accessToken);
-        console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
-      }
-      
-      // Pequeño delay para asegurar que localStorage se sincroniza
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('🚀 Navegando a dashboard con role:', role);
-      if (role === 'admin') history.push('/adminDashboard');
-      else if (role === 'creator') history.push('/creator');
-      else if (role === 'user') history.push('/usuario');
-      else history.push('/');
-
+      await handleLoginSuccess(res);
     } catch (err) {
-      console.error('Error al iniciar sesión:', err);
-      console.log('Error response:', err.response);
-
-      // ✅ Manejar código 428: Requiere 2FA o 3FA
-      if (err.response?.status === 428) {
-        const responseData = err.response.data;
-        
-        console.log('🔐 Requiere 2FA/3FA - Data recibida:', responseData);
-        
-        // Verificar si tiene los datos necesarios
-        if (responseData && (responseData.email || responseData.role)) {
-          // ✅ CORRECTO: Pasar state dentro de un objeto
-          history.push({
-            pathname: '/validate-2fa',
-            state: {
-              email: responseData.email || email, 
-              password: password,
-              role: responseData.role
-            }
-          });
-          return;
-        }
-      }
-
-      // Manejar otros errores HTTP
-      if (err.response?.status === 403) {
-        setError('Usuario bloqueado. Contacta con soporte.');
-      } else if (err.response?.status === 401) {
-        const errorData = err.response.data;
-        if (errorData && errorData.remainingAttempts !== undefined) {
-          setError(`Credenciales inválidas. Intentos restantes: ${errorData.remainingAttempts}`);
-        } else {
-          setError('Credenciales inválidas');
-        }
-      } else if (err.response?.status === 429) {
-        setError('Demasiados intentos. Por favor, espera antes de intentar de nuevo.');
-      } else {
-        setError(err.response?.data?.message || err.response?.data?.error || 'Error en el servidor');
-      }
+      handleLoginError(err);
     }
   };
 
