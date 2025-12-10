@@ -226,7 +226,6 @@ public class AuthController {
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        log.info("[DEBUG] Admin 3FA status for '{}': isThirdFactorEnabled={}", admin.getEmail(), admin.isThirdFactorEnabled());
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), "admin");
         if (threeFa != null) return threeFa;
 
@@ -267,7 +266,6 @@ public class AuthController {
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        log.info("[DEBUG] Creator 3FA status for '{}': isThirdFactorEnabled={}", creator.getEmail(), creator.isThirdFactorEnabled());
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), "creator");
         if (threeFa != null) return threeFa;
 
@@ -283,11 +281,8 @@ public class AuthController {
         log.info("[AUTH] Found user for email='{}'", user.getEmail());
 
         if (!passwordUtils.verifyPassword(password, user.getPassword())) {
-            log.warn("[AUTH] Invalid password for user: {}", email);
             return invalidCredentialsResponse(email, clientIp, "user");
         }
-        
-        log.info("[AUTH] Password verified for user: {}", email);
 
         Instant lastChange = user.getLastPasswordChangeAt();
         
@@ -303,25 +298,15 @@ public class AuthController {
             log.warn("Contraseña expirada para el usuario {}", user.getEmail());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("La contraseña debe cambiarse cada 30 días");        
         }
-        
-        log.info("[AUTH] Password expiration check passed for user: {}", email);
 
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(user.getEmail(), "user", user.getTwoFactorSecretKey(), loginRequest, clientIp);
-        if (twoFa != null) {
-            log.info("[AUTH] 2FA required for user: {}", email);
-            return twoFa;
-        }
-        
-        log.info("[AUTH] 2FA check passed (or not required) for user: {}", email);
+        if (twoFa != null) return twoFa;
 
         if (!user.isActive()) {
-            log.warn("[AUTH] User account is not active: {}", email);
             return inactiveAccountResponse();
         }
-        
-        log.info("[AUTH] User is active, checking 3FA for: {}", email);
 
-        log.info("[DEBUG] User 3FA status for '{}': isThirdFactorEnabled={}", user.getEmail(), user.isThirdFactorEnabled());
+
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(user.isThirdFactorEnabled(), user.getEmail(), "user");
         if (threeFa != null) return threeFa;
 
@@ -749,12 +734,7 @@ Object account = null;
     }
 
     private ResponseEntity<?> enforceThirdFactorIfEnabled(boolean enabled, String email, String role) {
-        log.info("[3FA] Checking 3FA for email='{}', role='{}', enabled={}", email, role, enabled);
-        if (!enabled) {
-            log.info("[3FA] 3FA is NOT enabled for email='{}', skipping", email);
-            return null;
-        }
-        log.info("[3FA] 3FA IS enabled for email='{}', requiring verification", email);
+        if (!enabled) return null;
         return ResponseEntity.status(428).body(new ThirdFactorRequiredResponseDTO(email, role));
     }
 

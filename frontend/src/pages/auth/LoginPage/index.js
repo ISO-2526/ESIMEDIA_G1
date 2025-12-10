@@ -59,29 +59,15 @@ function LoginPage() {
         
         // Verificar si tiene los datos necesarios
         if (responseData && (responseData.email || responseData.role)) {
-          
-          // ✅ Verificar si es 3FA o 2FA
-          if (responseData.thirdFactorRequired === true) {
-            console.log('🔐 Requiere 3FA - Redirigiendo a validate-3fa');
-            history.push({
-              pathname: '/validate-3fa',
-              state: {
-                email: responseData.email || email,
-                role: responseData.role
-              }
-            });
-          } else {
-            console.log('🔐 Requiere 2FA - Redirigiendo a validate-2fa');
-            // ✅ CORRECTO: Pasar state dentro de un objeto
-            history.push({
-              pathname: '/validate-2fa',
-              state: {
-                email: responseData.email || email, 
-                password: password,
-                role: responseData.role
-              }
-            });
-          }
+          // ✅ CORRECTO: Pasar state dentro de un objeto
+          history.push({
+            pathname: '/validate-2fa',
+            state: {
+              email: responseData.email || email, 
+              password: password,
+              role: responseData.role
+            }
+          });
           return;
         }
       }
