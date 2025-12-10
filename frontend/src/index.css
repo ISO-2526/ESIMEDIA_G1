@@ -6,24 +6,43 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Web: permitir scroll normal */
+/* Estilos específicos para plataforma WEB */
+html.web-platform,
+body.web-platform {
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+html.web-platform #root,
+body.web-platform #root {
+  width: 100%;
+  min-height: 100vh;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Forzar scroll en web independientemente del viewport */
 @media (min-width: 769px) {
   html, body {
-    height: auto;
+    height: auto !important;
     min-height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto !important;
   }
   
   #root {
     width: 100%;
     min-height: 100vh;
-    height: auto;
+    height: auto !important;
   }
 }
 
 /* Móvil: mantener comportamiento de Ionic */
 @media (max-width: 768px) {
-  html, body {
+  html:not(.web-platform), 
+  body:not(.web-platform) {
     height: 100%;
     overflow: hidden;
   }

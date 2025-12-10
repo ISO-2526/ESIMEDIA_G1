@@ -65,6 +65,14 @@ function App() {
   console.log('Running in:', isMobile ? 'mobile app' : 'web app');
   console.log('App component rendered');
 
+  // Agregar clase al body para diferenciar web de móvil
+  React.useEffect(() => {
+    if (!isMobile) {
+      document.body.classList.add('web-platform');
+      document.documentElement.classList.add('web-platform');
+    }
+  }, [isMobile]);
+
   if (isMobile) {
     // App móvil: Todas las páginas se auto-envuelven con IonPage/IonContent
     return (
