@@ -220,4 +220,9 @@ public class PasswordUtils {
         log.info("  Con pre-hash: {}", encoder.matches(preHashed, hash2));
         log.info("═══════════════════════════════════════════════════════\n");
     }
+
+        public boolean matches(String plainPassword, String hashedPassword) {
+            // Reutilizamos la lógica de verificación que ya contempla el SHA-256 + Pepper
+            return verifyPassword(plainPassword, hashedPassword);
+        }
 }
