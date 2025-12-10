@@ -11,7 +11,8 @@ import {
   cardOutline,
   logOutOutline,
   closeOutline,
-  person
+  person,
+  homeOutline
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import MobileFilterModal from './MobileFilterModal';
@@ -204,6 +205,17 @@ const MobileHeader = ({
         className="user-menu-popover"
       >
         <div className="user-menu-content">
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              history.push('/usuario');
+            }}
+          >
+            <IonIcon icon={homeOutline} />
+            <span>Inicio</span>
+          </button>
+
           <button
             className="user-menu-button"
             onClick={() => {
