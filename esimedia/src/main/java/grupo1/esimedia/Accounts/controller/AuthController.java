@@ -66,6 +66,26 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final String ADMIN = "admin";
+
+    private static final String NOLASTPASSWORDCHANGEDAT = "Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.";
+
+    private static final String RECUPERARCONTRASENA = "Error con la contraseña, debe recuperarla";
+
+    private static final String CONTRASENAEXPIRADA = "Contraseña expirada para el usuario {}";
+
+    private static final String CONTRASENA30DIAS = "La contraseña debe cambiarse cada 30 días";
+
+    private static final String CREATOR = "creator";
+
+    private static final String CONTRASENARESTABLECIDA = "Contraseña restablecida";
+
+    private static final String TOKENEXPIRADO = "El token ha expirado";
+
+    private static final String NOREUTILIZARCONTRASENANTIGUA = "Usuario {} intentó reutilizar una contraseña antigua.";
+
+    private static final String NOREUTILIZARCONTRASENA = "No puedes reutilizar una de tus últimas 5 contraseñas.";
     
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
@@ -204,29 +224,29 @@ public class AuthController {
         }
 
         if (!passwordUtils.verifyPassword(password, admin.getPassword())) {
-            return invalidCredentialsResponse(email, clientIp, "admin");
+            return invalidCredentialsResponse(email, clientIp, ADMIN);
         }
 
         Instant lastChange = admin.getLastPasswordChangeAt();
         
         if (lastChange == null) {
             // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn("Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.", admin.getEmail());
+            log.warn(NOLASTPASSWORDCHANGEDAT, admin.getEmail());
 
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error con la contraseña, debe recuperarla"); 
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
         }
 
         Instant expirationDate = lastChange.plus(Duration.ofDays(30));
         
         if (Instant.now().isAfter(expirationDate)) {
-            log.warn("Contraseña expirada para el usuario {}", admin.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("La contraseña debe cambiarse cada 30 días");        
+            log.warn(CONTRASENAEXPIRADA, admin.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), ADMIN, admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), "admin");
+        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), ADMIN);
         if (threeFa != null) return threeFa;
 
         loginAttemptService.resetAttempts(email, clientIp);
@@ -245,28 +265,28 @@ public class AuthController {
         }
 
         if (!passwordUtils.verifyPassword(password, creator.getPassword())) {
-            return invalidCredentialsResponse(email, clientIp, "creator");
+            return invalidCredentialsResponse(email, clientIp, CREATOR);
         }
 
         Instant lastChange = creator.getLastPasswordChangeAt();
         
         if (lastChange == null) {
             // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn("Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.", creator.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error con la contraseña, debe recuperarla"); 
+            log.warn(NOLASTPASSWORDCHANGEDAT, creator.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
         }
 
         Instant expirationDate = lastChange.plus(Duration.ofDays(30));
         
         if (Instant.now().isAfter(expirationDate)) {
-            log.warn("Contraseña expirada para el usuario {}", creator.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("La contraseña debe cambiarse cada 30 días");        
+            log.warn(CONTRASENAEXPIRADA, creator.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), CREATOR, creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), "creator");
+        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), CREATOR);
         if (threeFa != null) return threeFa;
 
         loginAttemptService.resetAttempts(email, clientIp);
@@ -288,15 +308,15 @@ public class AuthController {
         
         if (lastChange == null) {
             // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn("Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.", user.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error con la contraseña, debe recuperarla"); 
+            log.warn(NOLASTPASSWORDCHANGEDAT, user.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
         }
 
         Instant expirationDate = lastChange.plus(Duration.ofDays(30));
         
         if (Instant.now().isAfter(expirationDate)) {
-            log.warn("Contraseña expirada para el usuario {}", user.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("La contraseña debe cambiarse cada 30 días");        
+            log.warn(CONTRASENAEXPIRADA, user.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
         }
 
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(user.getEmail(), "user", user.getTwoFactorSecretKey(), loginRequest, clientIp);
@@ -638,7 +658,7 @@ Object account = null;
         if (user != null) {
             ResponseEntity<?> resp = handlePasswordResetForUser(user, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         // 2. Admin
@@ -646,7 +666,7 @@ Object account = null;
         if (admin != null) {
             ResponseEntity<?> resp = handlePasswordResetForAdmin(admin, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         // 3. ContentCreator
@@ -654,7 +674,7 @@ Object account = null;
         if (creator != null) {
             ResponseEntity<?> resp = handlePasswordResetForCreator(creator, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         return ResponseEntity.status(400).body("Token inválido");
@@ -778,9 +798,9 @@ Object account = null;
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForAdmin(Admin admin, String email, String clientIp) {
-        TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
+        TokenResult tr = createTokenAndCookies(admin.getEmail(), ADMIN);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("admin");
+        response.setRole(ADMIN);
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
@@ -795,9 +815,9 @@ Object account = null;
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForCreator(ContentCreator creator, String email, String clientIp) {
-        TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
+        TokenResult tr = createTokenAndCookies(creator.getEmail(), CREATOR);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("creator");
+        response.setRole(CREATOR);
         response.setEmail(creator.getEmail());
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
@@ -830,9 +850,9 @@ Object account = null;
     }
 
     private ResponseEntity<?> build3FASuccessResponseForAdmin(Admin admin) {
-        TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
+        TokenResult tr = createTokenAndCookies(admin.getEmail(), ADMIN);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("admin");
+        response.setRole(ADMIN);
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
@@ -846,9 +866,9 @@ Object account = null;
     }
 
     private ResponseEntity<?> build3FASuccessResponseForCreator(ContentCreator creator) {
-        TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
+        TokenResult tr = createTokenAndCookies(creator.getEmail(), CREATOR);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("creator");
+        response.setRole(CREATOR);
         response.setEmail(creator.getEmail());
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
@@ -880,7 +900,7 @@ Object account = null;
 
     private ResponseEntity<?> handlePasswordResetForUser(User user, String password, LocalDateTime now) {
         if (isResetTokenExpired(user.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = user.getEmail();
         String name = user.getName();
@@ -895,9 +915,9 @@ Object account = null;
         for (String oldHash : user.getPasswordHistory()) {
             // Usa 'matches' en lugar de comparar hashes generados manualmente
             if (passwordUtils.matches(password, oldHash)) { 
-                log.warn("Usuario {} intentó reutilizar una contraseña antigua.", user.getEmail());
+                log.warn(NOREUTILIZARCONTRASENANTIGUA, user.getEmail());
                 // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body("No puedes reutilizar una de tus últimas 5 contraseñas.");
+                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
             }
         }
 
@@ -913,7 +933,7 @@ Object account = null;
 
     private ResponseEntity<?> handlePasswordResetForAdmin(Admin admin, String password, LocalDateTime now) {
         if (isResetTokenExpired(admin.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = admin.getEmail();
         String name = admin.getName();
@@ -928,9 +948,9 @@ Object account = null;
         for (String oldHash : admin.getPasswordHistory()) {
             // Usa 'matches' en lugar de comparar hashes generados manualmente
             if (passwordUtils.matches(password, oldHash)) { 
-                log.warn("Usuario {} intentó reutilizar una contraseña antigua.", admin.getEmail());
+                log.warn(NOREUTILIZARCONTRASENANTIGUA, admin.getEmail());
                 // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body("No puedes reutilizar una de tus últimas 5 contraseñas.");
+                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
             }
         }
 
@@ -946,7 +966,7 @@ Object account = null;
 
     private ResponseEntity<?> handlePasswordResetForCreator(ContentCreator creator, String password, LocalDateTime now) {
         if (isResetTokenExpired(creator.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = creator.getEmail();
         String name = creator.getName();
@@ -961,9 +981,9 @@ Object account = null;
         for (String oldHash : creator.getPasswordHistory()) {
             // Usa 'matches' en lugar de comparar hashes generados manualmente
             if (passwordUtils.matches(password, oldHash)) { 
-                log.warn("Usuario {} intentó reutilizar una contraseña antigua.", creator.getEmail());
+                log.warn(NOREUTILIZARCONTRASENANTIGUA, creator.getEmail());
                 // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body("No puedes reutilizar una de tus últimas 5 contraseñas.");
+                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
             }
         }
 

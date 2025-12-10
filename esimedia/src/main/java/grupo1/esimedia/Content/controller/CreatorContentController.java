@@ -26,6 +26,11 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('ADMIN', 'CREATOR')")
 public class CreatorContentController {
 
+    private static final String STATUS = "status";
+    private static final String MESSAGE = "message";
+    private static final String NOENCONTRADO = "No encontrado";
+
+
     private final ContentService service;
     private final ContentCreatorRepository creatorRepository;
 
@@ -55,7 +60,7 @@ public class CreatorContentController {
             return ResponseEntity.created(URI.create("/api/creator/contents/" + saved.getId())).body(saved);
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body((Object) Map.of("message", ex.getReason(), "status", 400));
+                    .body((Object) Map.of(MESSAGE, ex.getReason(), STATUS, 400));
         }
     }
 
@@ -70,9 +75,9 @@ public class CreatorContentController {
                 return ResponseEntity.ok((Object) opt.get());
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body((Object) Map.of("message", "No encontrado", "status", 404));
+                    .body((Object) Map.of(MESSAGE, NOENCONTRADO, STATUS, 404));
         } catch (ResponseStatusException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getReason(), "status", 400));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(MESSAGE, ex.getReason(), STATUS, 400));
         }
     }
 
@@ -83,22 +88,22 @@ public class CreatorContentController {
         return service.findById(id)
                 .map(existing -> {
                     if (actorContentType == null) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body((Object) java.util.Map.of("message",
-                                "Token no proporcionado o inválido", "status", 403));
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body((Object) java.util.Map.of(MESSAGE,
+                                "Token no proporcionado o inválido", STATUS, 403));
                     }
                     if (!existing.getType().equals(actorContentType)) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body((Object) java.util.Map.of("message",
-                                "No estás autorizado para eliminar contenidos de este tipo", "status", 403));
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body((Object) java.util.Map.of(MESSAGE,
+                                "No estás autorizado para eliminar contenidos de este tipo", STATUS, 403));
                     }
                     boolean deleted = service.delete(id);
                     return deleted
                             ? ResponseEntity.status(HttpStatus.NO_CONTENT)
-                                    .body((Object) java.util.Map.of("message", "Eliminado", "status", 204))
+                                    .body((Object) java.util.Map.of(MESSAGE, "Eliminado", STATUS, 204))
                             : ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                    .body((Object) java.util.Map.of("message", "No encontrado", "status", 404));
+                                    .body((Object) java.util.Map.of(MESSAGE, NOENCONTRADO, STATUS, 404));
                 })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body((Object) java.util.Map.of("message", "No encontrado", "status", 404)));
+                        .body((Object) java.util.Map.of(MESSAGE, NOENCONTRADO, STATUS, 404)));
     }
 
     private ContentType resolveContentTypeFromToken() {

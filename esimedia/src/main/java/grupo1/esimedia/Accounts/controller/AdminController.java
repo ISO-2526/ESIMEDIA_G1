@@ -44,7 +44,14 @@ public class AdminController {
     @Autowired
     private UserRepository userRepository;
 
-    
+    private static final String DEPARTMENT = "department";
+
+    private static final String PICTURE = "picture";
+
+    private static final String ACTIVE = "active";
+
+    private static final String SURNAME = "surname";
+
     @Autowired
     private TwoFactorAuthService twoFactorAuthService;
     
@@ -266,21 +273,22 @@ public class AdminController {
 		if (body.containsKey("name") && body.get("name") instanceof String) {
 			existing.setName(((String) body.get("name")).trim());
 		}
-		if (body.containsKey("surname") && body.get("surname") instanceof String) {
-			existing.setSurname(((String) body.get("surname")).trim());
+		if (body.containsKey(SURNAME) && body.get(SURNAME) instanceof String) {
+			existing.setSurname(((String) body.get(SURNAME)).trim());
 		}
-		if (body.containsKey("department") && body.get("department") instanceof String) {
+		if (body.containsKey(DEPARTMENT) && body.get(DEPARTMENT) instanceof String) {
 			try {
-				var dep = grupo1.esimedia.Accounts.model.Department.valueOf(((String) body.get("department")).trim());
+				var dep = grupo1.esimedia.Accounts.model.Department.valueOf(((String) body.get(DEPARTMENT)).trim());
 				existing.setDepartment(dep);
 			} catch (IllegalArgumentException ignored) {
+                
 			}
 		}
-		if (body.containsKey("picture") && body.get("picture") instanceof String) {
-			existing.setPicture((String) body.get("picture"));
+		if (body.containsKey(PICTURE) && body.get(PICTURE) instanceof String) {
+			existing.setPicture((String) body.get(PICTURE));
 		}
-		if (body.containsKey("active")) {
-			Object o = body.get("active");
+		if (body.containsKey(ACTIVE)) {
+			Object o = body.get(ACTIVE);
 			if (o instanceof Boolean) existing.setActive((Boolean) o);
 			else if (o instanceof String) existing.setActive(Boolean.parseBoolean((String) o));
 		}

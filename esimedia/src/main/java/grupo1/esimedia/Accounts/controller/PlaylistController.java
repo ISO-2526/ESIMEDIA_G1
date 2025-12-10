@@ -18,6 +18,10 @@ import java.util.Map;
 @PreAuthorize("isAuthenticated()")
 public class PlaylistController {
 
+        private static final String ERROR = "error";
+
+    private static final String MESSAGE = "message";
+
     private final PlaylistRepository playlistRepository;
 
     public PlaylistController(PlaylistRepository playlistRepository) {
@@ -76,7 +80,7 @@ public class PlaylistController {
                 .toList();
             
             if (!existingFavoritos.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("error", "Ya existe una lista de Favoritos"));
+                return ResponseEntity.status(400).body(Map.of(ERROR, "Ya existe una lista de Favoritos"));
             }
         }
         
@@ -114,7 +118,7 @@ public class PlaylistController {
         
         // Prevent editing permanent playlists
         if (Boolean.TRUE.equals(playlist.getIsPermanent())) {
-            return ResponseEntity.status(403).body(Map.of("error", "No se puede editar la lista de Favoritos"));
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No se puede editar la lista de Favoritos"));
         }
         
         if (updates.containsKey("nombre")) {
@@ -148,11 +152,11 @@ public class PlaylistController {
         
         // Prevent deleting permanent playlists
         if (Boolean.TRUE.equals(playlist.getIsPermanent())) {
-            return ResponseEntity.status(403).body(Map.of("error", "No se puede eliminar la lista de Favoritos"));
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No se puede eliminar la lista de Favoritos"));
         }
         
         playlistRepository.deleteById(id);
-        return ResponseEntity.ok().body(Map.of("message", "Playlist deleted successfully"));
+        return ResponseEntity.ok().body(Map.of(MESSAGE, "Playlist deleted successfully"));
     }
 
     // Add content to playlist
@@ -184,7 +188,7 @@ public class PlaylistController {
                 .anyMatch(item -> item.getContentId().equals(contentId));
         
         if (exists) {
-            return ResponseEntity.status(400).body(Map.of("error", "Content already in playlist"));
+            return ResponseEntity.status(400).body(Map.of(ERROR, "Content already in playlist"));
         }
         
         // Add content to playlist

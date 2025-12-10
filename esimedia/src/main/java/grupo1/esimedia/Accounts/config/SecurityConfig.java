@@ -25,7 +25,7 @@ public class SecurityConfig {
 
     private final SessionTimeoutFilter sessionTimeoutFilter;
 
-
+    private static final String IPANDROIDEMULATOR = "http://10.0.2.2:8080";
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -86,7 +86,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             "http://localhost:3000",      // React Web
             "http://localhost:8100",      // Ionic
             "http://localhost",           // Android/Capacitor
-            "http://10.0.2.2:8080",      // Emulador Android
+            IPANDROIDEMULATOR,            // Emulador Android
             "capacitor://localhost",      // Capacitor iOS
             "ionic://localhost"           // Ionic iOS
         ));

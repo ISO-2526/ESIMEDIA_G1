@@ -28,6 +28,10 @@ public class FileUploadController {
 
     private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
 
+    private static final String ERROR = "error";
+    private static final String SUCCESS = "success";
+
+
     // Ruta donde se guardan los archivos de audio
     private static final String AUDIO_UPLOAD_DIR = "src/main/resources/static/audio/";
     private static final String COVER_UPLOAD_DIR = "src/main/resources/static/cover/";
@@ -54,14 +58,14 @@ public class FileUploadController {
         try {
             // Validar que el archivo no esté vacío
             if (file.isEmpty()) {
-                response.put("error", "El archivo está vacío");
+                response.put(ERROR, "El archivo está vacío");
                 return ResponseEntity.badRequest().body(response);
             }
 
             // Validar el tamaño del archivo (máximo 1MB)
             if (file.getSize() > MAX_AUDIO_SIZE) {
                 double sizeMB = file.getSize() / 1048576.0;
-                response.put("error", String.format("El archivo es demasiado grande (%.2f MB). Máximo permitido: 1 MB", sizeMB));
+                response.put(ERROR, String.format("El archivo es demasiado grande (%.2f MB). Máximo permitido: 1 MB", sizeMB));
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
             }
 
@@ -89,7 +93,7 @@ public class FileUploadController {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // Respuesta exitosa
-            response.put("success", true);
+            response.put(SUCCESS, true);
             response.put("filename", uniqueFilename);
             response.put("originalFilename", originalFilename);
             response.put("size", file.getSize());
@@ -99,10 +103,10 @@ public class FileUploadController {
 
         } catch (SecurityException se) {
             // Capturar el error específico de Tika/Magic Numbers
-            response.put("error", se.getMessage());
+            response.put(ERROR, se.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         } catch (IOException e) {
-            response.put("error", "Error al guardar el archivo: " + e.getMessage());
+            response.put(ERROR, "Error al guardar el archivo: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -113,21 +117,21 @@ public class FileUploadController {
 
         try {
             if (file.isEmpty()) {
-                response.put("error", "El archivo está vacío");
+                response.put(ERROR, "El archivo está vacío");
                 return ResponseEntity.badRequest().body(response);
             }
 
             // Validar el tamaño del archivo (máximo 5MB para imágenes)
             if (file.getSize() > MAX_COVER_SIZE) {
                 double sizeMB = file.getSize() / 1048576.0;
-                response.put("error", String.format("La imagen es demasiado grande (%.2f MB). Máximo permitido: 5 MB", sizeMB));
+                response.put(ERROR, String.format("La imagen es demasiado grande (%.2f MB). Máximo permitido: 5 MB", sizeMB));
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
             }
 
             // Validar el tipo de archivo (solo imágenes)
             String contentType = file.getContentType();
             if (contentType == null || !isImageFile(contentType)) {
-                response.put("error", "Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WEBP)");
+                response.put(ERROR, "Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WEBP)");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -147,7 +151,7 @@ public class FileUploadController {
             Path filePath = uploadPath.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            response.put("success", true);
+            response.put(SUCCESS, true);
             response.put("filename", uniqueFilename);
             response.put("originalFilename", originalFilename);
             response.put("size", file.getSize());
@@ -155,7 +159,7 @@ public class FileUploadController {
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            response.put("error", "Error al guardar la imagen: " + e.getMessage());
+            response.put(ERROR, "Error al guardar la imagen: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -169,16 +173,16 @@ public class FileUploadController {
             
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                response.put("success", true);
+                response.put(SUCCESS, true);
                 response.put("message", "Archivo eliminado correctamente");
                 return ResponseEntity.ok(response);
             } else {
-                response.put("error", "Archivo no encontrado");
+                response.put(ERROR, "Archivo no encontrado");
                 return ResponseEntity.notFound().build();
             }
 
         } catch (IOException e) {
-            response.put("error", "Error al eliminar el archivo: " + e.getMessage());
+            response.put(ERROR, "Error al eliminar el archivo: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

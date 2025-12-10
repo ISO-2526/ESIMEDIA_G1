@@ -16,6 +16,9 @@ import grupo1.esimedia.config.PasswordSecurityConfig;
 
 @Component
 public class PasswordUtils {
+
+    private static final String SEPARADOR = " ═══════════════════════════════════════════════════════ ";
+    private static final String UTF = "UTF-8";
     
     private static final Logger log = LoggerFactory.getLogger(PasswordUtils.class);
     
@@ -93,7 +96,7 @@ public class PasswordUtils {
         try {
             String passwordWithPepper = plainPassword + securityConfig.getPasswordPepper();
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(passwordWithPepper.getBytes("UTF-8"));
+            byte[] hash = digest.digest(passwordWithPepper.getBytes(UTF));
             return Base64.getEncoder().encodeToString(hash);
         } catch (Exception e) {
             log.error("Error al pre-hashear contraseña", e);
@@ -107,9 +110,9 @@ public class PasswordUtils {
     public String hashPassword(String plainPassword) {
         try {
             if (isDebugMode()) {
-                log.info("═══════════════════════════════════════════════════════");
+                log.info(SEPARADOR);
                 log.info("🔐 GENERACIÓN DE HASH DE CONTRASEÑA");
-                log.info("═══════════════════════════════════════════════════════");
+                log.info(SEPARADOR);
                 log.info("📝 Contraseña original: '{}'", plainPassword);
                 log.info("📏 Longitud: {} caracteres", plainPassword.length());
             }
@@ -119,7 +122,7 @@ public class PasswordUtils {
             
             if (isDebugMode()) {
                 log.info("🌶️  Pre-hash SHA-256 + Pepper: {}", preHashed);
-                log.info("📏 Longitud pre-hash: {} bytes", preHashed.getBytes("UTF-8").length);
+                log.info("📏 Longitud pre-hash: {} bytes", preHashed.getBytes(UTF).length);
             }
             
             // Aplicar bcrypt al pre-hash
@@ -127,7 +130,7 @@ public class PasswordUtils {
             
             if (isDebugMode()) {
                 log.info("🔐 Hash final (bcrypt): {}", finalHash);
-                log.info("═══════════════════════════════════════════════════════\n");
+                log.info(SEPARADOR + "\n");
             }
             
             return finalHash;
@@ -143,9 +146,9 @@ public class PasswordUtils {
     public boolean verifyPassword(String plainPassword, String hashedPassword) {
         try {
             if (isDebugMode()) {
-                log.info("═══════════════════════════════════════════════════════");
+                log.info(SEPARADOR);
                 log.info("🔍 VERIFICACIÓN DETALLADA DE CONTRASEÑA");
-                log.info("═══════════════════════════════════════════════════════");
+                log.info(SEPARADOR);
                 log.info("📥 INPUT DEL USUARIO:");
                 log.info("   Contraseña ingresada: '{}'", plainPassword);
                 log.info("   Longitud: {} caracteres", plainPassword.length());
@@ -162,7 +165,7 @@ public class PasswordUtils {
                 log.info("");
                 log.info("🧪 VERIFICACIÓN:");
                 log.info("   Pre-hash generado: {}", preHashed);
-                log.info("   Longitud: {} bytes", preHashed.getBytes("UTF-8").length);
+                log.info("   Longitud: {} bytes", preHashed.getBytes(UTF).length);
             }
             
             // Verificar con bcrypt
@@ -172,7 +175,7 @@ public class PasswordUtils {
                 log.info("   Resultado: {} {}", match ? "✅ MATCH" : "❌ NO MATCH",
                          match ? "(Contraseña correcta)" : "(Contraseña incorrecta)");
                 log.info("");
-                log.info("═══════════════════════════════════════════════════════");
+                log.info(SEPARADOR);
                 
                 if (match) {
                     log.info("✅ ✅ ✅ CONTRASEÑA CORRECTA - LOGIN PERMITIDO ✅ ✅ ✅");
@@ -184,7 +187,7 @@ public class PasswordUtils {
                     log.error("   3. Hash corrupto en la base de datos");
                 }
                 
-                log.info("═══════════════════════════════════════════════════════\n");
+                log.info(SEPARADOR + "\n");
             }
             
             return match;
@@ -200,9 +203,9 @@ public class PasswordUtils {
     public void compareHashes(String password, String hash1, String hash2) {
         if (!isDebugMode()) return;
         
-        log.info("═══════════════════════════════════════════════════════");
+        log.info(SEPARADOR);
         log.info("🔬 COMPARACIÓN DE HASHES");
-        log.info("═══════════════════════════════════════════════════════");
+        log.info(SEPARADOR);
         log.info("Contraseña: '{}'", password);
         log.info("");
         log.info("Hash 1: {}", hash1);
@@ -218,7 +221,7 @@ public class PasswordUtils {
         log.info("");
         log.info("Verificación Hash 2:");
         log.info("  Con pre-hash: {}", encoder.matches(preHashed, hash2));
-        log.info("═══════════════════════════════════════════════════════\n");
+        log.info(SEPARADOR + "\n");
     }
 
         public boolean matches(String plainPassword, String hashedPassword) {
