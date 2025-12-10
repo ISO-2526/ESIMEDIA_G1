@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import axios from "../../../api/axiosConfig";
 import './Validate2FA.css';
 
+/* Validacion de 2FA */
 const Validate2FA = () => {
   const location = useLocation();
   const history = useHistory();
