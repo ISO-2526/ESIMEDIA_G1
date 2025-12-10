@@ -76,25 +76,21 @@ function SubscriptionPage() {
 
   const loadUserProfile = async () => {
     try {
-      const email = localStorage.getItem('email');
-      
-      if (email) {
-        const response = await axios.get('/api/users/profile', {
-          withCredentials: true,
-          headers: { 'email': email }
-        });
-        const profileData = response.data;
-        const updatedProfile = {
-          name: profileData.name,
-          surname: profileData.surname,
-          email: profileData.email,
-          alias: profileData.alias,
-          dateOfBirth: profileData.dateOfBirth,
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        };
-        setUserProfile(updatedProfile);
-      }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
+      });
+      const profileData = response.data;
+      const updatedProfile = {
+        name: profileData.name,
+        surname: profileData.surname,
+        email: profileData.email,
+        alias: profileData.alias,
+        dateOfBirth: profileData.dateOfBirth,
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      };
+      setUserProfile(updatedProfile);
+      console.log('🖼️ Profile picture URL (SubscriptionPage):', updatedProfile.picture);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }

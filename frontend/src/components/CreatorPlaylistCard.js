@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CreatorPlaylistCard.css';
+import axios from '../api/axiosConfig';
 
 // Helpers para reducir anidación
 const DEFAULT_COVER = '/cover/default.png';
@@ -34,10 +35,8 @@ function CreatorPlaylistCard({ playlist, onClick }) {
 
     const fetchCovers = async () => {
       try {
-        const response = await fetch('/api/public/contents');
-        if (!response.ok) return;
-
-        const allContents = await response.json();
+        const response = await axios.get('/api/public/contents');
+        const allContents = response.data;
         const index = buildContentIndex(allContents);
         const covers = coversForPlaylist(playlist.items, index);
 

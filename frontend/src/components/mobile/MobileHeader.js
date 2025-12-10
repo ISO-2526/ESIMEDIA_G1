@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   IonIcon,
   IonPopover
@@ -11,9 +11,10 @@ import {
   cardOutline,
   logOutOutline,
   closeOutline,
-  person
+  person,
+  homeOutline
 } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import MobileFilterModal from './MobileFilterModal';
 import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
@@ -34,25 +35,56 @@ const MobileHeader = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const history = useHistory();
+  const location = useLocation();
+
+  // Resetear el error de imagen cuando cambia el userProfile
+  useEffect(() => {
+    setImageError(false);
+  }, [userProfile?.picture]);
+
+  // Cerrar todos los menús al cambiar de página
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsFilterOpen(false);
+    setIsNotificationsOpen(false);
+    setShowSearch(false);
+    if (setSearchQuery) {
+      setSearchQuery('');
+    }
+  }, [location.pathname, setSearchQuery]);
 
   // Prevenir scroll cuando se abren los menus
-  React.useEffect(() => {
+  useEffect(() => {
     if (isMenuOpen || isFilterOpen || isNotificationsOpen) {
+      // Guardar posición actual del scroll
+      const currentScrollY = window.scrollY;
+      setScrollPosition(currentScrollY);
+      
+      // Bloquear scroll
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${currentScrollY}px`;
       document.body.style.width = '100%';
     } else {
+      // Restaurar scroll cuando se cierran los menús
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
+      
+      // Restaurar posición del scroll
+      window.scrollTo(0, scrollPosition);
     }
+    
     return () => {
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
     };
-  }, [isMenuOpen, isFilterOpen, isNotificationsOpen]);
+  }, [isMenuOpen, isFilterOpen, isNotificationsOpen, scrollPosition]);
 
   return (
     <div className={`mobile-header-ionic ${showSearch ? 'search-expanded' : ''}`}>
@@ -108,7 +140,8 @@ const MobileHeader = ({
             <button 
               id="filter-menu-trigger"
               className="mobile-icon-btn"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setIsFilterOpen(!isFilterOpen);
                 setIsMenuOpen(false);
                 setIsNotificationsOpen(false);
@@ -123,7 +156,8 @@ const MobileHeader = ({
             <button 
               id="notifications-menu-trigger"
               className="mobile-icon-btn"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setIsNotificationsOpen(!isNotificationsOpen);
                 setIsMenuOpen(false);
                 setIsFilterOpen(false);
@@ -138,7 +172,8 @@ const MobileHeader = ({
             <button 
               className="mobile-icon-btn avatar-button" 
               id="user-menu-trigger"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setIsMenuOpen(!isMenuOpen);
                 setIsFilterOpen(false);
                 setIsNotificationsOpen(false);
@@ -187,6 +222,17 @@ const MobileHeader = ({
         className="user-menu-popover"
       >
         <div className="user-menu-content">
+          <button
+            className="user-menu-button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              history.push('/usuario');
+            }}
+          >
+            <IonIcon icon={homeOutline} />
+            <span>Inicio</span>
+          </button>
+
           <button
             className="user-menu-button"
             onClick={() => {

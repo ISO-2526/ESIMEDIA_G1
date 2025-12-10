@@ -117,12 +117,10 @@ const parseActivationResponseMessage = async (response) => {
 };
 
 const activateOrDeactivate3FA = async ({ email, activate }) => {
-  return fetch('/api/auth/activate-3fa', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, activate })
-  });
+  return axios.post('/api/auth/activate-3fa', 
+    { email, activate },
+    { withCredentials: true }
+  );
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
@@ -393,8 +391,18 @@ function UserProfilePage() {
       }, {
         withCredentials: true
       });
+      
+      // Actualizar los datos del perfil
       setProfileData(response.data);
+      
+      // Actualizar el userProfile para que se refleje en MobileHeader
+      setUserProfile({ 
+        picture: getImageUrl(response.data.picture),
+        vip: response.data.vip || false
+      });
+      
       setIsEditing(false);
+      setPreviewImage(null);
       showSuccess('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error al guardar los cambios:', error);

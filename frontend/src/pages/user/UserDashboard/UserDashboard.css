@@ -55,7 +55,7 @@
 /* Header */
 .dashboard-header {
   position: fixed;
-  top: calc(10px + env(safe-area-inset-top)); /* 📱 Respetar notch/safe area */
+  top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* 📱 Respetar notch/safe area */
   left: 50%;
   transform: translateX(-50%);
   max-width: 1800px;
@@ -982,13 +982,13 @@
 @media (max-width: 768px) {
   /* 📱 Padding superior para que el contenido empiece debajo del MobileHeader */
   .user-dashboard {
-    padding-top: max(100px, calc(100px + env(safe-area-inset-top)));
+    padding-top: var(--mobile-content-padding-top);
   }
 
   .dashboard-header {
     padding: 10px 15px;
     width: 95%;
-    top: calc(10px + env(safe-area-inset-top)); /* Respetar notch */
+    top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* Respetar notch */
     border-radius: 40px;
     overflow: visible;
   }
@@ -1230,7 +1230,7 @@
     width: 94%; /* Un poco menos ancho para dar margen */
     left: 50%;
     transform: translateX(-50%);
-    top: calc(10px + env(safe-area-inset-top)); /* Respetar notch */
+    top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* Respetar notch */
     overflow: visible;
   }
   

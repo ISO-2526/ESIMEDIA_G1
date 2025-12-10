@@ -1,10 +1,6 @@
 package grupo1.esimedia.Accounts.model;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.persistence.*;
 import org.springframework.data.annotation.Id;
 import jakarta.validation.constraints.*;
@@ -115,35 +111,5 @@ public abstract class Account {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    private List<String> passwordHistory = new ArrayList<>();
-    public List<String> getPasswordHistory() {
-        return passwordHistory;
-    }
-    public void addPasswordToHistory(String newHashedPassword) {
-        if (this.passwordHistory == null) {
-            this.passwordHistory = new ArrayList<>(); // <-- Sé consistente
-        }
-        
-        // Añadir el nuevo hash al principio (índice 0)
-        // Esto funciona en CUALQUIER tipo de List
-        this.passwordHistory.add(0, newHashedPassword);
-        
-        // Mantener solo las últimas 5 contraseñas
-        while (this.passwordHistory.size() > 5) {
-            // Eliminar el último elemento (índice size - 1)
-            // Esto también funciona en CUALQUIER tipo de List
-            this.passwordHistory.remove(this.passwordHistory.size() - 1);
-        }
-    }
-
-    /** Timestamp del último cambio de contraseña. */
-    private Instant lastPasswordChangeAt;
-    public Instant getLastPasswordChangeAt() {
-        return lastPasswordChangeAt;
-    }
-    public void setLastPasswordChangeAt(Instant lastPasswordChangeAt) {
-        this.lastPasswordChangeAt = lastPasswordChangeAt;
     }
 }

@@ -10,6 +10,7 @@ import './CreatorPlaylistViewPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
+import axios from '../../../api/axiosConfig';
 
 function CreatorPlaylistViewPage() {
   const { id } = useParams();
@@ -37,19 +38,11 @@ function CreatorPlaylistViewPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      setUserProfile({
+        picture: getImageUrl(response.data.picture),
+        vip: response.data.vip || false
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -91,11 +84,8 @@ function CreatorPlaylistViewPage() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch('/api/users/favorites', { credentials: 'include' });
-      if (response.ok) {
-        const data = await response.json();
-        setFavorites(data);
-      }
+      const response = await axios.get('/api/users/favorites', { withCredentials: true });
+      setFavorites(response.data);
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
@@ -103,11 +93,8 @@ function CreatorPlaylistViewPage() {
 
   const fetchAllContents = async () => {
     try {
-      const response = await fetch('/api/public/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setAllContents(data);
-      }
+      const response = await axios.get('/api/public/contents');
+      setAllContents(response.data);
     } catch (error) {
       console.error('Error fetching all contents:', error);
     }
@@ -115,24 +102,21 @@ function CreatorPlaylistViewPage() {
 
   const fetchPlaylistDetails = async () => {
     try {
-      const response = await fetch(`/api/creator/playlists/public`);
-
-      if (response.ok) {
-        const data = await response.json();
-        const foundPlaylist = data.find(p => p.id === id);
-        
-        if (foundPlaylist && foundPlaylist.visible) {
-          setPlaylist(foundPlaylist);
-        } else {
-          showWarning('Esta lista no está disponible');
-          history.push('/usuario');
-        }
+      const response = await axios.get(`/api/creator/playlists/public`);
+      const data = response.data;
+      const foundPlaylist = data.find(p => p.id === id);
+      
+      if (foundPlaylist && foundPlaylist.visible) {
+        setPlaylist(foundPlaylist);
       } else {
-        showError('Error al cargar la lista');
+        showWarning('Esta lista no está disponible');
         history.push('/usuario');
       }
     } catch (error) {
       console.error('Error:', error);
+      if (error.response?.status) {
+        showError('Error al cargar la lista');
+      }
       history.push('/usuario');
     } finally {
       setLoading(false);
@@ -189,31 +173,24 @@ function CreatorPlaylistViewPage() {
   };
 
   const removeFavorite = async (contentId) => {
-    const response = await fetch(`/api/users/favorites/${contentId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-
-    if (response.ok) {
+    try {
+      await axios.delete(`/api/users/favorites/${contentId}`, { withCredentials: true });
       setFavorites(favorites.filter(id => id !== contentId));
       showSuccess('Eliminado de favoritos');
-    } else {
+    } catch (error) {
       showError('Error al eliminar de favoritos');
     }
   };
 
   const addFavorite = async (contentId) => {
-    const response = await fetch('/api/users/favorites', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ contentId })
-    });
-
-    if (response.ok) {
+    try {
+      await axios.post('/api/users/favorites', 
+        { contentId }, 
+        { withCredentials: true }
+      );
       setFavorites([...favorites, contentId]);
       showSuccess('Añadido a favoritos');
-    } else {
+    } catch (error) {
       showError('Error al añadir a favoritos');
     }
   };

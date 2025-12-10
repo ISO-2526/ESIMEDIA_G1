@@ -7,6 +7,7 @@ import PlaylistCard from '../../../components/PlaylistCard';
 import './PlaylistsPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
+import axios from '../../../api/axiosConfig';
 
 function PlaylistsPage() {
   const history = useHistory();
@@ -41,19 +42,16 @@ function PlaylistsPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
+      const profileData = response.data;
+      const updatedProfile = {
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      };
+      setUserProfile(updatedProfile);
+      console.log('🖼️ Profile picture URL (PlaylistsPage):', updatedProfile.picture);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -61,30 +59,28 @@ function PlaylistsPage() {
 
   const fetchPlaylists = async () => {
     try {
-      const response = await fetch('/api/playlists', { credentials: 'include' });
+      const response = await axios.get('/api/playlists', {
+        withCredentials: true
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Playlists recibidas:', data);
-        data.forEach(p => {
-          console.log(`  - ${p.nombre}: ${p.items ? p.items.length : 0} items`, p.items);
-        });
-        
-        // Separar la lista "Favoritos" y las demás
-        const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
-        const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
-        
-        // Si existe "Favoritos", ponerla primero
-        if (favoritosPlaylist) {
-          setPlaylists([favoritosPlaylist, ...otherPlaylists]);
-        } else {
-          setPlaylists(data);
-        }
+      const data = response.data;
+      console.log('Playlists recibidas:', data);
+      data.forEach(p => {
+        console.log(`  - ${p.nombre}: ${p.items ? p.items.length : 0} items`, p.items);
+      });
+      
+      // Separar la lista "Favoritos" y las demás
+      const favoritosPlaylist = data.find(p => p.nombre === 'Favoritos' && p.isPermanent);
+      const otherPlaylists = data.filter(p => !(p.nombre === 'Favoritos' && p.isPermanent));
+      
+      // Si existe "Favoritos", ponerla primero
+      if (favoritosPlaylist) {
+        setPlaylists([favoritosPlaylist, ...otherPlaylists]);
       } else {
-        console.error('Error fetching playlists');
+        setPlaylists(data);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al cargar playlists:', error);
     } finally {
       setLoading(false);
     }
@@ -99,19 +95,14 @@ function PlaylistsPage() {
     }
 
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: newPlaylistName,
-          descripcion: newPlaylistDescription || ''
-        })
+      const response = await axios.post('/api/playlists', {
+        nombre: newPlaylistName,
+        descripcion: newPlaylistDescription || ''
+      }, {
+        withCredentials: true
       });
 
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         showSuccess('Lista de reproducción creada exitosamente');
         setShowCreateModal(false);
         setNewPlaylistName('');
@@ -121,7 +112,7 @@ function PlaylistsPage() {
         showError('Error al crear la lista de reproducción');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al crear playlist:', error);
       showError('Error al crear la lista de reproducción');
     }
   };

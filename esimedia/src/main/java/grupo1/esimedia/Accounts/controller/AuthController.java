@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +58,6 @@ import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
 import grupo1.esimedia.security.LoginAttemptService;
 import grupo1.esimedia.security.RateLimitService;
 import grupo1.esimedia.utils.PasswordUtils;
-import grupo1.esimedia.utils.TokenHasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
@@ -180,8 +178,6 @@ public class AuthController {
         // Hash ficticio para comparación constante en tiempo
         String dummyHash = "$2a$12$dummyHashParaEvitarTimingAttacks1234567890ABC";
 
-
-
         // Try admin login
         ResponseEntity<?> adminResponse = tryAdminLogin(email, password, loginRequest, clientIp, dummyHash);
         if (adminResponse != null) return adminResponse;
@@ -227,23 +223,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, ADMIN);
         }
 
-        Instant lastChange = admin.getLastPasswordChangeAt();
-        
-        if (lastChange == null) {
-            // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn(NOLASTPASSWORDCHANGEDAT, admin.getEmail());
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
-        }
-
-        Instant expirationDate = lastChange.plus(Duration.ofDays(30));
-        
-        if (Instant.now().isAfter(expirationDate)) {
-            log.warn(CONTRASENAEXPIRADA, admin.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
-        }
-
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), ADMIN, admin.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), ADMIN);
@@ -268,22 +248,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, CREATOR);
         }
 
-        Instant lastChange = creator.getLastPasswordChangeAt();
-        
-        if (lastChange == null) {
-            // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn(NOLASTPASSWORDCHANGEDAT, creator.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
-        }
-
-        Instant expirationDate = lastChange.plus(Duration.ofDays(30));
-        
-        if (Instant.now().isAfter(expirationDate)) {
-            log.warn(CONTRASENAEXPIRADA, creator.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
-        }
-
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), CREATOR, creator.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), CREATOR);
@@ -304,28 +269,12 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, "user");
         }
 
-        Instant lastChange = user.getLastPasswordChangeAt();
-        
-        if (lastChange == null) {
-            // Caso de usuario antiguo sin fecha. Forzamos el cambio.
-            log.warn(NOLASTPASSWORDCHANGEDAT, user.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(RECUPERARCONTRASENA); 
-        }
-
-        Instant expirationDate = lastChange.plus(Duration.ofDays(30));
-        
-        if (Instant.now().isAfter(expirationDate)) {
-            log.warn(CONTRASENAEXPIRADA, user.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(CONTRASENA30DIAS);        
-        }
-
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(user.getEmail(), "user", user.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         if (!user.isActive()) {
             return inactiveAccountResponse();
         }
-
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(user.isThirdFactorEnabled(), user.getEmail(), "user");
         if (threeFa != null) return threeFa;
@@ -373,81 +322,49 @@ public class AuthController {
                 .body("Límite diario excedido. Puedes solicitar máximo 10 códigos por día.");
         }
 
-Object account = null;
-    var adminOpt = findAdminByEmailIgnoreCase(email);
-    var creatorOpt = findCreatorByEmailIgnoreCase(email);
-    var userOpt = findUserByEmailIgnoreCase(email);
-
-    if (adminOpt.isPresent()) account = adminOpt.get();
-    else if (creatorOpt.isPresent()) account = creatorOpt.get();
-    else if (userOpt.isPresent()) account = userOpt.get();
-
-    if (account != null) {
-        String token = java.util.UUID.randomUUID().toString();
-        String hashedToken = TokenHasher.hashToken(token);
-        LocalDateTime expiration = LocalDateTime.now().plusMinutes(15);
-
-        // 2. Guardar token según el tipo de objeto encontrado
-        String name = "";
-        if (account instanceof Admin a) {
-            a.setResetToken(hashedToken);
-            a.setTokenExpiration(expiration);
-            adminRepository.save(a);
-            name = a.getName();
-        } else if (account instanceof ContentCreator c) {
-            c.setResetToken(hashedToken);
-            c.setTokenExpiration(expiration);
-            contentCreatorRepository.save(c);
-            name = c.getName();
-        } else if (account instanceof User u) {
-            u.setResetToken(hashedToken);
-            u.setTokenExpiration(expiration);
-            userRepository.save(u);
-            name = u.getName();
+        var opt = userRepository.findById(email);
+        if (opt.isEmpty()) {
+            for (User u : userRepository.findAll()) {
+                if (u.getEmail() != null && u.getEmail().equalsIgnoreCase(email)) { opt = java.util.Optional.of(u); break; }
+            }
         }
+        if (opt.isPresent()) {
+            User user = opt.get();
+            String token= java.util.UUID.randomUUID().toString();
+            user.setResetToken(token);
+            user.setTokenExpiration(java.time.LocalDateTime.now().plusMinutes(15)); // token valid for 15 minutes
+            userRepository.save(user);
             // Send the user a link to reset their password
-            String resetLink = "http://localhost:3000/#/reset-password?token=" + token;
+            String resetLink = "http://localhost:3000/reset-password?token=" + user.getResetToken();
             String subject = "Recuperación de contraseña";
-            String bodyEmail = "Hola " + name + ",\n\n" +
+            String bodyEmail = "Hola " + user.getName() + ",\n\n" +
                     "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.\n" +
                     "Por favor, haz clic en el siguiente enlace para restablecer tu contraseña:\n" +
                     resetLink + "\n" + "Este enlace es válido por 15 minutos." + "\n" +
                     "Si no solicitaste este cambio, puedes ignorar este correo electrónico.\n\n" +
                     "Saludos,\nEl equipo de ESIMEDIA";
             
-            emailService.sendEmail(email, subject, bodyEmail);
+            emailService.sendEmail(user.getEmail(), subject, bodyEmail);
         }
 
         // ✅ SIEMPRE devolver 200 OK con mensaje genérico (para no revelar si el usuario existe)
         return ResponseEntity.ok("Si el correo está registrado, recibirás un enlace de recuperación");
     }
 
+    // Validate reset token
     @GetMapping(path = "/validate-reset-token", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> validateResetToken(@RequestParam String token) {
-        if (token == null || token.isBlank()) return ResponseEntity.badRequest().build();
-
-        String hashed = TokenHasher.hashToken(token);
-        
-        // Búsqueda en cascada por token
-        Object found = null;
-        LocalDateTime expiration = null;
-
-        Admin a = adminRepository.findByResetToken(hashed);
-        if (a != null) { found = a; expiration = a.getTokenExpiration(); }
-        
-        if (found == null) {
-            ContentCreator c = contentCreatorRepository.findByResetToken(hashed);
-            if (c != null) { found = c; expiration = c.getTokenExpiration(); }
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().build();
         }
-        
-        if (found == null) {
-            User u = userRepository.findByResetToken(hashed);
-            if (u != null) { found = u; expiration = u.getTokenExpiration(); }
-        }
+        User user = userRepository.findByResetToken(token);
+        boolean isValid = (user != null && user.getTokenExpiration() != null && user.getTokenExpiration().isAfter(java.time.LocalDateTime.now()));
+        //printea el token y si es valido
 
-        boolean isValid = (found != null && expiration != null && expiration.isAfter(LocalDateTime.now()));
-        
-        return ResponseEntity.ok(Map.of("valid", isValid));
+        System.out.println("Validating token: " + token + " isValid: " + isValid);
+        Map<String, Boolean> resp = new HashMap<>();
+        resp.put("valid", isValid);
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/protected-resource")
@@ -486,22 +403,43 @@ Object account = null;
     }
 
     @GetMapping("/validate-token")
-    public ResponseEntity<?> validateToken() {
-        // Si llegamos aquí y el filtro funcionó, el usuario ya está autenticado
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<?> validateToken(
+            @CookieValue(value = "access_token", required = false) String cookieToken,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
+        // ⚠️ HYBRID STRATEGY: Prioridad 1 - Header Bearer (Móvil), Prioridad 2 - Cookie (Web)
+        String tokenId = null;
+        
+        // 1. Intentar extraer del header Authorization (para móvil)
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenId = authHeader.substring(7);
+            System.out.println("✅ Validating token from Authorization header (mobile): " + tokenId);
+        }
+        // 2. Si no hay header, usar cookie (para web)
+        else if (cookieToken != null && !cookieToken.isBlank()) {
+            tokenId = cookieToken;
+            System.out.println("✅ Validating token from cookie (web): " + tokenId);
+        }
+        
+        if (tokenId == null || tokenId.isBlank()) {
+            System.out.println("❌ No token found in header or cookie");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
         }
 
-        String email = auth.getName();
-        String role = auth.getAuthorities().stream()
-                        .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
-                        .findFirst().orElse("user");
+        Token token = tokenRepository.findById(tokenId).orElse(null);
+        if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
+            System.out.println("❌ Token invalid or expired: " + tokenId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
+        }
 
+        // Obtener role y email del token
+        String accountId = token.getAccountId();
+        String role = token.getRole();
+        
+        System.out.println("✅ Token validated successfully for: " + accountId);
         Map<String, Object> response = new HashMap<>();
         response.put("role", role);
-        response.put("email", email);
+        response.put("email", accountId);
         return ResponseEntity.ok(response);
     }
 
@@ -649,7 +587,7 @@ Object account = null;
 
     @PostMapping(path = "/reset-password", consumes = "application/json")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
-        String token = TokenHasher.hashToken(request.getToken());
+        String token = request.getToken();
         String password = request.getPassword();
         LocalDateTime now = LocalDateTime.now();
 
@@ -912,18 +850,7 @@ Object account = null;
             return ResponseEntity.status(400).body(err.get());
         }
 
-        for (String oldHash : user.getPasswordHistory()) {
-            // Usa 'matches' en lugar de comparar hashes generados manualmente
-            if (passwordUtils.matches(password, oldHash)) { 
-                log.warn(NOREUTILIZARCONTRASENANTIGUA, user.getEmail());
-                // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
-            }
-        }
-
         user.setPassword(passwordUtils.hashPassword(password));
-        user.addPasswordToHistory(user.getPassword());
-        user.setLastPasswordChangeAt(Instant.now());
         user.setResetToken(null);
         user.setTokenExpiration(null);
         userRepository.save(user);
@@ -945,18 +872,7 @@ Object account = null;
             return ResponseEntity.status(400).body(err.get());
         }
 
-        for (String oldHash : admin.getPasswordHistory()) {
-            // Usa 'matches' en lugar de comparar hashes generados manualmente
-            if (passwordUtils.matches(password, oldHash)) { 
-                log.warn(NOREUTILIZARCONTRASENANTIGUA, admin.getEmail());
-                // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
-            }
-        }
-
         admin.setPassword(passwordUtils.hashPassword(password));
-        admin.setLastPasswordChangeAt(Instant.now());
-        admin.addPasswordToHistory(admin.getPassword());
         admin.setResetToken(null);
         admin.setTokenExpiration(null);
         adminRepository.save(admin);
@@ -978,18 +894,7 @@ Object account = null;
             return ResponseEntity.status(400).body(err.get());
         }
 
-        for (String oldHash : creator.getPasswordHistory()) {
-            // Usa 'matches' en lugar de comparar hashes generados manualmente
-            if (passwordUtils.matches(password, oldHash)) { 
-                log.warn(NOREUTILIZARCONTRASENANTIGUA, creator.getEmail());
-                // Se recomienda devolver un ResponseEntity en lugar de lanzar excepción si el método es private y asíncrono
-                return ResponseEntity.status(400).body(NOREUTILIZARCONTRASENA);
-            }
-        }
-
         creator.setPassword(passwordUtils.hashPassword(password));
-        creator.addPasswordToHistory(creator.getPassword());
-        creator.setLastPasswordChangeAt(Instant.now());
         creator.setResetToken(null);
         creator.setTokenExpiration(null);
         contentCreatorRepository.save(creator);

@@ -12,7 +12,7 @@
 
 .mobile-filter-popover::part(content) {
   position: fixed !important;
-  top: calc(66px + env(safe-area-inset-top)) !important;
+  top: calc(var(--mobile-header-offset)) !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: 240px !important;
