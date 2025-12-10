@@ -3,6 +3,7 @@ import { useLocation, useHistory } from "react-router-dom";
 import axios from "../../../api/axiosConfig"; // ✅ Asegúrate de que la ruta sea correcta
 import './Validate2FA.css';
 
+/* Validando el 2FA */
 const Validate2FA = () => {
   const location = useLocation();
   const history = useHistory();
