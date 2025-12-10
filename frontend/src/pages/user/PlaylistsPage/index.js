@@ -7,6 +7,7 @@ import PlaylistCard from '../../../components/PlaylistCard';
 import './PlaylistsPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
+import axios from '../../../api/axiosConfig';
 
 function PlaylistsPage() {
   const history = useHistory();
@@ -41,19 +42,16 @@ function PlaylistsPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          picture: getImageUrl(profileData.picture),
-          vip: profileData.vip || false
-        });
-      }
+      const profileData = response.data;
+      const updatedProfile = {
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      };
+      setUserProfile(updatedProfile);
+      console.log('🖼️ Profile picture URL (PlaylistsPage):', updatedProfile.picture);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }

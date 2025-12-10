@@ -48,7 +48,9 @@ const MobileHeader = ({
     setIsFilterOpen(false);
     setIsNotificationsOpen(false);
     setShowSearch(false);
-    setSearchQuery('');
+    if (setSearchQuery) {
+      setSearchQuery('');
+    }
   }, [location.pathname, setSearchQuery]);
 
   // Prevenir scroll cuando se abren los menus
