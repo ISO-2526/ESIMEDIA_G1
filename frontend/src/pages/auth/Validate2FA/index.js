@@ -1,56 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { IonPage, IonContent } from '@ionic/react';
-import { useIonRouter } from '@ionic/react';
-import { Capacitor } from '@capacitor/core';
-import axios from "../../../api/axiosConfig";
+import axios from "../../../api/axiosConfig"; // ✅ Asegúrate de que la ruta sea correcta
 import './Validate2FA.css';
 
-/* Validacion de 2FA */
+/* Validando el 2FA */
 const Validate2FA = () => {
   const location = useLocation();
   const history = useHistory();
-  const ionRouter = useIonRouter();
-  const isMobile = Capacitor.isNativePlatform();
-
-  // ✅ Leer state de location o sessionStorage (móvil)
-  const getStateValue = (key) => {
-    if (location.state && location.state[key]) {
-      return location.state[key];
-    }
-    // Fallback para móvil: leer de sessionStorage
-    try {
-      const navState = JSON.parse(sessionStorage.getItem('navigationState') || '{}');
-      return navState[key] || '';
-    } catch {
-      return '';
-    }
-  };
-
-  const email = getStateValue('email');
-  const password = getStateValue('password');
-  const role = getStateValue('role');
+  const email = location.state?.email || "";
+  const password = location.state?.password || "";
+  const role = location.state?.role || "";
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Función de navegación híbrida
-  const navigate = (path) => {
-    console.log('📍 Navegando a:', path, 'isMobile:', isMobile);
-    if (isMobile && ionRouter) {
-      ionRouter.push(path, 'root', 'replace');
-    } else {
-      history.push(path);
-    }
-  };
-
   // Redirigir al login si no hay datos
-  useEffect(() => {
+  React.useEffect(() => {
     if (!email || !password) {
-      console.log('⚠️ Validate2FA - Sin datos de sesión, redirigiendo a login');
-      navigate('/login');
+      history.push('/login');
     }
-  }, [email, password]);
+  }, [email, password, history]);
 
   const handleValidate2FA = async () => {
     if (!code || code.length < 6) {
@@ -63,7 +32,7 @@ const Validate2FA = () => {
 
     try {
       console.log('📱 Validando 2FA con:', { email, hasPassword: !!password, code });
-
+      
       // ✅ Enviar twoFactorCode (no "2fa_code")
       const response = await axios.post("/api/auth/login", {
         email,
@@ -88,14 +57,10 @@ const Validate2FA = () => {
 
       // Verificar si el usuario tiene activado el 3FA
       if (data.thirdFactorEnabled) {
-        // Guardar state para móvil
-        if (isMobile) {
-          sessionStorage.setItem('navigationState', JSON.stringify({
-            email: data.email || email,
-            role: data.role
-          }));
-        }
-        navigate("/validate-3fa");
+        history.push("/validate-3fa", { 
+          email: data.email || email, 
+          role: data.role 
+        });
         return;
       }
 
@@ -106,47 +71,41 @@ const Validate2FA = () => {
       // Redirigir según el rol
       console.log('🚀 Navegando a dashboard con role:', data.role);
       if (data.role === "admin") {
-        navigate("/adminDashboard");
+        history.push("/adminDashboard");
       } else if (data.role === "creator") {
-        navigate("/creator");
+        history.push("/creator");
       } else if (data.role === "user") {
-        navigate("/usuario");
+        history.push("/usuario");
       } else {
-        navigate("/");
+        history.push("/");
       }
 
     } catch (error) {
       console.error("❌ Error al validar el token:", error);
       console.log('Error status:', error.response?.status);
       console.log('Error data type:', typeof error.response?.data);
-
+      
       // Si después del 2FA se requiere 3FA
       if (error.response?.status === 428) {
         try {
           // Intentar parsear responseData de forma segura
           let responseData = error.response.data;
-
+          
           // Si data es string (HTML), no intentar parsearlo
           if (typeof responseData === 'string') {
             console.log('⚠️ Respuesta es HTML/texto, usando datos del state');
             responseData = { email, role };
           }
-
+          
           console.log('🔐 Redirigiendo a 3FA con:', responseData);
-          if (isMobile) {
-            sessionStorage.setItem('navigationState', JSON.stringify({
-              email: responseData.email || email,
-              role: responseData.role || role
-            }));
-          }
-          navigate("/validate-3fa");
+          history.push("/validate-3fa", { 
+            email: responseData.email || email, 
+            role: responseData.role || role 
+          });
           return;
         } catch (parseError) {
           console.error('Error parseando respuesta 428:', parseError);
-          if (isMobile) {
-            sessionStorage.setItem('navigationState', JSON.stringify({ email, role }));
-          }
-          navigate("/validate-3fa");
+          history.push("/validate-3fa", { email, role });
           return;
         }
       }
@@ -159,17 +118,17 @@ const Validate2FA = () => {
       } else {
         // Manejar respuestas no-JSON de forma segura
         let errorMsg = "Código incorrecto o sesión expirada";
-
+        
         try {
           if (error.response?.data && typeof error.response.data === 'object') {
-            errorMsg = error.response.data.message ||
-              error.response.data.error ||
-              errorMsg;
+            errorMsg = error.response.data.message || 
+                      error.response.data.error || 
+                      errorMsg;
           }
         } catch (e) {
           console.error('Error extrayendo mensaje:', e);
         }
-
+        
         setMessage(errorMsg);
       }
       setIsLoading(false);
@@ -182,7 +141,7 @@ const Validate2FA = () => {
     }
   };
 
-  const content = (
+  return (
     <div className="page-container">
       <div className="validate2fa-wrapper">
         {/* Panel informativo lateral */}
@@ -191,7 +150,7 @@ const Validate2FA = () => {
             <div className="validate2fa-info-icon">🔒</div>
             <h2 className="validate2fa-info-title">Verificación de Seguridad</h2>
             <p className="validate2fa-info-description">
-              Ingresa el código de 6 dígitos que aparece en tu aplicación Google Authenticator
+              Ingresa el código de 6 dígitos que aparece en tu aplicación Google Authenticator 
               para completar el inicio de sesión.
             </p>
             <div className="validate2fa-info-tips">
@@ -239,12 +198,12 @@ const Validate2FA = () => {
           <div className="validate2fa-info-box">
             <span className="validate2fa-info-box-icon">💡</span>
             <div>
-              Asegúrate de ingresar el código antes de que expire.
+              Asegúrate de ingresar el código antes de que expire. 
               Si el código no funciona, espera a que se genere uno nuevo.
             </div>
           </div>
 
-          <button
+          <button 
             onClick={handleValidate2FA}
             disabled={isLoading || code.length < 6}
             className="validate2fa-submit-btn"
@@ -259,10 +218,10 @@ const Validate2FA = () => {
           )}
 
           <div className="validate2fa-footer">
-            <button
-              type="button"
+            <button 
+              type="button" 
               className="validate2fa-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>
@@ -271,18 +230,6 @@ const Validate2FA = () => {
       </div>
     </div>
   );
-
-  if (isMobile) {
-    return (
-      <IonPage>
-        <IonContent fullscreen>
-          {content}
-        </IonContent>
-      </IonPage>
-    );
-  }
-
-  return content;
 };
 
 export default Validate2FA;
