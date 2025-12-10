@@ -10,13 +10,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile: Padding para el MobileHeader */
-@media (max-width: 768px) {
-  .user-profile-page {
-    padding-top: var(--mobile-content-padding-top);
-  }
-}
-
 .user-profile-page::before {
   content: '';
   position: fixed;
@@ -917,6 +910,10 @@
 }
 
 @media (max-width: 768px) {
+  .user-profile-page {
+    padding-top: var(--mobile-content-padding-top);
+  }
+
   .profile-header {
     padding: 10px 15px;
     width: 95%;

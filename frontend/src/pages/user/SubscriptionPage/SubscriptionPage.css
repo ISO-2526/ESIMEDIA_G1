@@ -10,13 +10,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile: Padding para el MobileHeader */
-@media (max-width: 768px) {
-  .subscription-page {
-    padding-top: var(--mobile-content-padding-top);
-  }
-}
-
 .subscription-page::before {
   content: '';
   position: fixed;
@@ -770,6 +763,10 @@
 }
 
 @media (max-width: 768px) {
+  .subscription-page {
+    padding-top: var(--mobile-content-padding-top);
+  }
+
   .subscription-page .profile-header {
     padding: 10px 15px;
     width: 95%;
