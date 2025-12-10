@@ -4,6 +4,8 @@ import grupo1.esimedia.Accounts.model.Department;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class CreateAdminRequestDTO {
     @NotBlank(message = "El email es obligatorio")
@@ -11,6 +13,9 @@ public class CreateAdminRequestDTO {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 12, max = 128, message = "La contraseña debe tener al menos 12 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>])[A-Za-z\\d!@#$%^&*(),.?\":{}|<>].*$",
+            message = "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial")
     private String password;
 
     @NotBlank(message = "El nombre es obligatorio")

@@ -1,9 +1,11 @@
 package grupo1.esimedia.Accounts.dto.request;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -13,19 +15,22 @@ import java.time.LocalDate;
  */
 public class CreateUserRequestDTO {
 
-    @NotEmpty(message = "El nombre es obligatorio")
+    @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 12, message = "El nombre no puede tener más de 12 caracteres")
     private String name;
 
-    @NotEmpty(message = "Los apellidos son obligatorios")
+    @NotBlank(message = "Los apellidos son obligatorios")
     @Size(max = 50, message = "Los apellidos no pueden tener más de 50 caracteres")
     private String surname;
 
-    @NotEmpty(message = "El email es obligatorio")
+    @NotBlank(message = "El email es obligatorio")
     @Email(message = "El formato del email es inválido")
     private String email;
 
-    @NotEmpty(message = "La contraseña es obligatoria")
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 12, max = 128, message = "La contraseña debe tener al menos 12 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>])[A-Za-z\\d!@#$%^&*(),.?\":{}|<>].*$",
+            message = "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial")
     private String password;
 
     private String alias;

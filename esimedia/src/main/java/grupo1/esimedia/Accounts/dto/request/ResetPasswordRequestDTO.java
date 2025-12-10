@@ -9,8 +9,8 @@ public class ResetPasswordRequestDTO {
     private String token;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, max = 128, message = "La contraseña debe tener entre 8 y 128 caracteres")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&].*$",
+    @Size(min = 12, max = 128, message = "La contraseña debe tener entre 8 y 128 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>])[A-Za-z\\d!@#$%^&*(),.?\":{}|<>].*$",
              message = "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial")
     private String password;
 
