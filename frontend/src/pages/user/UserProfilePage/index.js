@@ -391,8 +391,18 @@ function UserProfilePage() {
       }, {
         withCredentials: true
       });
+      
+      // Actualizar los datos del perfil
       setProfileData(response.data);
+      
+      // Actualizar el userProfile para que se refleje en MobileHeader
+      setUserProfile({ 
+        picture: getImageUrl(response.data.picture),
+        vip: response.data.vip || false
+      });
+      
       setIsEditing(false);
+      setPreviewImage(null);
       showSuccess('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
