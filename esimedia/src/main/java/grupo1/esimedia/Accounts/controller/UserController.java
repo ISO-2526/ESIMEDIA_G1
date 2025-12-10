@@ -411,13 +411,22 @@ public class UserController {
     }
 
     @DeleteMapping("/{email:.+}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> deleteUser(@PathVariable String email) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = auth.getName();
+        
+        // Solo permitir si es el mismo usuario
+        if (!authenticatedEmail.equalsIgnoreCase(email)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(ERROR, "Solo puedes eliminar tu propia cuenta"));
+        }
+        
         var opt = findUserByEmail(email);
         return opt.map(existing -> {
             userRepository.delete(existing);
-            return ResponseEntity.ok().build();
-        }).orElse(ResponseEntity.status(404).build());
+            return ResponseEntity.ok(Map.of(MESSAGE, "Cuenta eliminada correctamente"));
+        }).orElse(ResponseEntity.status(404).body(Map.of(ERROR, USUARIONOENCONTRADO)));
     }
 
     @PostMapping("/vip/upgrade")
