@@ -1,6 +1,6 @@
 package grupo1.esimedia.config;
 
-import grupo1.esimedia.exception.ErrorResponse;
+// ELIMINAR O COMENTAR la línea: import grupo1.esimedia.exception.ErrorResponse;
 import grupo1.esimedia.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,15 +46,18 @@ class GlobalExceptionHandlerTests {
         ResourceNotFoundException exception = new ResourceNotFoundException("Notificación", "id", "123");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleResourceNotFound(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleResourceNotFound(exception, request);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(404, response.getBody().getStatus());
-        assertEquals("Not Found", response.getBody().getError());
-        assertTrue(response.getBody().getMessage().contains("Notificación"));
-        assertEquals("/api/test", response.getBody().getPath());
+        
+        // Asumiendo que el cuerpo es Map<String, Object>
+        assertEquals(404, response.getBody().get("status"));
+        assertEquals("Not Found", response.getBody().get("error"));
+        assertTrue(response.getBody().get("message").toString().contains("Notificación"));
+        assertEquals("/api/test", response.getBody().get("path"));
     }
 
     @Test
@@ -63,14 +66,17 @@ class GlobalExceptionHandlerTests {
         AccessDeniedException exception = new AccessDeniedException("Acceso denegado");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAccessDenied(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleAccessDenied(exception, request);
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(403, response.getBody().getStatus());
-        assertEquals("Forbidden", response.getBody().getError());
-        assertEquals("No tienes permiso para acceder a este recurso", response.getBody().getMessage());
+        
+        // Asumiendo que el cuerpo es Map<String, Object>
+        assertEquals(403, response.getBody().get("status"));
+        assertEquals("Forbidden", response.getBody().get("error"));
+        assertEquals("No tienes permiso para acceder a este recurso", response.getBody().get("message"));
     }
 
     @Test
@@ -79,14 +85,17 @@ class GlobalExceptionHandlerTests {
         IllegalArgumentException exception = new IllegalArgumentException("Argumento inválido");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleIllegalArgument(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleIllegalArgument(exception, request);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().getStatus());
-        assertEquals("Bad Request", response.getBody().getError());
-        assertEquals("Argumento inválido", response.getBody().getMessage());
+        
+        // Asumiendo que el cuerpo es Map<String, Object>
+        assertEquals(400, response.getBody().get("status"));
+        assertEquals("Bad Request", response.getBody().get("error"));
+        assertEquals("Argumento inválido", response.getBody().get("message"));
     }
 
     @Test
@@ -95,14 +104,17 @@ class GlobalExceptionHandlerTests {
         RuntimeException exception = new RuntimeException("Error inesperado");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleGenericException(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleGenericException(exception, request);
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(500, response.getBody().getStatus());
-        assertEquals("Internal Server Error", response.getBody().getError());
-        assertEquals("Ha ocurrido un error inesperado. Por favor, inténtalo más tarde.", response.getBody().getMessage());
+        
+        // Asumiendo que el cuerpo es Map<String, Object>
+        assertEquals(500, response.getBody().get("status"));
+        assertEquals("Internal Server Error", response.getBody().get("error"));
+        assertEquals("Ha ocurrido un error inesperado. Por favor, inténtalo más tarde.", response.getBody().get("message"));
     }
 
     @Test
@@ -116,11 +128,14 @@ class GlobalExceptionHandlerTests {
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
 
         // Act
+        // El tipo de retorno ya es correcto aquí: ResponseEntity<Map<String, Object>>
         ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleValidationErrors(exception);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
+        
+        // Asumiendo que el cuerpo es Map<String, Object>
         assertEquals(400, response.getBody().get("status"));
         assertEquals("Bad Request", response.getBody().get("error"));
         assertNotNull(response.getBody().get("fields"));
@@ -136,11 +151,12 @@ class GlobalExceptionHandlerTests {
         ResourceNotFoundException exception = new ResourceNotFoundException("El recurso solicitado no existe");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleResourceNotFound(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleResourceNotFound(exception, request);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("El recurso solicitado no existe", response.getBody().getMessage());
+        assertEquals("El recurso solicitado no existe", response.getBody().get("message"));
     }
 
     @Test
@@ -149,9 +165,10 @@ class GlobalExceptionHandlerTests {
         ResourceNotFoundException exception = new ResourceNotFoundException("Test");
 
         // Act
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleResourceNotFound(exception, request);
+        // CAMBIO: DE ResponseEntity<ErrorResponse> A ResponseEntity<Map<String, Object>>
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleResourceNotFound(exception, request);
 
         // Assert
-        assertNotNull(response.getBody().getTimestamp());
+        assertNotNull(response.getBody().get("timestamp"));
     }
 }
