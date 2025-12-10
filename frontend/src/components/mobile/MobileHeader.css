@@ -2,7 +2,7 @@
 .mobile-header-ionic {
   --background: transparent;
   position: fixed;
-  top: calc(10px + env(safe-area-inset-top));
+  top: calc(var(--mobile-header-margin) + var(--safe-area-top));
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
@@ -23,7 +23,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  min-height: 56px;
+  min-height: var(--mobile-header-height);
   border-radius: 50px;
   gap: 12px;
 }
@@ -262,7 +262,7 @@
 
 .user-menu-popover::part(content) {
   position: fixed !important;
-  top: calc(66px + env(safe-area-inset-top)) !important; /* Justo debajo del header */
+  top: calc(var(--mobile-header-offset)) !important; /* Justo debajo del header */
   right: 15px !important;
   bottom: auto !important;
   left: auto !important;
@@ -411,7 +411,7 @@ ion-content {
 
 .notifications-popover::part(content) {
   position: fixed;
-  top: calc(76px + env(safe-area-inset-top));
+  top: calc(var(--mobile-header-offset) + 10px);
   right: 16px;
   left: auto;
   max-width: 380px;
@@ -422,7 +422,7 @@ ion-content {
   border-radius: 20px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(79, 86, 186, 0.3);
-  max-height: calc(100vh - 120px - env(safe-area-inset-top));
+  max-height: calc(100vh - var(--mobile-header-offset) - 40px - var(--safe-area-bottom));
   overflow: hidden;
 }
 

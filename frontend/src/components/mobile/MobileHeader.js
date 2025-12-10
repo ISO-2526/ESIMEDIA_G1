@@ -37,6 +37,11 @@ const MobileHeader = ({
   const history = useHistory();
   const location = useLocation();
 
+  // Resetear el error de imagen cuando cambia el userProfile
+  useEffect(() => {
+    setImageError(false);
+  }, [userProfile?.picture]);
+
   // Cerrar todos los menús al cambiar de página
   useEffect(() => {
     setIsMenuOpen(false);

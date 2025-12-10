@@ -7,7 +7,7 @@
 
 .floating-back-button {
   position: fixed;
-  top: max(90px, calc(90px + env(safe-area-inset-top)));
+  top: calc(var(--mobile-header-offset) + 10px);
   left: 24px;
   z-index: 100;
   background: rgba(24, 24, 24, 0.7);
@@ -23,6 +23,13 @@
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Mobile: Padding para el MobileHeader */
+@media (max-width: 768px) {
+  .playlist-detail-page {
+    padding-top: var(--mobile-content-padding-top);
+  }
 }
 
 .floating-back-button:hover {
