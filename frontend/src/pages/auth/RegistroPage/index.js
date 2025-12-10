@@ -164,7 +164,10 @@ function RegistroPage() {
       });
 
       if (response.ok) {
-        history.push('/setup-2fa', { state: { email: form.email } });
+        history.push({ 
+          pathname: '/setup-2fa', 
+          state: { email: form.email } 
+        });
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
         console.error('Error del servidor:', errorData);

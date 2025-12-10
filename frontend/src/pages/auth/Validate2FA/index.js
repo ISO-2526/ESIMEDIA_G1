@@ -55,14 +55,26 @@ const Validate2FA = () => {
       // ✅ Desactivar loading ANTES de navegar
       setIsLoading(false);
 
-      // Verificar si el usuario tiene activado el 3FA
-      if (data.thirdFactorEnabled) {
+      // 🐛 DEBUG: Verificar thirdFactorEnabled
+      console.log('🔍 DEBUG - thirdFactorEnabled VALUE:', data.thirdFactorEnabled);
+      console.log('🔍 DEBUG - thirdFactorEnabled TYPE:', typeof data.thirdFactorEnabled);
+      console.log('🔍 DEBUG - thirdFactorEnabled === true?:', data.thirdFactorEnabled === true);
+      console.log('🔍 DEBUG - Respuesta completa:', JSON.stringify(data, null, 2));
+
+      // Verificar si el usuario tiene activado el 3FA (SOLO si es explícitamente true)
+      const has3FA = data.thirdFactorEnabled === true;
+      console.log('✓ has3FA resultado:', has3FA);
+
+      if (has3FA) {
+        console.log('🔐 [3FA ACTIVADO] Redirigiendo a /validate-3fa');
         history.push("/validate-3fa", { 
           email: data.email || email, 
           role: data.role 
         });
         return;
       }
+      
+      console.log('✅ [3FA DESACTIVADO] Continuando con login normal');
 
       // Pequeño delay para asegurar que localStorage se sincroniza
       // antes de que ProtectedRoute intente validar el token

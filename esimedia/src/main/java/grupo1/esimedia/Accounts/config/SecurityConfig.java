@@ -3,7 +3,6 @@ package grupo1.esimedia.Accounts.config;
 import grupo1.esimedia.security.SessionTimeoutFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -61,10 +60,10 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 "/api/auth/2fa/setup",
                 "/api/auth/send-3fa-code",
                 "/api/auth/verify-3fa-code",
+                "/api/users",
                 "/api/auth/validate-token", // ✅ Añadir esto como público
                 "/api/auth/logout"          // ✅ Y esto también
             ).permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()  // ✅ Solo POST público
 
             .requestMatchers("/api/public/**", "/health", "/actuator/**").permitAll()
             
