@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * DTO para la creación de un nuevo usuario.
@@ -37,6 +38,8 @@ public class CreateUserRequestDTO {
     private boolean vip;
 
     private String picture;
+
+    private List<String> tags; // Preferencias del usuario (opcional)
 
     // Getters y Setters
 
@@ -102,5 +105,13 @@ public class CreateUserRequestDTO {
 
     public void setPicture(String picture) {
         this.picture = picture;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }

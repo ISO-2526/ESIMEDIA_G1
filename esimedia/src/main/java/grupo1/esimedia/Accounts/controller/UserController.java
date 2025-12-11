@@ -111,6 +111,7 @@ public class UserController {
         user.setDateOfBirth(dto.getDateOfBirth().toString());
         user.setVip(dto.isVip());
         user.setPicture(dto.getPicture());
+        user.setTags(dto.getTags()); // Preferencias del usuario (HDU 492)
 
         // Guardar el usuario en la base de datos
         User saved = userRepository.save(user);
@@ -312,6 +313,7 @@ public class UserController {
         user.setSurname(updatedUser.getSurname());
         user.setAlias(updatedUser.getAlias());
         user.setPicture(updatedUser.getPicture());
+        user.setTags(updatedUser.getTags()); // Actualizar preferencias (HDU 492)
 
         userRepository.save(user);
         return ResponseEntity.ok(toUserResponseDTO(user));
@@ -490,6 +492,7 @@ public class UserController {
         if (user.getDateOfBirth() != null) {
             dto.setDateOfBirth(LocalDate.parse(user.getDateOfBirth()));
         }
+        dto.setTags(user.getTags()); // Preferencias del usuario (HDU 492)
         return dto;
     }
 }
