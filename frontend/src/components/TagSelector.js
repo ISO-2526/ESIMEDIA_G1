@@ -1,9 +1,11 @@
 import React from 'react';
 import './TagSelector.css';
+import { TAGS } from '../creator/components/constants'; // Usar mismos tags que contenido
 
 /**
  * Componente TagSelector para HDU 492.
  * Permite seleccionar múltiples tags de preferencias del usuario.
+ * Usa los mismos tags que el contenido para asegurar matching correcto.
  * 
  * Props:
  * - selectedTags: Array de tags actualmente seleccionados
@@ -11,17 +13,8 @@ import './TagSelector.css';
  * - maxTags: Máximo de tags permitidos (default: 10)
  */
 
-// Tags disponibles en el sistema (pueden venir de un servicio en el futuro)
-const AVAILABLE_TAGS = [
-    // Música
-    'Rock', 'Pop', 'Jazz', 'Clásica', 'Electrónica', 'Hip-Hop', 'Reggaeton', 'Indie',
-    // Formatos
-    'Podcast', 'Audiolibro', 'Entrevistas', 'Documentales',
-    // Temáticas
-    'Comedia', 'Drama', 'Acción', 'Terror', 'Romance', 'Ciencia Ficción',
-    // Otros
-    'Deportes', 'Noticias', 'Educación', 'Gaming', 'Tecnología', 'Salud'
-];
+// Usar los mismos tags que el contenido para que coincidan las notificaciones
+const AVAILABLE_TAGS = TAGS;
 
 function TagSelector({ selectedTags = [], onChange, maxTags = 10 }) {
 
