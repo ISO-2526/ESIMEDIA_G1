@@ -1,6 +1,7 @@
 package grupo1.esimedia.Accounts.dto.response;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class UserResponseDTO {
     private String email;
@@ -10,7 +11,7 @@ public class UserResponseDTO {
     private String picture;
     private boolean vip;
     private LocalDate dateOfBirth;
-    // Omitimos password, tokens, etc.
+    private List<String> tags; // HDU 492 - Preferencias del usuario
 
     // Constructor vacío
     public UserResponseDTO() {}
@@ -30,4 +31,6 @@ public class UserResponseDTO {
     public void setVip(boolean vip) { this.vip = vip; }
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags = tags; }
 }
