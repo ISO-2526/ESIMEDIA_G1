@@ -7,7 +7,8 @@ import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutWithCookies } from '../../../auth/logout';
-import axios from '../../../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
+import axios from '../../../api/axiosConfig';
+import TagSelector from '../../../components/TagSelector'; // HDU 492
 
 const isActivationKey = (key) => key === 'Enter' || key === ' ' || key === 'Spacebar';
 
@@ -117,7 +118,7 @@ const parseActivationResponseMessage = async (response) => {
 };
 
 const activateOrDeactivate3FA = async ({ email, activate }) => {
-  return axios.post('/api/auth/activate-3fa', 
+  return axios.post('/api/auth/activate-3fa',
     { email, activate },
     { withCredentials: true }
   );
@@ -128,8 +129,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
-        <button 
-          onClick={() => window.location.href='/usuario'}
+        <button
+          onClick={() => window.location.href = '/usuario'}
           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           aria-label="Ir a inicio"
         >
@@ -143,8 +144,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
       </nav>
       <div className="header-right">
         <div className="user-menu-container">
-          <div 
-            className="user-avatar-profile" 
+          <div
+            className="user-avatar-profile"
             onClick={onToggleMenu}
             onKeyDown={(event) => handleKeyboardActivation(event, onToggleMenu)}
             role="button"
@@ -333,12 +334,12 @@ function UserProfilePage() {
   };
 
   const availableAvatars = [
-    '/pfp/avatar1.png','/pfp/avatar2.png','/pfp/avatar3.png','/pfp/avatar4.png','/pfp/avatar5.png',
-    '/pfp/avatar6.png','/pfp/avatar7.png','/pfp/avatar8.png','/pfp/avatar9.png','/pfp/avatar10.png'
+    '/pfp/avatar1.png', '/pfp/avatar2.png', '/pfp/avatar3.png', '/pfp/avatar4.png', '/pfp/avatar5.png',
+    '/pfp/avatar6.png', '/pfp/avatar7.png', '/pfp/avatar8.png', '/pfp/avatar9.png', '/pfp/avatar10.png'
   ];
 
   const [profileData, setProfileData] = useState({
-    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: ''
+    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', tags: [] // HDU 492
   });
   const [tempData, setTempData] = useState({ ...profileData });
   const [previewImage, setPreviewImage] = useState(null);
@@ -356,9 +357,9 @@ function UserProfilePage() {
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({ 
+        setUserProfile({
           picture: getImageUrl(data.picture),
-          vip: data.vip || false 
+          vip: data.vip || false
         });
       }
     })();
@@ -387,20 +388,21 @@ function UserProfilePage() {
         surname: tempData.surname,
         alias: tempData.alias,
         dateOfBirth: tempData.dateOfBirth,
-        picture: tempData.picture
+        picture: tempData.picture,
+        tags: tempData.tags || [] // HDU 492 - Guardar preferencias
       }, {
         withCredentials: true
       });
-      
+
       // Actualizar los datos del perfil
       setProfileData(response.data);
-      
+
       // Actualizar el userProfile para que se refleje en MobileHeader
-      setUserProfile({ 
+      setUserProfile({
         picture: getImageUrl(response.data.picture),
         vip: response.data.vip || false
       });
-      
+
       setIsEditing(false);
       setPreviewImage(null);
       showSuccess('Perfil actualizado correctamente');
@@ -455,7 +457,7 @@ function UserProfilePage() {
 
       if (!response.ok) {
         let errText = '';
-        try { errText = await response.text(); } catch {}
+        try { errText = await response.text(); } catch { }
         showError(errText || 'No se pudo cambiar el estado del 3FA');
         setStatusMessage(errText || 'No se pudo cambiar el estado del 3FA');
         return;
@@ -503,16 +505,16 @@ function UserProfilePage() {
         <div className="profile-box">
           <h1>Mi Perfil</h1>
 
-            <ProfilePhotoSection
-              isEditing={isEditing}
-              previewImage={previewImage}
-              profilePicture={profileData.picture}
-              showAvatarSelector={showAvatarSelector}
-              onToggleSelector={() => setShowAvatarSelector(s => !s)}
-              availableAvatars={availableAvatars}
-              tempData={tempData}
-              handleAvatarSelect={handleAvatarSelect}
-            />
+          <ProfilePhotoSection
+            isEditing={isEditing}
+            previewImage={previewImage}
+            profilePicture={profileData.picture}
+            showAvatarSelector={showAvatarSelector}
+            onToggleSelector={() => setShowAvatarSelector(s => !s)}
+            availableAvatars={availableAvatars}
+            tempData={tempData}
+            handleAvatarSelect={handleAvatarSelect}
+          />
 
           <div className="profile-form">
             {renderFormField('Nombre *', 'name', profileData.name, isEditing, tempData.name, handleInputChange)}
@@ -527,6 +529,30 @@ function UserProfilePage() {
               statusMessage={statusMessage}
               handleToggle3FA={handleToggle3FA}
             />
+
+            {/* HDU 492 - Sección Mis Gustos */}
+            <div className="form-row tags-section">
+              <label>Mis Gustos</label>
+              {isEditing ? (
+                <TagSelector
+                  selectedTags={tempData.tags || []}
+                  onChange={(newTags) => setTempData(prev => ({ ...prev, tags: newTags }))}
+                  maxTags={10}
+                />
+              ) : (
+                <div className="field-value tags-display">
+                  {(profileData.tags && profileData.tags.length > 0) ? (
+                    <div className="tags-list">
+                      {profileData.tags.map(tag => (
+                        <span key={tag} className="tag-badge">{tag}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="no-tags">Sin preferencias definidas</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <ProfileActions
