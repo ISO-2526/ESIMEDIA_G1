@@ -179,7 +179,7 @@ const MobileHeader = ({
                 setIsNotificationsOpen(false);
               }}
             >
-              <div className="mobile-avatar">
+              <div className="mobile-avatar" style={{ position: 'relative' }}>
                 {userProfile?.picture && !imageError ? (
                   <img 
                     src={userProfile.picture} 
@@ -189,6 +189,25 @@ const MobileHeader = ({
                 ) : (
                   <div className="avatar-placeholder">
                     <IonIcon icon={person} />
+                  </div>
+                )}
+                {userProfile?.vip && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(255, 193, 7, 0.6)',
+                    border: '2px solid #1a1a2e',
+                    zIndex: 9999
+                  }}>
+                    <i className="fas fa-crown" style={{ color: '#1a1a2e', fontSize: '10px' }}></i>
                   </div>
                 )}
               </div>
