@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { IonIcon } from '@ionic/react';
@@ -142,8 +142,11 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
 
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Refs para botones
+  const notificationsButtonRef = useRef(null);
+
   // Hook para cerrar el desplegable al hacer clic fuera (solo en web)
-  const notificationsRef = useClickOutside(() => setShowNotifications(false), showNotifications);
+  const notificationsRef = useClickOutside(() => setShowNotifications(false), showNotifications, [notificationsButtonRef]);
 
   return (
     <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
@@ -165,7 +168,11 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
       <div className="header-right">
         {/* Botón de notificaciones */}
         <button
-          onClick={() => setShowNotifications(!showNotifications)}
+          ref={notificationsButtonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowNotifications(prev => !prev);
+          }}
           style={{
             background: 'none',
             border: 'none',
@@ -261,7 +268,8 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
         {showNotifications && (
           <div 
             ref={notificationsRef}
-            className="notifications-dropdown" 
+            className="notifications-dropdown"
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: 'absolute',
               top: '60px',

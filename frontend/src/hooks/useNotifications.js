@@ -56,21 +56,23 @@ export const useNotifications = () => {
     // Marcar como leída
     markAsRead(notification.id);
 
-    // Si tiene contenido, navegar a él
-    if (notification.contentId) {
-      const routes = {
-        video: `/usuario`,
-        audio: `/usuario`,
-        playlist: `/playlists/${notification.contentId}`
-      };
-
-      const route = routes[notification.contentType] || '/usuario';
+    // Si tiene contenido, disparar evento personalizado para reproducirlo
+    if (notification.contentId && notification.contentType) {
+      console.log(`🎯 Notificación clickeada - ${notification.contentType} ID: ${notification.contentId}`);
       
-      // Para contenido individual, navegar al dashboard con el ID del contenido
-      if (notification.contentType === 'video' || notification.contentType === 'audio') {
-        history.push(route, { playContentId: notification.contentId });
-      } else {
-        history.push(route);
+      // Disparar evento personalizado que el dashboard escuchará
+      const event = new CustomEvent('playContentFromNotification', {
+        detail: {
+          contentId: notification.contentId,
+          contentType: notification.contentType
+        }
+      });
+      window.dispatchEvent(event);
+      
+      // Si no estamos en /usuario, navegar allí
+      if (!window.location.hash.includes('/usuario')) {
+        console.log('📍 Navegando a /usuario');
+        history.push('/usuario');
       }
     }
   }, [markAsRead, history]);

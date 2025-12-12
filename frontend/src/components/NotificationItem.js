@@ -11,7 +11,19 @@ import {
 
 const NotificationItem = ({ notification, onClick, onMarkAsRead, onRemove }) => {
   // Iconos según el tipo de notificación
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type, contentType) => {
+    // Si es una notificación de contenido, usar el contentType específico
+    if (contentType === 'audio') {
+      return musicalNotesOutline;
+    }
+    if (contentType === 'video') {
+      return videocamOutline;
+    }
+    if (contentType === 'playlist') {
+      return listOutline;
+    }
+    
+    // Iconos por tipo de notificación
     const icons = {
       content: videocamOutline,
       audio: musicalNotesOutline,
@@ -69,7 +81,7 @@ const NotificationItem = ({ notification, onClick, onMarkAsRead, onRemove }) => 
         }}
       >
         <IonIcon
-          icon={getNotificationIcon(notification.type)}
+          icon={getNotificationIcon(notification.type, notification.contentType)}
           style={{ color: getNotificationColor(notification.type) }}
         />
       </div>

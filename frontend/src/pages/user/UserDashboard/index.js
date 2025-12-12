@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -66,15 +66,33 @@ function DashboardHeader({
   // Estado local para el desplegable de notificaciones
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Refs para botones y dropdowns
+  const notificationsButtonRef = useRef(null);
+  const userMenuButtonRef = useRef(null);
+
   // Hook para cerrar el desplegable al hacer clic fuera (solo en web)
-  const notificationsRef = useClickOutside(() => setShowNotifications(false), showNotifications);
-  const userMenuRef = useClickOutside(() => setShowUserMenu(false), showUserMenu);
+  const notificationsRef = useClickOutside(() => setShowNotifications(false), showNotifications, [notificationsButtonRef]);
+  const userMenuRef = useClickOutside(() => setShowUserMenu(false), showUserMenu, [userMenuButtonRef]);
 
   // Cerrar todos los menús al cambiar de página
   useEffect(() => {
     setShowUserMenu(false);
     setShowNotifications(false);
   }, [location.pathname, setShowUserMenu]);
+
+  // Listener global para cerrar menús al hacer clic en el documento
+  useEffect(() => {
+    const handleDocumentClick = (e) => {
+      // Si hay algún menú abierto y el clic es fuera de los refs
+      if (showUserMenu || showNotifications) {
+        // Los refs ya manejan el cierre automático
+        // Este efecto es un respaldo adicional
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, [showUserMenu, showNotifications]);
 
   // Prevenir scroll cuando se abren los menus
   useEffect(() => {
@@ -164,9 +182,11 @@ function DashboardHeader({
 
           {/* Botón de notificaciones */}
           <button
+            ref={notificationsButtonRef}
             className="notifications-btn"
-            onClick={() => {
-              setShowNotifications(!showNotifications);
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowNotifications(prev => !prev);
               setShowUserMenu(false); // Cerrar menú de usuario si está abierto
             }}
             style={{
@@ -206,9 +226,11 @@ function DashboardHeader({
 
           <div className="user-menu-container">
             <div
+              ref={userMenuButtonRef}
               className="user-avatar-dashboard"
-              onClick={() => {
-                setShowUserMenu(s => !s);
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowUserMenu(prev => !prev);
                 setShowNotifications(false); // Cerrar notificaciones si están abiertas
               }}
               role="button"
@@ -216,7 +238,7 @@ function DashboardHeader({
               onKeyDown={(e) => { 
                 if (e.key === 'Enter' || e.key === ' ') { 
                   e.preventDefault(); 
-                  setShowUserMenu(s => !s);
+                  setShowUserMenu(prev => !prev);
                   setShowNotifications(false);
                 } 
               }}
@@ -244,6 +266,7 @@ function DashboardHeader({
               <div 
                 ref={userMenuRef}
                 className="user-dropdown-dashboard"
+                onClick={(e) => e.stopPropagation()}
               >
                 <Link to="/perfil" className="dropdown-item"><i className="fas fa-user-circle"></i> Mi Perfil</Link>
                 <Link to="/playlists" className="dropdown-item"><i className="fas fa-list"></i> Mis Listas</Link>
@@ -260,7 +283,8 @@ function DashboardHeader({
           {showNotifications && (
             <div 
               ref={notificationsRef}
-              className="notifications-dropdown" 
+              className="notifications-dropdown"
+              onClick={(e) => e.stopPropagation()}
               style={{
                 position: 'absolute',
                 top: '60px',
@@ -443,7 +467,7 @@ function UserDashboard() {
   const [contents, setContents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroTransition, setHeroTransition] = useState(false);
-  const [playingVideo, setPlayingVideo] = useState(null);
+  const [playingContent, setPlayingContent] = useState(null);
   const [filters, setFilters] = useState({
     yearRange: { min: 2000, max: new Date().getFullYear() },
     categories: [],
@@ -457,7 +481,7 @@ function UserDashboard() {
   const [selectedVipContent, setSelectedVipContent] = useState(null);
 
   useActiveTabObserver(setActiveTab);
-  useAutoHeroRotation(contents, heroContent, playingVideo, setHeroTransition, setCurrentHeroIndex);
+  useAutoHeroRotation(contents, heroContent, playingContent, setHeroTransition, setCurrentHeroIndex);
 
   const showNotification = useCallback((message, type = 'success') => {
     setNotification({ message, type });
@@ -518,6 +542,38 @@ function UserDashboard() {
       showNotification('Error de conexión al cargar contenidos', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para obtener y reproducir un contenido específico desde notificación
+  const fetchAndPlayContent = async (contentId, contentType) => {
+    try {
+      console.log(`📥 Obteniendo contenido ${contentId} del backend...`);
+      const response = await axios.get(`/api/public/contents/${contentId}`);
+      const contentData = response.data;
+      
+      if (contentData) {
+        const transformedContent = transformContent(contentData);
+        console.log(`✅ Contenido obtenido: ${transformedContent.titulo}`);
+        
+        // Verificar que el tipo coincida
+        if (contentType && transformedContent.type.toLowerCase() !== contentType.toLowerCase()) {
+          console.warn(`⚠️ El tipo de contenido no coincide: esperado ${contentType}, recibido ${transformedContent.type}`);
+        }
+        
+        playContent(transformedContent);
+      } else {
+        showNotification('Contenido no encontrado', 'warning');
+      }
+    } catch (error) {
+      console.error('Error al obtener contenido desde notificación:', error);
+      if (error.response?.status === 404) {
+        showNotification('El contenido ya no está disponible', 'warning');
+      } else if (error.response?.status === 403) {
+        showNotification('No tienes permisos para ver este contenido', 'warning');
+      } else {
+        showNotification('Error al cargar el contenido', 'error');
+      }
     }
   };
 
@@ -600,17 +656,80 @@ function UserDashboard() {
     }
     const mediaError = missingMediaMessage(content);
     if (mediaError) { showNotification(mediaError, 'warning'); return; }
-    setPlayingVideo(content);
+    setPlayingContent(content);
   }, [userProfile.vip, showNotification]);
 
-  // Efecto para reproducir contenido desde notificaciones
+  // Efecto para reproducir contenido desde notificaciones usando eventos personalizados
+  useEffect(() => {
+    const handlePlayFromNotification = (event) => {
+      const { contentId, contentType } = event.detail;
+      
+      console.log(`📬 Evento de notificación recibido - ID: ${contentId}, Tipo: ${contentType}`);
+      
+      // Esperar a que haya contenidos cargados
+      if (contents.length === 0) {
+        console.log('⏳ Esperando a que se carguen los contenidos...');
+        // Reintentar después de un breve delay
+        setTimeout(() => {
+          const contentToPlay = contents.find(content => content.id === contentId);
+          if (contentToPlay) {
+            playContent(contentToPlay);
+          } else {
+            fetchAndPlayContent(contentId, contentType);
+          }
+        }, 500);
+        return;
+      }
+      
+      // Buscar el contenido en la lista local
+      const contentToPlay = contents.find(content => content.id === contentId);
+      
+      if (contentToPlay) {
+        console.log(`🎵 Reproduciendo contenido: ${contentToPlay.titulo} (${contentToPlay.type})`);
+        playContent(contentToPlay);
+      } else {
+        // Si no está en la lista local, intentar obtenerlo del backend
+        console.log(`🔍 Contenido ${contentId} no encontrado localmente, obteniendo del backend...`);
+        fetchAndPlayContent(contentId, contentType);
+      }
+    };
+
+    // Escuchar evento personalizado
+    window.addEventListener('playContentFromNotification', handlePlayFromNotification);
+
+    return () => {
+      window.removeEventListener('playContentFromNotification', handlePlayFromNotification);
+    };
+  }, [contents, playContent, fetchAndPlayContent]);
+
+  // Efecto adicional para manejar state de react-router (compatibilidad)
   useEffect(() => {
     const locationState = history.location.state;
-    if (locationState && locationState.playContentId && contents.length > 0) {
-      const contentToPlay = contents.find(content => content.id === locationState.playContentId);
+    if (locationState && locationState.playContentId) {
+      const contentId = locationState.playContentId;
+      const contentType = locationState.contentType;
+      
+      console.log(`📬 Notificación detectada via state - ID: ${contentId}, Tipo: ${contentType}`);
+      
+      // Esperar a que haya contenidos cargados
+      if (contents.length === 0) {
+        console.log('⏳ Esperando a que se carguen los contenidos...');
+        return;
+      }
+      
+      // Buscar el contenido en la lista local
+      const contentToPlay = contents.find(content => content.id === contentId);
+      
       if (contentToPlay) {
+        console.log(`🎵 Reproduciendo contenido desde notificación: ${contentToPlay.titulo} (${contentToPlay.type})`);
         playContent(contentToPlay);
         // Limpiar el estado para evitar reproducciones repetidas
+        history.replace({ ...history.location, state: {} });
+      } else {
+        // Si no está en la lista local, intentar obtenerlo del backend
+        console.log(`🔍 Contenido ${contentId} no encontrado localmente, obteniendo del backend...`);
+        fetchAndPlayContent(contentId, contentType);
+        // Limpiar el estado
         history.replace({ ...history.location, state: {} });
       }
     }
@@ -633,8 +752,8 @@ function UserDashboard() {
   };
 
   const handleCloseVideo = useCallback(() => {
-    console.log('Cerrando video player');
-    setPlayingVideo(null);
+    console.log('Cerrando media player');
+    setPlayingContent(null);
   }, []);
 
   const handlePlayHero = () => playContent(currentHero);
@@ -781,21 +900,21 @@ function UserDashboard() {
       )}
 
       {/* Video/Audio Player */}
-      {playingVideo && playingVideo.type === 'VIDEO' && (
+      {playingContent && playingContent.type === 'VIDEO' && (
         <VideoPlayer
-          videoUrl={playingVideo.videoUrl}
-          title={playingVideo.titulo}
-          contentId={playingVideo.id}
+          videoUrl={playingContent.videoUrl}
+          title={playingContent.titulo}
+          contentId={playingContent.id}
           onClose={handleCloseVideo}
           onAddToPlaylist={handleAddToPlaylist}
         />
       )}
 
-      {playingVideo && playingVideo.type === 'AUDIO' && (
+      {playingContent && playingContent.type === 'AUDIO' && (
         <AudioPlayer
-          audioFileName={playingVideo.audioFileName}
-          title={playingVideo.titulo}
-          contentId={playingVideo.id}
+          audioFileName={playingContent.audioFileName}
+          title={playingContent.titulo}
+          contentId={playingContent.id}
           onClose={handleCloseVideo}
           onAddToPlaylist={handleAddToPlaylist}
         />
