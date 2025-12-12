@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public/contents")
-@PreAuthorize("permitAll()") 
+@PreAuthorize("hasRole('USER')")
 public class PublicContentViewController {
 
     private final CreatorContentRepository contentRepository;

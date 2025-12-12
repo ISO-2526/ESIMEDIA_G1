@@ -59,11 +59,11 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 "/api/auth/send-3fa-code",
                 "/api/auth/verify-3fa-code",
                 "/api/users",
-                "/api/auth/validate-token", // ✅ Añadir esto como público
-                "/api/auth/logout"          // ✅ Y esto también
+                "/api/auth/validate-token", 
+                "/api/auth/logout"         
             ).permitAll()
             
-            .requestMatchers("/api/public/**", "/health", "/actuator/**").permitAll()
+            .requestMatchers("/health", "/actuator/**").permitAll()
             
             // Todos los demás endpoints requieren autenticación
             .anyRequest().authenticated()
