@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { IonIcon } from '@ionic/react';
+import { notificationsOutline } from 'ionicons/icons';
 import MobileHeader from '../../../components/mobile/MobileHeader';
+import NotificationItem from '../../../components/NotificationItem';
+import { useNotifications } from '../../../hooks/useNotifications';
+import { useClickOutside } from '../../../hooks/useClickOutside';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -125,8 +130,23 @@ const activateOrDeactivate3FA = async ({ email, activate }) => {
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
-const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout }) => (
-  <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
+const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout }) => {
+  // Usar el hook de notificaciones centralizado
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    handleNotificationClick 
+  } = useNotifications();
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Hook para cerrar el desplegable al hacer clic fuera (solo en web)
+  const notificationsRef = useClickOutside(() => setShowNotifications(false), showNotifications);
+
+  return (
+    <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
         <button
@@ -143,6 +163,45 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
         <Link to="/suscripcion">Suscripción</Link>
       </nav>
       <div className="header-right">
+        {/* Botón de notificaciones */}
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px',
+            borderRadius: '50%',
+            marginRight: '10px',
+            position: 'relative'
+          }}
+          aria-label="Notificaciones"
+        >
+          <IonIcon icon={notificationsOutline} style={{ fontSize: '24px', color: '#666' }} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-2px',
+              background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+              color: 'white',
+              borderRadius: '50%',
+              width: '18px',
+              height: '18px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid rgba(18, 18, 18, 0.9)',
+              boxShadow: '0 2px 8px rgba(255, 107, 107, 0.4)',
+              zIndex: 1
+            }}>
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
         <div className="user-menu-container">
           <div
             className="user-avatar-profile"
@@ -197,10 +256,83 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
             </div>
           )}
         </div>
+
+        {/* Dropdown de notificaciones */}
+        {showNotifications && (
+          <div 
+            ref={notificationsRef}
+            className="notifications-dropdown" 
+            style={{
+              position: 'absolute',
+              top: '60px',
+              right: '10px',
+              background: 'rgba(18, 18, 18, 0.95)',
+            backdropFilter: 'blur(30px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+            borderRadius: '20px',
+            boxShadow: '0 4px 15px rgba(79, 86, 186, 0.3)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            width: '300px',
+            maxHeight: '400px',
+            zIndex: 1000,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '16px',
+              borderBottom: '1px solid rgba(79, 86, 186, 0.2)',
+              fontWeight: 'bold',
+              color: '#F5F6F3',
+              background: 'rgba(79, 86, 186, 0.1)',
+              borderRadius: '20px 20px 0 0'
+            }}>
+              Notificaciones
+            </div>
+            <div style={{
+              maxHeight: '320px',
+              overflowY: 'auto',
+              padding: '8px'
+            }}>
+              {loading ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px 20px',
+                  color: 'rgba(245, 246, 243, 0.7)',
+                  fontSize: '14px'
+                }}>
+                  Cargando notificaciones...
+                </div>
+              ) : notifications.length > 0 ? (
+                notifications.map(notification => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                    onClick={() => {
+                      handleNotificationClick(notification);
+                      setShowNotifications(false);
+                    }}
+                    onMarkAsRead={markAsRead}
+                  />
+                ))
+              ) : (
+                <div style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  color: 'rgba(245, 246, 243, 0.6)'
+                }}>
+                  <IonIcon icon={notificationsOutline} style={{ fontSize: '48px', marginBottom: '8px', opacity: 0.5 }} />
+                  <p>No tienes notificaciones nuevas</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   </header>
-);
+  );
+};
 
 const ProfilePhotoSection = ({
   isEditing,

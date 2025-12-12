@@ -16,6 +16,8 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import MobileFilterModal from './MobileFilterModal';
+import NotificationItem from '../NotificationItem';
+import { useNotifications } from '../../hooks/useNotifications';
 import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
 
@@ -38,6 +40,15 @@ const MobileHeader = ({
   const [scrollPosition, setScrollPosition] = useState(0);
   const history = useHistory();
   const location = useLocation();
+
+  // Usar el hook de notificaciones centralizado
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    handleNotificationClick 
+  } = useNotifications();
 
   // Resetear el error de imagen cuando cambia el userProfile
   useEffect(() => {
@@ -155,7 +166,7 @@ const MobileHeader = ({
           {showNotificationsProp && !showSearch && (
             <button 
               id="notifications-menu-trigger"
-              className="mobile-icon-btn"
+              className="mobile-icon-btn notification-btn"
               onClick={(e) => {
                 e.preventDefault();
                 setIsNotificationsOpen(!isNotificationsOpen);
@@ -164,6 +175,9 @@ const MobileHeader = ({
               }}
             >
               <IonIcon icon={notificationsOutline} />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
             </button>
           )}
 
@@ -314,12 +328,28 @@ const MobileHeader = ({
             <h3>Notificaciones</h3>
           </div>
           <div className="notifications-list">
-            {/* Mensaje cuando no hay notificaciones */}
-            <div className="no-notifications">
-              <IonIcon icon={notificationsOutline} />
-              <p>No tienes notificaciones nuevas</p>
-            </div>
-            {/* Aquí se cargarán las notificaciones dinámicamente */}
+            {loading ? (
+              <div className="notifications-loading">
+                <p>Cargando notificaciones...</p>
+              </div>
+            ) : notifications.length > 0 ? (
+              notifications.map(notification => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onClick={() => {
+                    handleNotificationClick(notification);
+                    setIsNotificationsOpen(false);
+                  }}
+                  onMarkAsRead={markAsRead}
+                />
+              ))
+            ) : (
+              <div className="no-notifications">
+                <IonIcon icon={notificationsOutline} />
+                <p>No tienes notificaciones nuevas</p>
+              </div>
+            )}
           </div>
         </div>
       </IonPopover>
