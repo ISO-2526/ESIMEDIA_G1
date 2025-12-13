@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import grupo1.esimedia.Accounts.model.User;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,25 +41,59 @@ public class PublicContentViewController {
     /**
      * Verifica si el contenido es accesible por el usuario autenticado.
      */
-    private boolean isContentAccessible(Content content) {
+private boolean isContentAccessible(Content content) {
         // 1. Debe ser PUBLICO
         if (content.getState() != ContentState.PUBLICO) {
             return false;
         }
 
-        // 2. Si no es VIP_ONLY, es accesible.
-        if (!content.isVipOnly()) {
-            return true;
-        }
-
-        // 3. Si es VIP_ONLY, verificar el usuario autenticado.
+        // Obtener el objeto User para la validación de Edad y VIP
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName(); // El email del usuario autenticado (el principal)
+        String userEmail = auth.getName(); 
 
         Optional<User> userOpt = userRepository.findById(userEmail);
         
-        // Si el usuario existe Y es VIP, permitir acceso.
-        return userOpt.isPresent() && userOpt.get().isVip();
+        if (userOpt.isEmpty()) {
+             // El usuario autenticado (ROLE_USER) no existe en la base de datos
+             return false;
+        }
+
+        User user = userOpt.get();
+        
+        // 2. VALIDACIÓN DE EDAD: El usuario debe ser mayor o igual a la edad mínima
+        if (content.getEdadMinima() > 0) {
+            String dobString = user.getDateOfBirth(); 
+            
+            if (dobString == null || dobString.isBlank()) {
+                return false; // Denegar si no hay fecha de nacimiento para contenido restringido
+            }
+
+            try {
+                LocalDate dateOfBirth = LocalDate.parse(dobString); 
+                
+                // Calcular edad
+                LocalDate now = LocalDate.now();
+                int age = Period.between(dateOfBirth, now).getYears();
+                
+                if (age < content.getEdadMinima()) {
+                    return false; // Bloquear si el usuario es menor
+                }
+            } catch (DateTimeParseException e) {
+                // Si el formato del String es incorrecto, lo tratamos como denegado por seguridad
+                return false; 
+            }
+        }
+
+
+        // 3. VALIDACIÓN VIP (Si el contenido es VIP, el usuario debe ser VIP)
+        if (content.isVipOnly()) {
+            if (!user.isVip()) {
+                return false; // Bloquear si es VIP_ONLY y el usuario no es VIP
+            }
+        }
+
+        // Si pasó todos los filtros (Público, Rol, Edad, VIP), es accesible.
+        return true;
     }
 
     // Get all public (PUBLICO) contents with their average rating calculated from ratings table
