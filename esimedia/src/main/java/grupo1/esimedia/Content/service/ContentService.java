@@ -101,7 +101,7 @@ public class ContentService {
         // HDU 492 - Trigger: Notificar a usuarios con tags coincidentes
         // Solo notifica si el contenido tiene tags (las notificaciones se envían incluso en estado PRIVADO
         // para que cuando se publique los usuarios ya tengan la notificación pendiente)
-        if (saved.getTags() != null && !saved.getTags().isEmpty()) {
+        if (saved.getTags() != null && !saved.getTags().isEmpty() && saved.getState() == ContentState.PUBLICO) {
             notificationService.notifyUsersWithMatchingTags(saved);
         }
         
