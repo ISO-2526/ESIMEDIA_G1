@@ -93,7 +93,7 @@ class ContentServiceTests {
         assertEquals("https://cdn.example/video.mp4", saved.getUrl());
         assertEquals(null, saved.getAvailableUntil());
 
-        verify(notificationService).notifyUsersInterestedIn(saved);
+        verify(notificationService).notifyUsersWithMatchingTags(saved);
     }
 
     @Test

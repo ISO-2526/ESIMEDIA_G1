@@ -36,7 +36,7 @@ class NotificationServiceTests {
     private NotificationService notificationService;
 
     @Test
-    void notifyUsersInterestedIn_ShouldNotifyMatchingUser() {
+    void notifyUsersWithMatchingTags_ShouldNotifyMatchingUser() {
         // Arrange
         Content content = new Content();
         content.setId("c1");
@@ -47,78 +47,78 @@ class NotificationServiceTests {
 
         User user = new User();
         user.setEmail("user@test.com");
-        user.setPreferences(List.of("ACTION", "COMEDY"));
+        user.setTags(List.of("ACTION", "COMEDY"));
 
         when(userRepository.findAll()).thenReturn(List.of(user));
 
         // Act
-        notificationService.notifyUsersInterestedIn(content);
+        notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
         verify(notificationRepository, times(1)).save(any(Notification.class));
     }
 
     @Test
-    void notifyUsersInterestedIn_ShouldNotNotifyNonMatchingUser() {
+    void notifyUsersWithMatchingTags_ShouldNotNotifyNonMatchingUser() {
         // Arrange
         Content content = new Content();
         content.setTags(List.of("HORROR"));
 
         User user = new User();
-        user.setPreferences(List.of("COMEDY"));
+        user.setTags(List.of("COMEDY"));
 
         when(userRepository.findAll()).thenReturn(List.of(user));
 
         // Act
-        notificationService.notifyUsersInterestedIn(content);
+        notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
         verify(notificationRepository, never()).save(any(Notification.class));
     }
 
     @Test
-    void notifyUsersInterestedIn_ShouldFilterByAge() {
+    void notifyUsersWithMatchingTags_ShouldFilterByAge() {
         // Arrange
         Content content = new Content();
         content.setTags(List.of("ACTION"));
         content.setEdadMinima(18);
 
         User kid = new User();
-        kid.setPreferences(List.of("ACTION"));
+        kid.setTags(List.of("ACTION"));
         // 10 years old
         kid.setDateOfBirth(LocalDate.now().minusYears(10).toString());
 
         when(userRepository.findAll()).thenReturn(List.of(kid));
 
         // Act
-        notificationService.notifyUsersInterestedIn(content);
+        notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
         verify(notificationRepository, never()).save(any(Notification.class));
     }
 
     @Test
-    void notifyUsersInterestedIn_ShouldFilterByVip() {
+    void notifyUsersWithMatchingTags_ShouldFilterByVip() {
         // Arrange
         Content content = new Content();
         content.setTags(List.of("ACTION"));
         content.setVipOnly(true);
 
         User regularUser = new User();
-        regularUser.setPreferences(List.of("ACTION"));
+        regularUser.setTags(List.of("ACTION"));
         regularUser.setVip(false);
 
         when(userRepository.findAll()).thenReturn(List.of(regularUser));
 
         // Act
-        notificationService.notifyUsersInterestedIn(content);
+        notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
         verify(notificationRepository, never()).save(any(Notification.class));
     }
 
     @Test
-    void notifyUsersInterestedIn_ShouldNotifyVipUserForVipContent() {
+    void notifyUsersWithMatchingTags_ShouldNotifyVipUserForVipContent() {
         // Arrange
         Content content = new Content();
         content.setId("c2");
@@ -128,13 +128,13 @@ class NotificationServiceTests {
 
         User vipUser = new User();
         vipUser.setEmail("vip@test.com");
-        vipUser.setPreferences(List.of("ACTION"));
+        vipUser.setTags(List.of("ACTION"));
         vipUser.setVip(true);
 
         when(userRepository.findAll()).thenReturn(List.of(vipUser));
 
         // Act
-        notificationService.notifyUsersInterestedIn(content);
+        notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
         verify(notificationRepository, times(1)).save(any(Notification.class));

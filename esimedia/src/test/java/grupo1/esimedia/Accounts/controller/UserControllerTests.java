@@ -122,7 +122,7 @@ class UserControllerTests {
 
         User saved = userRepository.findById("new@test.com").orElse(null);
         assertNotEquals("Clave#13579", saved.getPassword());
-        assertEquals(List.of("ACCION", "COMEDIA"), saved.getPreferences());
+        assertEquals(List.of("ACCION", "COMEDIA"), saved.getTags());
     }
 
     @Test
@@ -165,7 +165,7 @@ class UserControllerTests {
                 "alias", "NewAlias",
                 "picture", "pic.png",
                 "active", true,
-                "preferences", List.of("DRAMA"));
+                "tags", List.of("DRAMA"));
 
         mockMvc.perform(put("/api/users/update@test.com")
                 .cookie(adminCookie("admin@test.com"))
@@ -179,7 +179,7 @@ class UserControllerTests {
         assertEquals("Surname", updated.getSurname());
         assertEquals("NewAlias", updated.getAlias());
         assertEquals("pic.png", updated.getPicture());
-        assertEquals(List.of("DRAMA"), updated.getPreferences());
+        assertEquals(List.of("DRAMA"), updated.getTags());
     }
 
     @Test
@@ -305,7 +305,7 @@ class UserControllerTests {
         payload.setSurname("User");
         payload.setAlias("Alias");
         payload.setPicture("pic.png");
-        payload.setPreferences(List.of("TERROR", "CIENCIA_FICCION"));
+        payload.setTags(List.of("TERROR", "CIENCIA_FICCION"));
 
         mockMvc.perform(put("/api/users/editUser")
                 .cookie(userCookie("edit@test.com"))
@@ -319,7 +319,7 @@ class UserControllerTests {
         assertEquals("User", edited.getSurname());
         assertEquals("Alias", edited.getAlias());
         assertEquals("pic.png", edited.getPicture());
-        assertEquals(List.of("TERROR", "CIENCIA_FICCION"), edited.getPreferences());
+        assertEquals(List.of("TERROR", "CIENCIA_FICCION"), edited.getTags());
     }
 
     @Test
@@ -411,7 +411,7 @@ class UserControllerTests {
                 "name", "Test",
                 "surname", "User",
                 "alias", "Tester",
-                "preferences", List.of("ACCION", "COMEDIA"));
+                "tags", List.of("ACCION", "COMEDIA"));
     }
 
     private User buildUser(String email) {
