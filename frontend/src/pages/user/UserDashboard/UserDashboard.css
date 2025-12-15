@@ -55,14 +55,14 @@
 /* Header */
 .dashboard-header {
   position: fixed;
-  top: 15px;
+  top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* 📱 Respetar notch/safe area */
   left: 50%;
   transform: translateX(-50%);
   max-width: 1800px;
   width: 98%;
   background: rgba(18, 18, 18, 0.75);
   padding: 14px 40px;
-  z-index: 999;
+  z-index: 10000; /* 🛡️ Máxima prioridad visual */
   transition: var(--transition);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -96,6 +96,7 @@
 .logo-dashboard {
   width: 140px;
   height: auto;
+  flex-shrink: 0; /* 🚫 Evitar que se encoja en móvil */
   filter: drop-shadow(0 4px 12px rgba(79, 86, 186, 0.4));
   transition: var(--transition);
   cursor: pointer;
@@ -305,6 +306,7 @@
   height: 42px;
   border-radius: 50%;
   cursor: pointer;
+  flex-shrink: 0 !important; /* 🚫 Obligatorio para que no se aplaste */
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
   display: flex;
   align-items: center;
@@ -839,10 +841,111 @@
   }
 }
 
-/* Responsive Design */
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 1400px) {
+  /* Slider Netflix */
+  .netflix-playlist-item {
+    width: 260px;
+  }
+  
+  /* Header navegación */
+  .nav-link-btn {
+    font-size: 13px;
+    padding: 9px 14px;
+    gap: 6px;
+  }
+  
+  .nav-link-btn i {
+    font-size: 13px;
+  }
+  
+  .nav-links-secondary {
+    gap: 15px;
+  }
+}
+
 @media (max-width: 1200px) {
+  /* Hero */
   .hero-title-dashboard {
     font-size: 3.5rem;
+  }
+  
+  /* Slider Netflix */
+  .creator-playlists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  
+  .netflix-playlist-item {
+    width: 240px;
+  }
+  
+  .netflix-slider-nav {
+    width: 50px;
+    height: 50px;
+    font-size: 1.4rem;
+  }
+  
+  .netflix-slider-prev {
+    left: 15px;
+  }
+  
+  .netflix-slider-next {
+    right: 15px;
+  }
+  
+  .creator-playlists-section .section-title-dashboard {
+    font-size: 1.3rem;
+  }
+  
+  /* Header */
+  .dashboard-header {
+    width: 98%;
+    padding: 12px 30px;
+  }
+  
+  .logo-dashboard {
+    width: 120px;
+    margin-right: 15px;
+  }
+  
+  .nav-links-dashboard {
+    gap: 6px;
+    margin-right: 15px;
+    padding-right: 15px;
+  }
+  
+  .nav-link-btn span {
+    display: none;
+  }
+  
+  .nav-link-btn {
+    padding: 10px 12px;
+    min-width: 40px;
+    justify-content: center;
+  }
+  
+  .nav-link-btn i {
+    font-size: 16px;
+  }
+  
+  .nav-links-secondary {
+    gap: 12px;
+    margin-right: 15px;
+    padding-right: 15px;
+  }
+  
+  .nav-links-secondary a {
+    font-size: 13px;
+  }
+  
+  .search-input-dashboard {
+    width: 180px;
+  }
+  
+  .search-input-dashboard:focus {
+    width: 220px;
   }
 }
 
@@ -877,44 +980,168 @@
 }
 
 @media (max-width: 768px) {
+  /* 📱 Padding superior para que el contenido empiece debajo del MobileHeader */
+  .user-dashboard {
+    padding-top: var(--mobile-content-padding-top);
+  }
+
   .dashboard-header {
     padding: 10px 15px;
     width: 95%;
-    top: 10px;
+    top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* Respetar notch */
     border-radius: 40px;
+    overflow: visible;
   }
   
-  .logo-dashboard {
-    width: 100px;
+  /* Asegurar que el contenedor del header no corte elementos */
+  .header-container {
+    overflow: visible;
+  }
+  
+  /* Asegurar que el contenedor derecho no corte el avatar */
+  .header-right {
+    overflow: visible;
+  }
+  
+  /* Asegurar que el contenedor del menú de usuario no se corte */
+  .user-menu-container {
+    overflow: visible;
+    position: relative;
   }
   
   .header-right {
     gap: 8px;
+    flex-wrap: nowrap;
   }
   
+  /* 🚫 Ocultar navegación secundaria en móvil */
+  .nav-links-dashboard,
+  .nav-links-secondary {
+    display: none !important;
+  }
+  
+  /* 🏛️ Reducir logo para dar espacio */
+  .logo-dashboard {
+    width: 100px !important;
+    margin-right: auto;
+  }
+  
+  /* 🚫 Ocultar texto "Filtros" en móvil */
+  .filter-text {
+    display: none !important;
+  }
+  
+  /* Header right - alineación vertical */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Botón de filtros - solo icono circular */
+  .filter-button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+  }
+
+  .filter-button i {
+    font-size: 18px !important;
+    margin: 0 !important;
+  }
+  
+  /* --- FIX CRÍTICO BUSCADOR MÓVIL/TABLET --- */
+  
+  /* 1. Contenedor Relativo: Ancla para los elementos absolutos */
   .search-container-dashboard {
     position: relative;
-  }
-  
-  .search-input-dashboard {
-    width: 140px;
-    padding: 8px 35px 8px 12px;
-    font-size: 13px;
-    border-radius: 20px;
-  }
-  
-  .search-input-dashboard:focus {
-    width: 160px;
-  }
-  
-  .search-icon-dashboard {
-    right: 12px;
-    font-size: 14px;
-  }
-  
-  .user-avatar-dashboard {
     width: 36px;
     height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 2. El Input "Fantasma" en Reposo */
+  .search-input-dashboard {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important; /* Fondo transparente */
+    color: transparent !important;      /* Texto invisible */
+    font-size: 0 !important;            /* Colapsar completamente el texto */
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10; /* Por encima del icono */
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    text-indent: -9999px !important;    /* Mover texto fuera de vista */
+  }
+
+  /* Ocultar el placeholder en reposo para que no cree la caja negra */
+  .search-input-dashboard::placeholder {
+    opacity: 0 !important;
+    color: transparent !important;
+    font-size: 0 !important;
+  }
+
+  /* 3. Icono de Lupa: Siempre visible debajo del input transparente */
+  .search-icon-dashboard {
+    position: static !important; /* Quitar absolute */
+    font-size: 18px !important; /* Tamaño consistente con otros iconos */
+    color: var(--text-primary);
+    pointer-events: none; /* Dejar pasar los clicks al input */
+    transform: none !important;
+  }
+
+  /* 4. ESTADO ACTIVO (FOCUS): Expandir y Mostrar */
+  .search-input-dashboard:focus {
+    position: absolute;
+    width: 240px !important; /* Ancho suficiente */
+    height: 40px !important;
+    right: -10px; /* Ajustar posición respecto al contenedor */
+    top: 50%;
+    transform: translateY(-50%);
+    
+    background: #181818 !important; /* Color de fondo sólido */
+    color: #fff !important;         /* Texto visible */
+    font-size: 14px !important;     /* Restaurar tamaño de fuente */
+    text-indent: 0 !important;      /* Restaurar indentación */
+    padding: 0 15px 0 15px !important;
+    border: 1px solid var(--accent) !important;
+    border-radius: 20px;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    outline: none;
+  }
+
+  /* Mostrar placeholder solo al escribir */
+  .search-input-dashboard:focus::placeholder {
+    opacity: 0.6 !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 14px !important;
+  }
+
+  /* Ocultar icono cuando está expandido para no duplicar */
+  .search-input-dashboard:focus + .search-icon-dashboard {
+    opacity: 0;
+  }
+
+  /* 5. Asegurar Avatar Intacto */
+  .user-avatar-dashboard {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important; /* Doble seguridad */
+    flex-shrink: 0 !important;
   }
   
   .hero-dashboard {
@@ -942,41 +1169,108 @@
     bottom: 20px;
     right: 20px;
   }
+  
+  /* Estilos de slider Netflix para móvil */
+  .creator-playlists-slider {
+    padding: 15px 0 25px;
+  }
+  
+  .netflix-playlist-item {
+    width: 220px;
+    transition: none;
+  }
+  
+  .netflix-playlist-item:hover {
+    transform: none;
+  }
+  
+  .netflix-playlist-item:hover ~ .netflix-playlist-item {
+    transform: none;
+  }
+  
+  .netflix-slider-nav {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    opacity: 0.9;
+  }
+  
+  .netflix-slider-prev {
+    left: 10px;
+  }
+  
+  .netflix-slider-next {
+    right: 10px;
+  }
+  
+  .slider-fade-left,
+  .slider-fade-right {
+    width: 50px;
+    opacity: 1;
+  }
+  
+  .creator-playlists-section .section-title-dashboard {
+    font-size: 1.2rem;
+    padding-left: 0;
+  }
+  
+  .creator-playlists-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .content-section {
+    padding: 0 10px;
+  }
 }
 
 @media (max-width: 576px) {
   .dashboard-header {
-    padding: 8px 10px;
-    width: 96%;
+    padding: 8px 12px;
+    width: 94%; /* Un poco menos ancho para dar margen */
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(var(--mobile-header-margin) + var(--safe-area-top)); /* Respetar notch */
+    overflow: visible;
   }
   
+  /* Asegurar que todos los contenedores permitan overflow visible */
+  .header-container,
+  .header-right,
+  .user-menu-container {
+    overflow: visible;
+  }
+
+  /* Blindar logo y avatar para que no se deformen */
   .logo-dashboard {
-    width: 85px;
-  }
-  
-  .header-right {
-    gap: 6px;
-  }
-  
-  .search-input-dashboard {
-    width: 110px;
-    padding: 7px 30px 7px 10px;
-    font-size: 12px;
-  }
-  
-  .search-input-dashboard:focus {
-    width: 130px;
-  }
-  
-  .search-icon-dashboard {
-    right: 10px;
-    font-size: 12px;
+    width: 100px !important; /* Reducir para dar espacio */
+    flex-shrink: 0 !important;
+    margin-right: auto;
   }
   
   .user-avatar-dashboard {
-    width: 32px;
-    height: 32px;
+    width: 36px !important; /* Mantener tamaño táctil */
+    height: 36px !important;
+    flex-shrink: 0 !important; /* CRÍTICO */
+    overflow: visible !important;
   }
+
+  .header-right {
+    gap: 10px;
+    flex-wrap: nowrap;
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  /* Ocultar elementos secundarios en móvil muy pequeño si es necesario */
+  .nav-links-dashboard,
+  .nav-links-secondary {
+    display: none !important;
+  }
+
+  /* --- FIX CRÍTICO BUSCADOR MÓVIL PEQUEÑO (heredado de 768px) --- */
+  /* La lógica del buscador se hereda de la media query 768px */
+  /* Solo ajustes específicos si son necesarios aquí */
   
   .hero-title-dashboard {
     font-size: 2rem;
@@ -1401,212 +1695,6 @@
 .netflix-playlist-item:hover .creator-playlist-card {
   border-color: rgba(79, 86, 186, 0.6);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-}
-
-/* ===== RESPONSIVE DESIGN - SLIDER NETFLIX ===== */
-@media (max-width: 1400px) {
-  .netflix-playlist-item {
-    width: 260px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .creator-playlists-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-  }
-  
-  .netflix-playlist-item {
-    width: 240px;
-  }
-  
-  .netflix-slider-nav {
-    width: 50px;
-    height: 50px;
-    font-size: 1.4rem;
-  }
-  
-  .netflix-slider-prev {
-    left: 15px;
-  }
-  
-  .netflix-slider-next {
-    right: 15px;
-  }
-  
-  .creator-playlists-section .section-title-dashboard {
-    font-size: 1.3rem;
-  }
-}
-
-/* Responsive para navegación en header */
-@media (max-width: 1400px) {
-  .nav-link-btn {
-    font-size: 13px;
-    padding: 9px 14px;
-    gap: 6px;
-  }
-  
-  .nav-link-btn i {
-    font-size: 13px;
-  }
-  
-  .nav-links-secondary {
-    gap: 15px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .dashboard-header {
-    width: 98%;
-    padding: 12px 30px;
-  }
-  
-  .logo-dashboard {
-    width: 120px;
-    margin-right: 15px;
-  }
-  
-  .nav-links-dashboard {
-    gap: 6px;
-    margin-right: 15px;
-    padding-right: 15px;
-  }
-  
-  .nav-link-btn span {
-    display: none; /* Ocultar texto, solo íconos */
-  }
-  
-  .nav-link-btn {
-    padding: 10px 12px;
-    min-width: 40px;
-    justify-content: center;
-  }
-  
-  .nav-link-btn i {
-    font-size: 16px;
-  }
-  
-  .nav-links-secondary {
-    gap: 12px;
-    margin-right: 15px;
-    padding-right: 15px;
-  }
-  
-  .nav-links-secondary a {
-    font-size: 13px;
-  }
-  
-  .search-input-dashboard {
-    width: 180px;
-  }
-  
-  .search-input-dashboard:focus {
-    width: 220px;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-header {
-    top: 10px;
-    width: 96%;
-    padding: 10px 20px;
-    border-radius: 50px;
-  }
-  
-  .logo-dashboard {
-    width: 100px;
-    margin-right: 10px;
-  }
-  
-  .nav-links-dashboard {
-    gap: 4px;
-    margin-right: 10px;
-    padding-right: 10px;
-  }
-  
-  .nav-link-btn {
-    padding: 8px 10px;
-    min-width: 36px;
-  }
-  
-  .nav-link-btn i {
-    font-size: 15px;
-  }
-  
-  .nav-links-secondary {
-    display: none; /* Ocultar en móvil */
-  }
-  
-  .search-input-dashboard {
-    width: 150px;
-    padding: 8px 35px 8px 15px;
-    font-size: 13px;
-  }
-  
-  .search-input-dashboard:focus {
-    width: 180px;
-  }
-  
-  .creator-playlists-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .content-section {
-    padding: 0 10px;
-  }
-  
-  .dashboard-main {
-    padding: 60px 20px;
-  }
-  
-  .creator-playlists-slider {
-    padding: 15px 0 25px;
-  }
-  
-  .netflix-playlist-item {
-    width: 220px;
-  }
-  
-  .netflix-slider-nav {
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem;
-    opacity: 0.9; /* Más visible en móvil */
-  }
-  
-  .netflix-slider-prev {
-    left: 10px;
-  }
-  
-  .netflix-slider-next {
-    right: 10px;
-  }
-  
-  .slider-fade-left,
-  .slider-fade-right {
-    width: 50px;
-    opacity: 1; /* Siempre visible en móvil */
-  }
-  
-  .creator-playlists-section .section-title-dashboard {
-    font-size: 1.2rem;
-    padding-left: 0;
-  }
-  
-  /* Desactivar efectos pesados en móvil para mejor rendimiento */
-  .netflix-playlist-item {
-    transition: none;
-  }
-  
-  .netflix-playlist-item:hover {
-    transform: none;
-  }
-  
-  .netflix-playlist-item:hover ~ .netflix-playlist-item {
-    transform: none;
-  }
 }
 
 @media (max-width: 480px) {

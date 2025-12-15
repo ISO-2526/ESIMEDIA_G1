@@ -3,34 +3,36 @@ package grupo1.esimedia.Accounts.controller;
 import grupo1.esimedia.Accounts.model.Playlist;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CookieValue;
-import jakarta.servlet.http.HttpServletRequest;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 
 @RestController
 @RequestMapping("/api/playlists")
-@CrossOrigin(origins = "http://localhost:3000")
+@PreAuthorize("isAuthenticated()")
 public class PlaylistController {
 
-    private final PlaylistRepository playlistRepository;
-    private final TokenRepository tokenRepository;
+        private static final String ERROR = "error";
 
-    public PlaylistController(PlaylistRepository playlistRepository, TokenRepository tokenRepository) {
+    private static final String MESSAGE = "message";
+
+    private final PlaylistRepository playlistRepository;
+
+    public PlaylistController(PlaylistRepository playlistRepository) {
         this.playlistRepository = playlistRepository;
-        this.tokenRepository = tokenRepository;
     }
 
     // Get all playlists for a user
     @GetMapping
-    public ResponseEntity<List<Playlist>> getUserPlaylists(@CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
-        if (userEmail == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<List<Playlist>> getUserPlaylists() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();        if (userEmail == null) return ResponseEntity.status(401).build();
         List<Playlist> playlists = playlistRepository.findByUserEmail(userEmail);
         
         // Log for debugging
@@ -45,9 +47,10 @@ public class PlaylistController {
 
     // Get a specific playlist by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Playlist> getPlaylistById(@PathVariable String id, @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
-        if (userEmail == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<Playlist> getPlaylistById(@PathVariable String id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+                if (userEmail == null) return ResponseEntity.status(401).build();
         
         var playlistOpt = playlistRepository.findById(id);
         if (playlistOpt.isEmpty()) {
@@ -65,9 +68,9 @@ public class PlaylistController {
 
     // Create a new playlist
     @PostMapping
-    public ResponseEntity<?> createPlaylist(@RequestBody Playlist playlist, @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
-        if (userEmail == null) return ResponseEntity.status(401).build();
+    public ResponseEntity<?> createPlaylist(@RequestBody Playlist playlist) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();        if (userEmail == null) return ResponseEntity.status(401).build();
         
         // Prevent creating multiple "Favoritos" playlists
         if ("Favoritos".equals(playlist.getNombre())) {
@@ -77,7 +80,7 @@ public class PlaylistController {
                 .toList();
             
             if (!existingFavoritos.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("error", "Ya existe una lista de Favoritos"));
+                return ResponseEntity.status(400).body(Map.of(ERROR, "Ya existe una lista de Favoritos"));
             }
         }
         
@@ -98,9 +101,9 @@ public class PlaylistController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePlaylist(
             @PathVariable String id,
-            @RequestBody Map<String, String> updates,
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
+            @RequestBody Map<String, String> updates) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         if (userEmail == null) return ResponseEntity.status(401).build();
         
         var playlistOpt = playlistRepository.findById(id);
@@ -115,7 +118,7 @@ public class PlaylistController {
         
         // Prevent editing permanent playlists
         if (Boolean.TRUE.equals(playlist.getIsPermanent())) {
-            return ResponseEntity.status(403).body(Map.of("error", "No se puede editar la lista de Favoritos"));
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No se puede editar la lista de Favoritos"));
         }
         
         if (updates.containsKey("nombre")) {
@@ -132,8 +135,9 @@ public class PlaylistController {
 
     // Delete a playlist
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePlaylist(@PathVariable String id, @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
+    public ResponseEntity<?> deletePlaylist(@PathVariable String id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         if (userEmail == null) return ResponseEntity.status(401).build();
         
         var playlistOpt = playlistRepository.findById(id);
@@ -148,20 +152,20 @@ public class PlaylistController {
         
         // Prevent deleting permanent playlists
         if (Boolean.TRUE.equals(playlist.getIsPermanent())) {
-            return ResponseEntity.status(403).body(Map.of("error", "No se puede eliminar la lista de Favoritos"));
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No se puede eliminar la lista de Favoritos"));
         }
         
         playlistRepository.deleteById(id);
-        return ResponseEntity.ok().body(Map.of("message", "Playlist deleted successfully"));
+        return ResponseEntity.ok().body(Map.of(MESSAGE, "Playlist deleted successfully"));
     }
 
     // Add content to playlist
     @PostMapping("/{id}/content/{contentId}")
     public ResponseEntity<?> addContentToPlaylist(
             @PathVariable String id,
-            @PathVariable String contentId,
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
+            @PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         if (userEmail == null) return ResponseEntity.status(401).build();
         
         var playlistOpt = playlistRepository.findById(id);
@@ -184,7 +188,7 @@ public class PlaylistController {
                 .anyMatch(item -> item.getContentId().equals(contentId));
         
         if (exists) {
-            return ResponseEntity.status(400).body(Map.of("error", "Content already in playlist"));
+            return ResponseEntity.status(400).body(Map.of(ERROR, "Content already in playlist"));
         }
         
         // Add content to playlist
@@ -204,9 +208,9 @@ public class PlaylistController {
     @DeleteMapping("/{id}/content/{contentId}")
     public ResponseEntity<?> removeContentFromPlaylist(
             @PathVariable String id,
-            @PathVariable String contentId,
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        String userEmail = resolveEmailFromToken(tokenId);
+            @PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         if (userEmail == null) return ResponseEntity.status(401).build();
         
         var playlistOpt = playlistRepository.findById(id);
@@ -225,13 +229,5 @@ public class PlaylistController {
         
         playlistRepository.save(playlist);
         return ResponseEntity.ok(playlist);
-    }
-    private String resolveEmailFromToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) return null;
-        var opt = tokenRepository.findById(tokenId);
-        if (opt.isEmpty()) return null;
-        Token token = opt.get();
-        if (token.getExpiration() == null || token.getExpiration().isBefore(LocalDateTime.now())) return null;
-        return token.getAccountId();
     }
 }

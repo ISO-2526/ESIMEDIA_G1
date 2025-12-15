@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
+import axios from '../../../api/axiosConfig';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -7,52 +8,118 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const history = useHistory();
+
+  // Helper: Guardar token de acceso en localStorage
+  const saveAccessToken = (data) => {
+    if (data.accessToken) {
+      localStorage.setItem('access_token', data.accessToken);
+      console.log('🔑 Token guardado en localStorage:', data.accessToken);
+      console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
+    }
+  };
+
+  // Helper: Redireccionar según el rol del usuario
+  const redirectByRole = (role) => {
+    console.log('🚀 Navegando a dashboard con role:', role);
+    const routes = {
+      admin: '/adminDashboard',
+      creator: '/creator',
+      user: '/usuario'
+    };
+    history.push(routes[role] || '/');
+  };
+
+  // Helper: Manejar respuesta de login exitoso
+  const handleLoginSuccess = async (res) => {
+    console.log('✅ Login exitoso:', res.data);
+    const data = res.data;
+    const role = data?.role ?? data?.data?.role;
+    
+    saveAccessToken(data);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    redirectByRole(role);
+  };
+
+  // Helper: Manejar requerimiento de 2FA/3FA
+  const handle2FARequired = (responseData) => {
+    console.log('🔐 Requiere 2FA/3FA - Data recibida:', responseData);
+    
+    if (responseData && (responseData.email || responseData.role)) {
+      history.push({
+        pathname: '/validate-2fa',
+        state: {
+          email: responseData.email || email, 
+          password: password,
+          role: responseData.role
+        }
+      });
+      return true;
+    }
+    return false;
+  };
+
+  // Helper: Obtener mensaje de error según status HTTP
+  const getErrorMessage = (status, data) => {
+    const errorMessages = {
+      403: 'Usuario bloqueado. Contacta con soporte.',
+      429: 'Demasiados intentos. Por favor, espera antes de intentar de nuevo.'
+    };
+
+    if (errorMessages[status]) {
+      return errorMessages[status];
+    }
+
+    if (status === 401) {
+      if (data && data.remainingAttempts !== undefined) {
+        return `Credenciales inválidas. Intentos restantes: ${data.remainingAttempts}`;
+      }
+      return 'Credenciales inválidas';
+    }
+
+    return data?.message || data?.error || 'Error en el servidor';
+  };
+
+  // Helper: Manejar errores de login
+  const handleLoginError = (err) => {
+    console.error('Error al iniciar sesión:', err);
+    console.log('Error response:', err.response);
+
+    if (err.response?.status === 428) {
+      const handled = handle2FARequired(err.response.data);
+      if (handled) return;
+    }
+
+    const errorMsg = getErrorMessage(err.response?.status, err.response?.data);
+    setError(errorMsg);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // <-- cookies
-        body: JSON.stringify({ email, password }),
+      console.log('Base URL configurada:', axios.defaults.baseURL);
+      console.log('URL completa a la que se va a hacer la petición:', '/api/auth/login');
+
+      const res = await axios.post('/api/auth/login', { 
+        email, 
+        password 
+      }, {
+        withCredentials: true
       });
 
-      if (res.status === 428) {
-        navigate('/validate-2fa', { state: { email, password } });
-        return;
-      }
-
-      if (!res.ok) {
-        if (res.status === 403) { setError('Usuario bloqueado. Contacta con soporte.'); return; }
-        if (res.status === 401) { setError('Credenciales inválidas'); return; }
-        if (res.status === 429) { setError('Demasiados intentos. Por favor, espera antes de intentar de nuevo.'); return; }
-        setError('Error desconocido al iniciar sesión.');
-        return;
-      }
-
-      const data = await res.json();
-      // No guardar token ni session en localStorage: se usa cookie HttpOnly
-      const role = data?.role ?? data?.data?.role;
-      if (role === 'admin') navigate('/adminDashboard');
-      else if (role === 'creator') navigate('/creator');
-      else if (role === 'user') navigate('/usuario');
-      else navigate('/');
+      await handleLoginSuccess(res);
     } catch (err) {
-      console.error('Error al iniciar sesión:', err);
-      setError('Error en el servidor');
+      handleLoginError(err);
     }
   };
 
   return (
     <div className="page-container">
       <div className="animated-bg"></div>
-
       <div className="login-wrapper">
-        {/* Panel lateral informativo */}
+          {/* Panel lateral informativo */}
         <div className="info-panel">
           <div className="info-content">
             <h2 className="info-title">¡Bienvenido de vuelta!</h2>
@@ -149,7 +216,7 @@ function LoginPage() {
             </button>
 
             <div className="form-footer">
-              <button type="button" className="link-btn" onClick={() => navigate('/recuperar')}>
+              <button type="button" className="link-btn" onClick={() => history.push('/recuperar')}>
                 ¿Olvidaste tu contraseña?
               </button>
               <div className="register-link">

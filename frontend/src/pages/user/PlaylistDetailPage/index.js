@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
+import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -9,27 +12,43 @@ import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { determineCategoryFromTags } from '../../../utils/contentUtils';
 import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
+import axios from '../../../api/axiosConfig';
 
 function PlaylistDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
   const [allContents, setAllContents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('addedDate');
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
+
+  const handleLogout = async () => {
+    await logoutCsrf('/', history);
+  };
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
   const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
   const [selectedVipContent, setSelectedVipContent] = useState(null);
-  const [userProfile, setUserProfile] = useState({ vip: false });
   const [contentCovers, setContentCovers] = useState([]);
+  const [sortBy, setSortBy] = useState('addedDate');
 
   useEffect(() => {
     fetchAllContents();
@@ -39,18 +58,15 @@ function PlaylistDetailPage() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setUserProfile({
-          vip: profileData.vip || false
-        });
-      }
+      const profileData = response.data;
+      setUserProfile({
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      });
+      console.log('🖼️ Profile picture URL (PlaylistDetailPage):', getImageUrl(profileData.picture));
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -78,11 +94,8 @@ function PlaylistDetailPage() {
 
   const fetchAllContents = async () => {
     try {
-      const response = await fetch('/api/public/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setAllContents(data);
-      }
+      const response = await axios.get('/api/public/contents');
+      setAllContents(response.data);
     } catch (error) {
       console.error('Error fetching all contents:', error);
     }
@@ -90,23 +103,20 @@ function PlaylistDetailPage() {
 
   const fetchPlaylistDetails = async () => {
     try {
-      const response = await fetch(`/api/playlists/${id}`, { credentials: 'include' });
+      const response = await axios.get(`/api/playlists/${id}`, { withCredentials: true });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPlaylist(data);
-        setEditName(data.nombre);
-        setEditDescription(data.descripcion || '');
-      } else if (response.status === 403) {
-        showWarning('No tienes permiso para ver esta lista');
-        navigate('/playlists');
-      } else {
-        showError('Error al cargar la lista');
-        navigate('/playlists');
-      }
+      setPlaylist(response.data);
+      setEditName(response.data.nombre);
+      setEditDescription(response.data.descripcion || '');
     } catch (error) {
       console.error('Error:', error);
-      navigate('/playlists');
+      if (error.response?.status === 403) {
+        showWarning('No tienes permiso para ver esta lista');
+        history.push('/playlists');
+      } else {
+        showError('Error al cargar la lista');
+        history.push('/playlists');
+      }
     } finally {
       setLoading(false);
     }
@@ -213,20 +223,14 @@ function PlaylistDetailPage() {
 
   const removeContentFromPlaylist = async (contentId) => {
     try {
-      const response = await fetch(`/api/playlists/${id}/content/${contentId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await axios.delete(`/api/playlists/${id}/content/${contentId}`, {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        setContents(contents.filter(c => c.id !== contentId));
-        setPlaylist(await response.json());
-        showSuccess('Contenido eliminado de la lista');
-      } else {
-        showError('Error al eliminar el contenido');
-      }
+      setContents(contents.filter(c => c.id !== contentId));
+      setPlaylist(response.data);
+      showSuccess('Contenido eliminado de la lista');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al eliminar contenido:', error);
       showError('Error al eliminar el contenido');
     }
   };
@@ -250,26 +254,18 @@ function PlaylistDetailPage() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`/api/playlists/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          nombre: editName,
-          descripcion: editDescription
-        })
+      const response = await axios.put(`/api/playlists/${id}`, {
+        nombre: editName,
+        descripcion: editDescription
+      }, {
+        withCredentials: true
       });
 
-      if (response.ok) {
-        const updated = await response.json();
-        setPlaylist(updated);
-        setShowEditModal(false);
-        showSuccess('Lista actualizada correctamente');
-      } else {
-        showError('Error al actualizar la lista');
-      }
+      setPlaylist(response.data);
+      setIsEditing(false);
+      showSuccess('Lista actualizada correctamente');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al actualizar lista:', error);
       showError('Error al actualizar la lista');
     }
   };
@@ -280,21 +276,14 @@ function PlaylistDetailPage() {
         '¿Estás seguro de que deseas eliminar esta lista? Esta acción no se puede deshacer.',
         async () => {
           try {
-            const response = await fetch(`/api/playlists/${id}`, {
-              method: 'DELETE',
-              credentials: 'include'
+            await axios.delete(`/api/playlists/${id}`, {
+              withCredentials: true
             });
-
-            if (response.ok) {
-              showSuccess('Lista eliminada correctamente');
-              navigate('/playlists');
-              resolve(true);
-            } else {
-              showError('Error al eliminar la lista');
-              resolve(false);
-            }
+            showSuccess('Lista eliminada correctamente');
+            history.push('/playlists');
+            resolve(true);
           } catch (error) {
-            console.error('Error:', error);
+            console.error('Error al eliminar playlist:', error);
             showError('Error al eliminar la lista');
             resolve(false);
           }
@@ -322,7 +311,7 @@ function PlaylistDetailPage() {
 
   const handleVipUpgrade = () => {
     setShowVipModal(false);
-    navigate('/suscripcion');
+    history.push('/suscripcion');
   };
 
   const handleClosePlayer = () => {
@@ -356,9 +345,18 @@ function PlaylistDetailPage() {
 
   return (
     <div className="playlist-detail-page">
+      {Capacitor.isNativePlatform() && (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      )}
       <button 
         className="floating-back-button" 
-        onClick={() => navigate('/playlists')}
+        onClick={() => history.push('/playlists')}
         aria-label="Volver a listas de reproducción"
       >
         <i className="fas fa-arrow-left"></i>
@@ -456,7 +454,7 @@ function PlaylistDetailPage() {
               <p>Añade contenidos navegando por el catálogo y haciendo clic en el botón "+"</p>
               <button 
                 className="browse-btn" 
-                onClick={() => navigate('/usuario')}
+                onClick={() => history.push('/usuario')}
                 aria-label="Explorar catálogo de contenidos"
               >
                 <i className="fas fa-search" aria-hidden="true"></i> Explorar Contenidos

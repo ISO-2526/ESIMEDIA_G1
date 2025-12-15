@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,12 +14,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class SessionTimeoutFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(SessionTimeoutFilter.class);
     private final InMemorySessionRegistry registry;
 
     public SessionTimeoutFilter(InMemorySessionRegistry registry) {
@@ -28,20 +32,35 @@ public class SessionTimeoutFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // No filtrar recursos públicos/estáticos
-        return path.startsWith("/api/public")
+        boolean shouldSkip = path.startsWith("/api/public")
+                || path.startsWith("/api/auth/login")
+                || path.startsWith("/api/auth/register")
+                || path.startsWith("/api/auth/recover")
+                || path.startsWith("/api/auth/reset-password")
+                || path.startsWith("/api/auth/validate-reset-token")
                 || path.startsWith("/cover/")
                 || path.startsWith("/pfp/")
                 || "OPTIONS".equalsIgnoreCase(request.getMethod());
+        
+        if (shouldSkip) {
+            log.debug("⏭️ SessionTimeoutFilter - Skipping: {}", path);
+        }
+        
+        return shouldSkip;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
 
+        String path = req.getRequestURI();
+        log.debug("⏱️ SessionTimeoutFilter - Processing: {}", path);
+
         String sessionKey = resolveSessionKey(req);
         String role = resolveRole(req);
 
         if (sessionKey == null) {
+            log.debug("⚠️ No session key found for path: {}", path);
             chain.doFilter(req, res);
             return;
         }
@@ -50,16 +69,19 @@ public class SessionTimeoutFilter extends OncePerRequestFilter {
 
         // Validar absolute/idle
         if (registry.isAbsoluteExpired(s)) {
+            log.warn("❌ Session expired (absolute) - Key: {} | Role: {}", sessionKey, role);
             registry.remove(sessionKey);
             writeExpired(res, "absolute");
             return;
         }
         if (registry.isIdleExpired(s)) {
+            log.warn("❌ Session expired (idle) - Key: {} | Role: {}", sessionKey, role);
             registry.remove(sessionKey);
             writeExpired(res, "idle");
             return;
         }
 
+        log.debug("✅ Session valid - Key: {} | Role: {} | Path: {}", sessionKey, role, path);
         registry.touch(s);
         chain.doFilter(req, res);
     }
@@ -67,13 +89,25 @@ public class SessionTimeoutFilter extends OncePerRequestFilter {
     private String resolveSessionKey(HttpServletRequest req) {
         // 1) Bearer token
         String auth = req.getHeader("Authorization");
-        if (auth != null && auth.startsWith("Bearer ")) return auth.substring(7).trim();
+        if (auth != null && auth.startsWith("Bearer ")) {
+            return auth.substring(7).trim();
+        }
 
-        // 2) Sesión dev
+        // 2) Cookie access_token
+        Cookie[] cookies = req.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("access_token".equals(c.getName())) {
+                    return c.getValue();
+                }
+            }
+        }
+
+        // 3) Sesión dev
         String sid = req.getHeader("X-Session-Id");
         if (sid != null && !sid.isBlank()) return sid;
 
-        // 3) Fallback dev por email
+        // 4) Fallback dev por email
         String email = req.getHeader("X-User-Email");
         if (email != null && !email.isBlank()) return "DEV:" + email;
 

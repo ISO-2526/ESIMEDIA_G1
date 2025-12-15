@@ -1,16 +1,121 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useLocation, useHistory } from "react-router-dom";
+import axios from "../../../api/axiosConfig"; // ✅ Asegúrate de que la ruta sea correcta
 import './Validate2FA.css';
 
 const Validate2FA = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const history = useHistory();
   const email = location.state?.email || "";
   const password = location.state?.password || "";
+  const role = location.state?.role || "";
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirigir al login si no hay datos
+  React.useEffect(() => {
+    if (!email || !password) {
+      history.push('/login');
+    }
+  }, [email, password, history]);
+
+  // Helper: Guardar token de acceso en localStorage
+  const saveAccessToken = (data) => {
+    if (data.accessToken) {
+      localStorage.setItem('access_token', data.accessToken);
+      console.log('🔑 Token guardado en localStorage:', data.accessToken);
+      console.log('🔍 Verificando token guardado:', localStorage.getItem('access_token'));
+    }
+  };
+
+  // Helper: Redireccionar según el rol del usuario
+  const redirectByRole = (userRole) => {
+    console.log('🚀 Navegando a dashboard con role:', userRole);
+    const routes = {
+      admin: "/adminDashboard",
+      creator: "/creator",
+      user: "/usuario"
+    };
+    history.push(routes[userRole] || "/");
+  };
+
+  // Helper: Manejar respuesta exitosa de 2FA
+  const handle2FASuccess = async (data) => {
+    console.log('✅ Validación 2FA exitosa:', data);
+    saveAccessToken(data);
+    setIsLoading(false);
+
+    if (data.thirdFactorEnabled) {
+      history.push("/validate-3fa", { 
+        email: data.email || email, 
+        role: data.role 
+      });
+      return;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    redirectByRole(data.role);
+  };
+
+  // Helper: Manejar requerimiento de 3FA (status 428)
+  const handle3FARequired = (responseData) => {
+    try {
+      let data = responseData;
+      
+      if (typeof data === 'string') {
+        console.log('⚠️ Respuesta es HTML/texto, usando datos del state');
+        data = { email, role };
+      }
+      
+      console.log('🔐 Redirigiendo a 3FA con:', data);
+      history.push("/validate-3fa", { 
+        email: data.email || email, 
+        role: data.role || role 
+      });
+    } catch (parseError) {
+      console.error('Error parseando respuesta 428:', parseError);
+      history.push("/validate-3fa", { email, role });
+    }
+  };
+
+  // Helper: Extraer mensaje de error de forma segura
+  const extractErrorMessage = (errorData) => {
+    const defaultMsg = "Código incorrecto o sesión expirada";
+    
+    try {
+      if (errorData && typeof errorData === 'object') {
+        return errorData.message || errorData.error || defaultMsg;
+      }
+    } catch (e) {
+      console.error('Error extrayendo mensaje:', e);
+    }
+    
+    return defaultMsg;
+  };
+
+  // Helper: Manejar errores de validación
+  const handle2FAError = (error) => {
+    console.error("❌ Error al validar el token:", error);
+    console.log('Error status:', error.response?.status);
+    console.log('Error data type:', typeof error.response?.data);
+
+    const status = error.response?.status;
+
+    if (status === 428) {
+      handle3FARequired(error.response.data);
+      return;
+    }
+
+    const errorMessages = {
+      401: "Código 2FA incorrecto. Por favor, intenta de nuevo.",
+      429: "Demasiados intentos. Por favor, espera antes de intentar de nuevo."
+    };
+
+    const message = errorMessages[status] || extractErrorMessage(error.response?.data);
+    setMessage(message);
+    setIsLoading(false);
+  };
 
   const handleValidate2FA = async () => {
     if (!code || code.length < 6) {
@@ -22,44 +127,24 @@ const Validate2FA = () => {
     setMessage("");
 
     try {
+      console.log('📱 Validando 2FA con:', { email, hasPassword: !!password, code });
+      
       const response = await axios.post("/api/auth/login", {
         email,
         password,
-        "2fa_code": parseInt(code),
+        twoFactorCode: code
       }, {
         withCredentials: true
       });
 
-      const data = response.data;
-
-      // Verificar si el usuario tiene activado el 3FA
-      if (data.thirdFactorEnabled) {
-        navigate("/validate-3fa", { state: { email, role: data.role } });
-        return;
-      }
-
-      // Redirigir según el rol
-      if (data.role === "admin") {
-        navigate("/adminDashboard");
-      } else if (data.role === "creator") {
-        navigate("/creator");
-      } else {
-        navigate("/usuario");
-      }
+      await handle2FASuccess(response.data);
     } catch (error) {
-      if (error.response?.status === 428) {
-        navigate("/validate-3fa", { state: { email, role: error.response.data.role } });
-        return;
-      }
-      const errorMsg = error.response?.data?.error || "Código incorrecto o sesión expirada";
-      setMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
+      handle2FAError(error);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && code.length === 6) {
       handleValidate2FA();
     }
   };
@@ -144,7 +229,7 @@ const Validate2FA = () => {
             <button 
               type="button" 
               className="validate2fa-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>

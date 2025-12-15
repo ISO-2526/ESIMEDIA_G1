@@ -31,7 +31,7 @@
 /* Header Navigation (reusing UserProfilePage styles) */
 .subscription-page .profile-header {
   position: fixed;
-  top: 20px;
+  top: calc(var(--mobile-header-margin) + var(--safe-area-top));
   left: 50%;
   transform: translateX(-50%);
   max-width: 1600px;
@@ -763,6 +763,10 @@
 }
 
 @media (max-width: 768px) {
+  .subscription-page {
+    padding-top: var(--mobile-content-padding-top);
+  }
+
   .subscription-page .profile-header {
     padding: 10px 15px;
     width: 95%;

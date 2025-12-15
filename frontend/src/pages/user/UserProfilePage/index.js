@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutWithCookies } from '../../../auth/logout';
-import { TAGS } from '../../../creator/components/constants';
-import NotificationBell from '../../../components/NotificationBell/NotificationBell';
+import axios from '../../../api/axiosConfig';
+import TagSelector from '../../../components/TagSelector'; // HDU 492
 
 const isActivationKey = (key) => key === 'Enter' || key === ' ' || key === 'Spacebar';
 
@@ -45,9 +47,8 @@ const AvatarSelector = ({ showAvatarSelector, previewImage, tempData, availableA
 // Helper: obtiene sesión desde cookie (email, role)
 const getSession = async () => {
   try {
-    const r = await fetch('/api/auth/validate-token', { method: 'GET', credentials: 'include' });
-    if (!r.ok) return null;
-    const data = await r.json();
+    const response = await axios.get('/api/auth/validate-token', { withCredentials: true });
+    const data = response.data;
     return { email: data?.email ?? data?.data?.email, role: data?.role ?? data?.data?.role };
   } catch { return null; }
 };
@@ -55,15 +56,10 @@ const getSession = async () => {
 // Helper function for fetching 3FA status
 const fetch3FAStatus = async (setThirdFactorEnabled) => {
   try {
-    const response = await fetch('/api/users/profile', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+    const response = await axios.get('/api/users/profile', {
+      withCredentials: true
     });
-    if (response.ok) {
-      const data = await response.json();
-      setThirdFactorEnabled(data.thirdFactorEnabled);
-    }
+    setThirdFactorEnabled(response.data.thirdFactorEnabled);
   } catch (error) {
     console.error('Error al obtener el estado del 3FA:', error);
   }
@@ -95,16 +91,10 @@ const renderFormField = (label, name, value, isEditing, tempValue, handleInputCh
 /* ---------- Helpers añadidos para reducir complejidad ---------- */
 const getProfileFromBackend = async () => {
   try {
-    const res = await fetch('/api/users/profile', {
-      method: 'GET',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+    const response = await axios.get('/api/users/profile', {
+      withCredentials: true
     });
-    if (!res.ok) {
-      console.error('Error al obtener el perfil:', res.status, res.statusText);
-      return null;
-    }
-    return await res.json();
+    return response.data;
   } catch (error) {
     console.error('Error al realizar la solicitud:', error);
     return null;
@@ -128,16 +118,14 @@ const parseActivationResponseMessage = async (response) => {
 };
 
 const activateOrDeactivate3FA = async ({ email, activate }) => {
-  return fetch('/api/auth/activate-3fa', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, activate })
-  });
+  return axios.post('/api/auth/activate-3fa',
+    { email, activate },
+    { withCredentials: true }
+  );
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
-const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout, userId }) => (
+const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout }) => (
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
@@ -155,7 +143,6 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
         <Link to="/suscripcion">Suscripción</Link>
       </nav>
       <div className="header-right">
-        {userId && <NotificationBell userId={userId} />}
         <div className="user-menu-container">
           <div
             className="user-avatar-profile"
@@ -326,7 +313,7 @@ const ProfileActions = ({ isEditing, onEdit, onDelete, onSave, onCancel }) => (
 
 /* ---------- Refactor de UserProfilePage (reducción complejidad) ---------- */
 function UserProfilePage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError } = useModal();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -334,7 +321,17 @@ function UserProfilePage() {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [thirdFactorEnabled, setThirdFactorEnabled] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [userProfile, setUserProfile] = useState({ id: null, vip: false });
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
 
   const availableAvatars = [
     '/pfp/avatar1.png', '/pfp/avatar2.png', '/pfp/avatar3.png', '/pfp/avatar4.png', '/pfp/avatar5.png',
@@ -342,7 +339,7 @@ function UserProfilePage() {
   ];
 
   const [profileData, setProfileData] = useState({
-    id: null, name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', preferences: []
+    name: '', surname: '', email: '', alias: '', dateOfBirth: '', picture: '', tags: [] // HDU 492
   });
   const [tempData, setTempData] = useState({ ...profileData });
   const [previewImage, setPreviewImage] = useState(null);
@@ -360,7 +357,10 @@ function UserProfilePage() {
       if (data) {
         setProfileData(data);
         setTempData(data);
-        setUserProfile({ id: data.email, vip: data.vip || false });
+        setUserProfile({
+          picture: getImageUrl(data.picture),
+          vip: data.vip || false
+        });
       }
     })();
   }, []);
@@ -383,42 +383,39 @@ function UserProfilePage() {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/users/editUser`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: tempData.name,
-          surname: tempData.surname,
-          alias: tempData.alias,
-          dateOfBirth: tempData.dateOfBirth,
-          picture: tempData.picture,
-          preferences: tempData.preferences
-        })
+      const response = await axios.put('/api/users/editUser', {
+        name: tempData.name,
+        surname: tempData.surname,
+        alias: tempData.alias,
+        dateOfBirth: tempData.dateOfBirth,
+        picture: tempData.picture,
+        tags: tempData.tags || [] // HDU 492 - Guardar preferencias
+      }, {
+        withCredentials: true
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        showError(`Error al guardar los cambios: ${errorText}`);
-        return;
-      }
-      const updatedData = await response.json();
-      setProfileData(updatedData);
+
+      // Actualizar los datos del perfil
+      setProfileData(response.data);
+
+      // Actualizar el userProfile para que se refleje en MobileHeader
+      setUserProfile({
+        picture: getImageUrl(response.data.picture),
+        vip: response.data.vip || false
+      });
+
       setIsEditing(false);
+      setPreviewImage(null);
       showSuccess('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
-      showError('Ocurrió un error al guardar los cambios. Inténtalo de nuevo.');
+      const errorMsg = error.response?.data?.message || error.message || 'Ocurrió un error';
+      showError(`Error al guardar los cambios: ${errorMsg}`);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTempData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleTagsChange = (e) => {
-    const values = Array.from(e.target.selectedOptions, o => o.value);
-    setTempData(prev => ({ ...prev, preferences: values }));
   };
 
   const handleAvatarSelect = (avatarPath) => {
@@ -436,23 +433,12 @@ function UserProfilePage() {
         return;
       }
 
-      const res = await fetch(`/api/users/${encodeURIComponent(email)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      await axios.delete(`/api/users/${encodeURIComponent(email)}`, {
+        withCredentials: true
       });
 
-      if (!res.ok) {
-        let txt = '';
-        try { txt = await res.text(); } catch { }
-        showError(txt || 'Error al eliminar cuenta');
-        return;
-      }
-
       showSuccess('Cuenta eliminada. Redirigiendo...');
-      setTimeout(() => logoutWithCookies('/', navigate), 1500);
+      setTimeout(() => logoutWithCookies('/', history), 1500);
     } catch (e) {
       console.error(e);
       showError('Error de red. Intenta de nuevo.');
@@ -496,15 +482,24 @@ function UserProfilePage() {
     <div className="user-profile-page">
       <div className="animated-bg"></div>
 
-      <ProfileHeader
-        scrolled={scrolled}
-        picture={profileData.picture}
-        vip={userProfile.vip}
-        onToggleMenu={() => setShowUserMenu(s => !s)}
-        showUserMenu={showUserMenu}
-        logout={() => logoutWithCookies('/login', navigate)}
-        userId={profileData.id}
-      />
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={() => logoutWithCookies('/', history)}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      ) : (
+        <ProfileHeader
+          scrolled={scrolled}
+          picture={profileData.picture}
+          vip={userProfile.vip}
+          onToggleMenu={() => setShowUserMenu(s => !s)}
+          showUserMenu={showUserMenu}
+          logout={() => logoutWithCookies('/', history)}
+        />
+      )}
 
       <div className="profile-container">
         <div className="profile-box">
@@ -528,37 +523,36 @@ function UserProfilePage() {
             {renderFormField('Alias *', 'alias', profileData.alias, isEditing, tempData.alias, handleInputChange)}
             {renderFormField('Fecha de Nacimiento', 'dateOfBirth', profileData.dateOfBirth, false, '', handleInputChange, true)}
 
-            <div className="form-row">
-              <label>Mis Gustos (Tags)</label>
-              {isEditing ? (
-                <>
-                  <select
-                    multiple
-                    value={tempData.preferences || []}
-                    onChange={handleTagsChange}
-                    style={{ width: '100%', padding: '8px', minHeight: '100px', borderRadius: '4px', border: '1px solid #ccc' }}
-                  >
-                    {TAGS.map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
-                  <small style={{ display: 'block', marginTop: '4px', color: '#666' }}>Mantén Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
-                </>
-              ) : (
-                <div className="field-value">
-                  {profileData.preferences && profileData.preferences.length > 0
-                    ? profileData.preferences.join(', ')
-                    : 'Sin preferencias definidas'}
-                </div>
-              )}
-            </div>
-
             <Security3FASection
               isEditing={isEditing}
               thirdFactorEnabled={thirdFactorEnabled}
               statusMessage={statusMessage}
               handleToggle3FA={handleToggle3FA}
             />
+
+            {/* HDU 492 - Sección Mis Gustos */}
+            <div className="form-row tags-section">
+              <label>Mis Gustos</label>
+              {isEditing ? (
+                <TagSelector
+                  selectedTags={tempData.tags || []}
+                  onChange={(newTags) => setTempData(prev => ({ ...prev, tags: newTags }))}
+                  maxTags={10}
+                />
+              ) : (
+                <div className="field-value tags-display">
+                  {(profileData.tags && profileData.tags.length > 0) ? (
+                    <div className="tags-list">
+                      {profileData.tags.map(tag => (
+                        <span key={tag} className="tag-badge">{tag}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="no-tags">Sin preferencias definidas</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <ProfileActions

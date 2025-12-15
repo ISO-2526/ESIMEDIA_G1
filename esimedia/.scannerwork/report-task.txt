@@ -2,5 +2,5 @@ projectKey=2025-g02-backend
 serverUrl=http://seralu4.esi.uclm.es:1521
 serverVersion=10.6.0.92116
 dashboardUrl=http://seralu4.esi.uclm.es:1521/dashboard?id=2025-g02-backend
-ceTaskId=e427a4b2-0ea1-4d27-b260-8ccccf6f76aa
-ceTaskUrl=http://seralu4.esi.uclm.es:1521/api/ce/task?id=e427a4b2-0ea1-4d27-b260-8ccccf6f76aa
+ceTaskId=ebf8ba97-0412-4811-96c7-1fa4f9def016
+ceTaskUrl=http://seralu4.esi.uclm.es:1521/api/ce/task?id=ebf8ba97-0412-4811-96c7-1fa4f9def016

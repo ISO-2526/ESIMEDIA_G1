@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import './DarAltaCuenta.css';
 import '../AdminDashboard/AdminDashboard.css';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 
 function DarAltaCuenta() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const getSession = async () => {
     try {
       const res = await fetch('/api/auth/validate-token', { credentials: 'include' });
@@ -171,7 +171,7 @@ function DarAltaCuenta() {
       {/* Header */}
       <header className="dar-alta-header">
         <div className="dar-alta-header-content">
-          <button onClick={() => navigate('/adminDashboard')} className="dar-alta-back-btn">
+          <button onClick={() => history.push('/adminDashboard')} className="dar-alta-back-btn">
             ← Volver
           </button>
           <h1 className="dar-alta-header-title">Dar Cuenta de Alta</h1>
@@ -415,7 +415,7 @@ function DarAltaCuenta() {
 
             {/* Form Actions */}
             <div className="dar-alta-form-actions">
-              <button type="button" onClick={() => navigate('/adminDashboard')} className="admin-btn admin-btn-secondary">
+              <button type="button" onClick={() => history.push('/adminDashboard')} className="admin-btn admin-btn-secondary">
                 Cancelar
               </button>
               <button type="submit" className="admin-btn admin-btn-success">

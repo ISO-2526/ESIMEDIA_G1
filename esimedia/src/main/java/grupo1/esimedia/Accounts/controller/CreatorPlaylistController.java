@@ -2,11 +2,12 @@ package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.ContentCreator;
 import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/creator/playlists")
-@CrossOrigin(origins = "http://localhost:3000")
 public class CreatorPlaylistController {
 
     private static final String OWNER_TYPE_CREATOR = "CREATOR";
@@ -28,28 +28,14 @@ public class CreatorPlaylistController {
 
     private final PlaylistRepository playlistRepository;
     private final ContentCreatorRepository contentCreatorRepository;
-    private final TokenRepository tokenRepository;
 
-    public CreatorPlaylistController(PlaylistRepository playlistRepository, ContentCreatorRepository contentCreatorRepository, TokenRepository tokenRepository) {
+    public CreatorPlaylistController(PlaylistRepository playlistRepository, ContentCreatorRepository contentCreatorRepository) {
         this.playlistRepository = playlistRepository;
         this.contentCreatorRepository = contentCreatorRepository;
-        this.tokenRepository = tokenRepository;
-    }
-
-    private Optional<String> getEmailFromToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) return Optional.empty();
-        Optional<Token> tokenOpt = tokenRepository.findById(tokenId);
-        if (tokenOpt.isEmpty()) return Optional.empty();
-        Token token = tokenOpt.get();
-        if (token.getExpiration() != null && token.getExpiration().isBefore(LocalDateTime.now())) return Optional.empty();
-        return Optional.ofNullable(token.getAccountId());
     }
 
     private Optional<String> getCreatorAlias(String email) {
-        if (email == null || email.isBlank()) {
-            return Optional.empty();
-        }
-
+        if (email == null || email.isBlank()) return Optional.empty();
         Optional<ContentCreator> creator = contentCreatorRepository.findById(email);
         if (creator.isEmpty()) {
             creator = contentCreatorRepository.findByEmail(email);
@@ -58,10 +44,10 @@ public class CreatorPlaylistController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Playlist>> myCreatorPlaylists(@CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
-        String email = emailOpt.get();
+    @PreAuthorize("hasRole('CREATOR')")
+    public ResponseEntity<List<Playlist>> myCreatorPlaylists() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         List<Playlist> lists = playlistRepository.findByOwnerTypeAndUserEmail(OWNER_TYPE_CREATOR, email);
         
         String alias = getCreatorAlias(email).orElse(UNKNOWN_CREATOR);
@@ -73,9 +59,8 @@ public class CreatorPlaylistController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Object> allCreatorPlaylists(@CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> allCreatorPlaylists() {
         
         List<Playlist> lists = playlistRepository.findByOwnerType(OWNER_TYPE_CREATOR);
         
@@ -89,6 +74,7 @@ public class CreatorPlaylistController {
 
 
     @GetMapping("/public")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<Object> publicVisibleCreatorPlaylists() {
         List<Playlist> lists = playlistRepository.findByOwnerTypeAndVisibleIsTrue(OWNER_TYPE_CREATOR);
         
@@ -102,11 +88,10 @@ public class CreatorPlaylistController {
 
     // Crear lista del creador
     @PostMapping
-    public ResponseEntity<Object> createCreatorPlaylist(@RequestBody Map<String, Object> body, @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
-        String email = emailOpt.get();
-
+    @PreAuthorize("hasRole('CREATOR')")
+    public ResponseEntity<Object> createCreatorPlaylist(@RequestBody Map<String, Object> body) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         String nombre = Optional.ofNullable((String) body.get("nombre"))
                 .map(String::trim).orElse("");
         String descripcion = (String) body.getOrDefault("descripcion", null);
@@ -148,9 +133,8 @@ public class CreatorPlaylistController {
 
     // Obtener una lista del creador por ID 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getCreatorPlaylist(@PathVariable String id, @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+    @PreAuthorize("hasAnyRole('CREATOR', 'ADMIN')")
+    public ResponseEntity<Object> getCreatorPlaylist(@PathVariable String id) {
 
         var opt = playlistRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(404).build();
@@ -165,15 +149,22 @@ public class CreatorPlaylistController {
 
     // Actualizar nombre/descripcion/visibilidad (valida unicidad de nombre)
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Object> updateCreatorPlaylist(@PathVariable String id,
-                                                   @RequestBody Map<String, Object> body,
-                                                   @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+                                                   @RequestBody Map<String, Object> body) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        
         var opt = playlistRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(404).build();
         Playlist p = opt.get();
-        if (!OWNER_TYPE_CREATOR.equals(p.getOwnerType())) return ResponseEntity.status(404).build();
+        
+        if (!OWNER_TYPE_CREATOR.equals(p.getOwnerType())) 
+            return ResponseEntity.status(404).build();
+        
+        // 🔒 Validar que el creador es el propietario
+        if (!p.getUserEmail().equals(email)) 
+            return ResponseEntity.status(403).body(Map.of(ERROR, "No eres el propietario"));
 
         String nuevoNombre = Optional.ofNullable((String) body.get("nombre")).map(String::trim).orElse(null);
         String nuevaDesc = (String) body.getOrDefault("descripcion", null);
@@ -195,11 +186,9 @@ public class CreatorPlaylistController {
 
     // Añadir contenido 
     @PostMapping("/{id}/content/{contentId}")
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Object> addContent(@PathVariable String id,
-                                        @PathVariable String contentId,
-                                        @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+                                        @PathVariable String contentId) {
         var opt = playlistRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(404).build();
         Playlist p = opt.get();
@@ -218,10 +207,9 @@ public class CreatorPlaylistController {
     // Eliminar contenido 
     @DeleteMapping("/{id}/content/{contentId}")
     public ResponseEntity<Object> removeContent(@PathVariable String id,
-                                           @PathVariable String contentId,
-                                           @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+                                           @PathVariable String contentId
+                                           ) {
+
         var opt = playlistRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(404).build();
         Playlist p = opt.get();
@@ -241,9 +229,9 @@ public class CreatorPlaylistController {
 
     // Eliminar una lista del creador
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteCreatorPlaylist(@PathVariable String id, @CookieValue(value = "access_token", required = false) String tokenId) {
-        var emailOpt = getEmailFromToken(tokenId);
-        if (emailOpt.isEmpty()) return ResponseEntity.status(401).build();
+    @PreAuthorize("hasRole('CREATOR')")
+    public ResponseEntity<Object> deleteCreatorPlaylist(@PathVariable String id) {
+
         var opt = playlistRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.status(404).build();
         Playlist p = opt.get();

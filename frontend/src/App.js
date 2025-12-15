@@ -1,5 +1,9 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Switch, Route } from 'react-router-dom';
+import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
+import { Capacitor } from '@capacitor/core';
+import BackButtonHandler from './components/BackButtonHandler';
 import './App.css';
 import './styles.css';
 
@@ -34,132 +38,202 @@ import DarAltaCuenta from './pages/admin/DarAltaCuenta';
 
 // General Pages
 import HomePage from './pages/HomePage';
-import NotFoundPage from './pages/errors/NotFoundPage';
-import ForbiddenPage from './pages/errors/ForbiddenPage';
 
 // Guards
 import ProtectedRoute from './guards/ProtectedRoute';
 import ProtectedRouteAfterLogin from './guards/ProtectedRouteAfterLogin';
 
-
-
 function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Rutas públicas */}
-        <Route path="/" element={
-          <ProtectedRouteAfterLogin>
-            <HomePage />
-          </ProtectedRouteAfterLogin>
-        } />
-        <Route path="/login" element={
-          <ProtectedRouteAfterLogin>
-            <LoginPage />
-          </ProtectedRouteAfterLogin>
-        } />
-        <Route path="/registro" element={
-          <ProtectedRouteAfterLogin>
-            <RegistroPage />
-          </ProtectedRouteAfterLogin>
-        } />
-        <Route path="/recuperar" element={<RecoverPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/setup-2fa" element={
-          <ProtectedRouteAfterLogin>
-            <Setup2FA />
-          </ProtectedRouteAfterLogin>
-        } />
-        <Route path="/validate-2fa" element={
-          <ProtectedRouteAfterLogin>
-            <Validate2FA />
-          </ProtectedRouteAfterLogin>
-        } />
-        <Route path="/validate-3fa" element={
-          <ProtectedRouteAfterLogin>
-            <Validate3FA />
-          </ProtectedRouteAfterLogin>
-        } />
+  const isMobile = Capacitor.isNativePlatform(); // Detecta si es app móvil
+  console.log('Running in:', isMobile ? 'mobile app' : 'web app');
+  console.log('App component rendered');
 
-        {/* Rutas de Usuario */}
-        <Route path="/usuario" element={
-          <ProtectedRoute allowedRoles={['user']}>
-            <UserDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/perfil" element={
-          <ProtectedRoute>
-            <UserProfilePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/suscripcion" element={
-          <ProtectedRoute>
-            <SubscriptionPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/playlists" element={
-          <ProtectedRoute>
-            <PlaylistsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/playlists/:id" element={
-          <ProtectedRoute>
-            <PlaylistDetailPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/creator-playlists/:id" element={
-          <ProtectedRoute>
-            <CreatorPlaylistViewPage />
-          </ProtectedRoute>
-        } />
+  if (isMobile) {
+    // App móvil: Solo rutas de usuario
+    return (
+      <IonApp>
+        <IonReactRouter>
+          <BackButtonHandler />
+          <IonRouterOutlet>
+            {/* Rutas públicas */}
+            <Route exact path="/" render={() => (
+              <ProtectedRouteAfterLogin>
+                <HomePage />
+              </ProtectedRouteAfterLogin>
+            )} />
+            <Route path="/login" render={() => (
+              <ProtectedRouteAfterLogin>
+                <LoginPage />
+              </ProtectedRouteAfterLogin>
+            )} />
+            <Route path="/registro" render={() => (
+              <ProtectedRouteAfterLogin>
+                <RegistroPage />
+              </ProtectedRouteAfterLogin>
+            )} />
+            <Route path="/recuperar" component={RecoverPassword} />
+            <Route path="/reset-password" component={ResetPassword} />
+            <Route path="/setup-2fa" render={() => (
+              <ProtectedRouteAfterLogin>
+                <Setup2FA />
+              </ProtectedRouteAfterLogin>
+            )} />
+            <Route path="/validate-2fa" render={() => (
+              <ProtectedRouteAfterLogin>
+                <Validate2FA />
+              </ProtectedRouteAfterLogin>
+            )} />
+            <Route path="/validate-3fa" render={() => (
+              <ProtectedRouteAfterLogin>
+                <Validate3FA />
+              </ProtectedRouteAfterLogin>
+            )} />
 
-        {/* Rutas de Creador de Contenido */}
-        <Route path="/creator" element={
-          <ProtectedRoute allowedRoles={['creator']}>
-            <ContentCreatorDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/creator/profile" element={<ProfilePage />} />
-        <Route path="/creator/playlists" element={
-          <ProtectedRoute allowedRoles={['creator']}>
-            <CreatorPlaylistsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/creator/playlists/:id" element={
-          <ProtectedRoute allowedRoles={['creator']}>
-            <CreatorPlaylistDetailPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/creator/statistics" element={
-          <ProtectedRoute allowedRoles={['creator']}>
-            <CreatorStatisticsPage />
-          </ProtectedRoute>
-        } />
+            {/* Rutas de Usuario */}
+            <Route path="/usuario" render={() => (
+              <ProtectedRoute allowedRoles={['user']}>
+                <UserDashboard />
+              </ProtectedRoute>
+            )} />
+            <Route path="/perfil" render={() => (
+              <ProtectedRoute>
+                <UserProfilePage />
+              </ProtectedRoute>
+            )} />
+            <Route path="/suscripcion" render={() => (
+              <ProtectedRoute>
+                <SubscriptionPage />
+              </ProtectedRoute>
+            )} />
+            <Route exact path="/playlists" render={() => (
+              <ProtectedRoute>
+                <PlaylistsPage />
+              </ProtectedRoute>
+            )} />
+            <Route path="/playlists/:id" render={() => (
+              <ProtectedRoute>
+                <PlaylistDetailPage />
+              </ProtectedRoute>
+            )} />
+            <Route path="/creator-playlists/:id" render={() => (
+              <ProtectedRoute>
+                <CreatorPlaylistViewPage />
+              </ProtectedRoute>
+            )} />
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
+    );
+  } else {
+    // App web: Todas las rutas
+    return (
+      <Router>
+        <Switch>
+          {/* Rutas públicas */}
+          <Route exact path="/" component={HomePage} />
+          <Route path="/login" render={() => (
+            <ProtectedRouteAfterLogin>
+              <LoginPage />
+            </ProtectedRouteAfterLogin>
+          )} />
+          <Route path="/registro" render={() => (
+            <ProtectedRouteAfterLogin>
+              <RegistroPage />
+            </ProtectedRouteAfterLogin>
+          )} />
+          <Route path="/recuperar" component={RecoverPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/setup-2fa" render={() => (
+            <ProtectedRouteAfterLogin>
+              <Setup2FA />
+            </ProtectedRouteAfterLogin>
+          )} />
+          <Route path="/validate-2fa" render={() => (
+            <ProtectedRouteAfterLogin>
+              <Validate2FA />
+            </ProtectedRouteAfterLogin>
+          )} />
+          <Route path="/validate-3fa" render={() => (
+            <ProtectedRouteAfterLogin>
+              <Validate3FA />
+            </ProtectedRouteAfterLogin>
+          )} />
 
-        {/* Rutas de Administrador */}
-        <Route path="/adminDashboard" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/adminDashboard/editProfile" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/darAlta" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <DarAltaCuenta />
-          </ProtectedRoute>
-        } />
+          {/* Rutas de Usuario */}
+          <Route path="/usuario" render={() => (
+            <ProtectedRoute allowedRoles={['user']}>
+              <UserDashboard />
+            </ProtectedRoute>
+          )} />
+          <Route path="/perfil" render={() => (
+            <ProtectedRoute>
+              <UserProfilePage />
+            </ProtectedRoute>
+          )} />
+          <Route path="/suscripcion" render={() => (
+            <ProtectedRoute>
+              <SubscriptionPage />
+            </ProtectedRoute>
+          )} />
+          <Route exact path="/playlists" render={() => (
+            <ProtectedRoute>
+              <PlaylistsPage />
+            </ProtectedRoute>
+          )} />
+          <Route path="/playlists/:id" render={() => (
+            <ProtectedRoute>
+              <PlaylistDetailPage />
+            </ProtectedRoute>
+          )} />
+          <Route path="/creator-playlists/:id" render={() => (
+            <ProtectedRoute>
+              <CreatorPlaylistViewPage />
+            </ProtectedRoute>
+          )} />
 
-        {/* Rutas de Error */}
-        <Route path="/403" element={<ForbiddenPage />} />
-        <Route path="/404" element={<NotFoundPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Router>
-  );
+          {/* Rutas de Creador de Contenido */}
+          <Route exact path="/creator" render={() => (
+            <ProtectedRoute allowedRoles={['creator']}>
+              <ContentCreatorDashboard />
+            </ProtectedRoute>
+          )} />
+          <Route path="/creator/profile" component={ProfilePage} />
+          <Route exact path="/creator/playlists" render={() => (
+            <ProtectedRoute allowedRoles={['creator']}>
+              <CreatorPlaylistsPage />
+            </ProtectedRoute>
+          )} />
+          <Route path="/creator/playlists/:id" render={() => (
+            <ProtectedRoute allowedRoles={['creator']}>
+              <CreatorPlaylistDetailPage />
+            </ProtectedRoute>
+          )} />
+          <Route path="/creator/statistics" render={() => (
+            <ProtectedRoute allowedRoles={['creator']}>
+              <CreatorStatisticsPage />
+            </ProtectedRoute>
+          )} />
+
+          {/* Rutas de Administrador */}
+          <Route exact path="/adminDashboard" render={() => (
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          )} />
+          <Route path="/adminDashboard/editProfile" render={() => (
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminProfile />
+            </ProtectedRoute>
+          )} />
+          <Route path="/darAlta" render={() => (
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DarAltaCuenta />
+            </ProtectedRoute>
+          )} />
+        </Switch>
+      </Router>
+    );
+  }
 }
 
 export default App;

@@ -130,7 +130,7 @@ function ContentFilters({ onFiltersChange, activeFiltersCount = 0 }) {
         onClick={() => setShowDropdown(!showDropdown)}
       >
         <i className="fas fa-filter"></i>
-        Filtros
+        <span className="filter-text">Filtros</span>
         {activeCount > 0 && (
           <span className="active-filters-badge">{activeCount}</span>
         )}

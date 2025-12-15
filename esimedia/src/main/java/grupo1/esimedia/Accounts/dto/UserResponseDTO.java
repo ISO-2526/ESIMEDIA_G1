@@ -13,6 +13,7 @@ public class UserResponseDTO {
     private boolean vip;
     private LocalDateTime vipSince;
     private List<String> favorites;
+    private List<String> tags; // Preferencias del usuario
     
     public UserResponseDTO() {}
 
@@ -69,6 +70,12 @@ public class UserResponseDTO {
     }
     public void setFavorites(List<String> favorites) {
         this.favorites = favorites;
+    }
+    public List<String> getTags() {
+        return tags;
+    }
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
     
 }

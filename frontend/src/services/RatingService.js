@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../api/axiosConfig';
 
 const API_BASE_URL = '/api/ratings';
 

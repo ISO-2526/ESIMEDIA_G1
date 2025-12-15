@@ -15,6 +15,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +33,9 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-import grupo1.esimedia.Accounts.dto.*;
+import grupo1.esimedia.Accounts.dto.LoginRequestDTO;
+import grupo1.esimedia.Accounts.dto.SendThirdFactorCodeRequestDTO;
+import grupo1.esimedia.Accounts.dto.VerifyThirdFactorCodeRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.ActivateThirdFactorRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.RecoverPasswordRequestDTO;
 import grupo1.esimedia.Accounts.dto.request.ResetPasswordRequestDTO;
@@ -59,6 +64,26 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final String ADMIN = "admin";
+
+    private static final String NOLASTPASSWORDCHANGEDAT = "Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.";
+
+    private static final String RECUPERARCONTRASENA = "Error con la contraseña, debe recuperarla";
+
+    private static final String CONTRASENAEXPIRADA = "Contraseña expirada para el usuario {}";
+
+    private static final String CONTRASENA30DIAS = "La contraseña debe cambiarse cada 30 días";
+
+    private static final String CREATOR = "creator";
+
+    private static final String CONTRASENARESTABLECIDA = "Contraseña restablecida";
+
+    private static final String TOKENEXPIRADO = "El token ha expirado";
+
+    private static final String NOREUTILIZARCONTRASENANTIGUA = "Usuario {} intentó reutilizar una contraseña antigua.";
+
+    private static final String NOREUTILIZARCONTRASENA = "No puedes reutilizar una de tus últimas 5 contraseñas.";
     
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
@@ -195,13 +220,13 @@ public class AuthController {
         }
 
         if (!passwordUtils.verifyPassword(password, admin.getPassword())) {
-            return invalidCredentialsResponse(email, clientIp, "admin");
+            return invalidCredentialsResponse(email, clientIp, ADMIN);
         }
 
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), "admin");
+        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), ADMIN);
         if (threeFa != null) return threeFa;
 
         loginAttemptService.resetAttempts(email, clientIp);
@@ -220,13 +245,13 @@ public class AuthController {
         }
 
         if (!passwordUtils.verifyPassword(password, creator.getPassword())) {
-            return invalidCredentialsResponse(email, clientIp, "creator");
+            return invalidCredentialsResponse(email, clientIp, CREATOR);
         }
 
         ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
-        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), "creator");
+        ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), CREATOR);
         if (threeFa != null) return threeFa;
 
         loginAttemptService.resetAttempts(email, clientIp);
@@ -343,19 +368,14 @@ public class AuthController {
     }
 
     @GetMapping("/protected-resource")
-    public ResponseEntity<?> getProtectedResource(
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
-        }
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
-        }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getProtectedResource() {
+
         return ResponseEntity.ok("Recurso protegido accedido correctamente");
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logout(
             @CookieValue(value = "access_token", required = false) String tokenId,
             @CookieValue(value = "csrf_token", required = false) String csrfCookie,
@@ -370,10 +390,11 @@ public class AuthController {
             if (token != null) tokenRepository.delete(token);
         }
 
+        // ✅ MOBILE FIX: Usar mismos flags que en login para limpiar cookies
         ResponseCookie clearAccess = ResponseCookie.from("access_token", "")
-                .httpOnly(true).secure(true).sameSite("Strict").path("/").maxAge(0).build();
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(0).build();
         ResponseCookie clearCsrf = ResponseCookie.from("csrf_token", "")
-                .httpOnly(false).secure(true).sameSite("Strict").path("/").maxAge(0).build();
+                .httpOnly(false).secure(false).sameSite("Lax").path("/").maxAge(0).build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearAccess.toString())
@@ -383,20 +404,42 @@ public class AuthController {
 
     @GetMapping("/validate-token")
     public ResponseEntity<?> validateToken(
-            @CookieValue(value = "access_token", required = false) String tokenId) {
+            @CookieValue(value = "access_token", required = false) String cookieToken,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // ⚠️ HYBRID STRATEGY: Prioridad 1 - Header Bearer (Móvil), Prioridad 2 - Cookie (Web)
+        String tokenId = null;
+        
+        // 1. Intentar extraer del header Authorization (para móvil)
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenId = authHeader.substring(7);
+            System.out.println("✅ Validating token from Authorization header (mobile): " + tokenId);
+        }
+        // 2. Si no hay header, usar cookie (para web)
+        else if (cookieToken != null && !cookieToken.isBlank()) {
+            tokenId = cookieToken;
+            System.out.println("✅ Validating token from cookie (web): " + tokenId);
+        }
+        
         if (tokenId == null || tokenId.isBlank()) {
+            System.out.println("❌ No token found in header or cookie");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
         }
-        System.out.println("Validating token (cookie): " + tokenId);
 
         Token token = tokenRepository.findById(tokenId).orElse(null);
         if (token == null || token.getExpiration().isBefore(LocalDateTime.now())) {
+            System.out.println("❌ Token invalid or expired: " + tokenId);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
         }
 
+        // Obtener role y email del token
+        String accountId = token.getAccountId();
+        String role = token.getRole();
+        
+        System.out.println("✅ Token validated successfully for: " + accountId);
         Map<String, Object> response = new HashMap<>();
-        response.put("role", token.getRole());
-        response.put("email", token.getAccountId());
+        response.put("role", role);
+        response.put("email", accountId);
         return ResponseEntity.ok(response);
     }
 
@@ -439,23 +482,35 @@ public class AuthController {
     }
 
     @PostMapping("/activate-3fa")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> activateThirdFactor(@Valid @RequestBody ActivateThirdFactorRequestDTO request) {
-        String email = request.getEmail();
-        boolean activate = request.isActivate();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = auth.getName();
+        
+        String requestEmail = request.getEmail();
+        
+        // Permitir si es el mismo usuario O si es admin
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!authenticatedEmail.equals(requestEmail) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("No tienes permiso para modificar esta cuenta");
+        }        boolean activate = request.isActivate();
 
-        var adminOpt = adminRepository.findById(email);
+        var adminOpt = adminRepository.findById(requestEmail);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             admin.setThirdFactorEnabled(activate);
             adminRepository.save(admin);
         }
-        var creatorOpt = contentCreatorRepository.findById(email);
+        var creatorOpt = contentCreatorRepository.findById(requestEmail);
         if (creatorOpt.isPresent()) {
             ContentCreator creator = creatorOpt.get();
             creator.setThirdFactorEnabled(activate);
             contentCreatorRepository.save(creator);
         }
-        var userOpt = userRepository.findById(email);
+        var userOpt = userRepository.findById(requestEmail);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             user.setThirdFactorEnabled(activate);
@@ -541,7 +596,7 @@ public class AuthController {
         if (user != null) {
             ResponseEntity<?> resp = handlePasswordResetForUser(user, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         // 2. Admin
@@ -549,7 +604,7 @@ public class AuthController {
         if (admin != null) {
             ResponseEntity<?> resp = handlePasswordResetForAdmin(admin, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         // 3. ContentCreator
@@ -557,7 +612,7 @@ public class AuthController {
         if (creator != null) {
             ResponseEntity<?> resp = handlePasswordResetForCreator(creator, password, now);
             if (resp != null) return resp;
-            return ResponseEntity.ok("Contraseña restablecida");
+            return ResponseEntity.ok(CONTRASENARESTABLECIDA);
         }
 
         return ResponseEntity.status(400).body("Token inválido");
@@ -659,21 +714,36 @@ public class AuthController {
         token.setExpiration(LocalDateTime.now().plusHours(8));
         tokenRepository.save(token);
 
+        // ✅ MOBILE FIX: secure=false y sameSite=Lax para desarrollo HTTP
+        // TODO: En producción, cambiar a secure=true y sameSite=Strict con HTTPS
         ResponseCookie accessCookie = ResponseCookie.from("access_token", tokenID)
-            .httpOnly(true).secure(true).sameSite("Strict").path("/").maxAge(Duration.ofHours(2)).build();
+            .httpOnly(true)
+            .secure(false)  // ✅ false para HTTP en desarrollo
+            .sameSite("Lax")  // ✅ Lax permite cookies entre localhost y 10.0.2.2
+            .path("/")
+            .maxAge(Duration.ofHours(2))
+            .build();
+            
         ResponseCookie csrfCookie = ResponseCookie.from("csrf_token", UUID.randomUUID().toString())
-            .httpOnly(false).secure(true).sameSite("Strict").path("/").maxAge(Duration.ofHours(2)).build();
+            .httpOnly(false)
+            .secure(false)  // ✅ false para HTTP en desarrollo
+            .sameSite("Lax")  // ✅ Lax permite cookies entre localhost y 10.0.2.2
+            .path("/")
+            .maxAge(Duration.ofHours(2))
+            .build();
 
         return new TokenResult(tokenID, accessCookie, csrfCookie);
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForAdmin(Admin admin, String email, String clientIp) {
-        TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
+        TokenResult tr = createTokenAndCookies(admin.getEmail(), ADMIN);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("admin");
+        response.setRole(ADMIN);
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for admin: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -683,13 +753,15 @@ public class AuthController {
     }
 
     private ResponseEntity<?> buildLoginSuccessResponseForCreator(ContentCreator creator, String email, String clientIp) {
-        TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
+        TokenResult tr = createTokenAndCookies(creator.getEmail(), CREATOR);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("creator");
+        response.setRole(CREATOR);
         response.setEmail(creator.getEmail());
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
         response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for creator: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -705,6 +777,8 @@ public class AuthController {
         response.setEmail(user.getEmail());
         response.setPicture(user.getPicture());
         response.setThirdFactorEnabled(user.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         log.info("[AUTH] ✓ Login successful for user: {} from IP: {}", email, clientIp);
         return ResponseEntity.ok()
@@ -714,12 +788,14 @@ public class AuthController {
     }
 
     private ResponseEntity<?> build3FASuccessResponseForAdmin(Admin admin) {
-        TokenResult tr = createTokenAndCookies(admin.getEmail(), "admin");
+        TokenResult tr = createTokenAndCookies(admin.getEmail(), ADMIN);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("admin");
+        response.setRole(ADMIN);
         response.setEmail(admin.getEmail());
         response.setPicture(admin.getPicture());
         response.setThirdFactorEnabled(admin.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
@@ -728,13 +804,15 @@ public class AuthController {
     }
 
     private ResponseEntity<?> build3FASuccessResponseForCreator(ContentCreator creator) {
-        TokenResult tr = createTokenAndCookies(creator.getEmail(), "creator");
+        TokenResult tr = createTokenAndCookies(creator.getEmail(), CREATOR);
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setRole("creator");
+        response.setRole(CREATOR);
         response.setEmail(creator.getEmail());
         response.setAlias(creator.getAlias());
         response.setPicture(creator.getPicture());
         response.setThirdFactorEnabled(creator.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
@@ -749,6 +827,8 @@ public class AuthController {
         response.setEmail(user.getEmail());
         response.setPicture(user.getPicture());
         response.setThirdFactorEnabled(user.isThirdFactorEnabled());
+        // ⚠️ HYBRID STRATEGY: Token en body para móvil + cookies para web
+        response.setAccessToken(tr.tokenId);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, tr.accessCookie.toString())
@@ -758,7 +838,7 @@ public class AuthController {
 
     private ResponseEntity<?> handlePasswordResetForUser(User user, String password, LocalDateTime now) {
         if (isResetTokenExpired(user.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = user.getEmail();
         String name = user.getName();
@@ -780,7 +860,7 @@ public class AuthController {
 
     private ResponseEntity<?> handlePasswordResetForAdmin(Admin admin, String password, LocalDateTime now) {
         if (isResetTokenExpired(admin.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = admin.getEmail();
         String name = admin.getName();
@@ -802,7 +882,7 @@ public class AuthController {
 
     private ResponseEntity<?> handlePasswordResetForCreator(ContentCreator creator, String password, LocalDateTime now) {
         if (isResetTokenExpired(creator.getTokenExpiration(), now)) {
-            return ResponseEntity.status(400).body("El token ha expirado");
+            return ResponseEntity.status(400).body(TOKENEXPIRADO);
         }
         String email = creator.getEmail();
         String name = creator.getName();

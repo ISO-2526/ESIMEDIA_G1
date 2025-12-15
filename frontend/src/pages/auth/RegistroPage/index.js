@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './RegistroPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import api from '../../../api/axiosConfig';
+import { useHistory } from 'react-router-dom';
 import { validatePasswordStrength } from '../../../utils/passwordDictionary';
-import { TAGS } from '../../../creator/components/constants';
+import TagSelector from '../../../components/TagSelector'; // HDU 492
 
 function RegistroPage() {
   const { modalState, closeModal, showSuccess, showError, showInfo } = useModal();
@@ -31,9 +31,8 @@ function RegistroPage() {
     alias: '',
     dateOfBirth: '',
     vip: false,
-    vip: false,
     picture: imagenes[0],
-    preferences: []
+    tags: [] // HDU 492 - Preferencias del usuario
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -44,7 +43,7 @@ function RegistroPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // Hook para redirección
+  const history = useHistory(); // Hook para redirección
 
   // Asegurar que el scroll comience desde arriba
   useEffect(() => {
@@ -82,11 +81,6 @@ function RegistroPage() {
     if (e.target.checked) {
       showInfo('¡Has seleccionado la opción VIP!\nAhora podrás acceder a las siguientes ventajas: contenido exclusivo, soporte prioritario y mucho más.\n¡Disfruta de tu experiencia VIP!', 'Bienvenido a VIP');
     }
-  };
-
-  const handleTagsChange = (e) => {
-    const values = Array.from(e.target.selectedOptions, o => o.value);
-    setForm(prev => ({ ...prev, preferences: values }));
   };
 
   const handleShowPassword = () => {
@@ -142,8 +136,8 @@ function RegistroPage() {
     dateOfBirth: form.dateOfBirth || null,
     vip: form.vip || false,
     picture: form.picture || null,
-    preferences: form.preferences || [],
     isActive: true,
+    tags: form.tags || [] // HDU 492 - Preferencias del usuario
   });
 
   const handleSubmit = async (e) => {
@@ -166,22 +160,18 @@ function RegistroPage() {
     const user = buildUserObject();
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
+      // HDU 492 - Usar axios (api) en lugar de fetch para compatibilidad con móvil
+      const response = await api.post('/api/users', user);
 
-      if (response.ok) {
-        navigate('/setup-2fa', { state: { email: form.email } });
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
-        console.error('Error del servidor:', errorData);
-        showError(errorData.error || 'Error al crear usuario. Por favor, verifica los datos e intenta de nuevo.');
-      }
+      // Axios envía respuesta directamente, no necesita .ok
+      history.push({
+        pathname: '/setup-2fa',
+        state: { email: form.email }
+      });
     } catch (error) {
       console.error('Error de conexión:', error);
-      showError('Error de conexión con el servidor. Por favor, intenta más tarde.');
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al crear usuario. Por favor, verifica los datos e intenta de nuevo.';
+      showError(errorMsg);
     }
   };
 
@@ -396,24 +386,6 @@ function RegistroPage() {
                 </label>
               </div>
 
-              <div className="form-field">
-                <label htmlFor="registro-tags" className="form-label">Mis Gustos (Tags)</label>
-                <select
-                  id="registro-tags"
-                  name="preferences"
-                  multiple
-                  value={form.preferences}
-                  onChange={handleTagsChange}
-                  className="form-input"
-                  style={{ height: 'auto', minHeight: '100px' }}
-                >
-                  {TAGS.map(tag => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
-                </select>
-                <small className="help-text">Mantén Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</small>
-              </div>
-
               <div className="form-field avatar-selector">
                 <label className="form-label" htmlFor="avatar-toggle-btn">Foto de perfil</label>
                 <button
@@ -445,6 +417,15 @@ function RegistroPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* HDU 492 - Selector de Tags/Preferencias */}
+              <div className="form-field">
+                <TagSelector
+                  selectedTags={form.tags}
+                  onChange={(newTags) => setForm(prev => ({ ...prev, tags: newTags }))}
+                  maxTags={10}
+                />
               </div>
             </div>
 

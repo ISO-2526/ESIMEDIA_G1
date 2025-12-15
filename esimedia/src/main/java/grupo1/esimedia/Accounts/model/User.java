@@ -13,7 +13,7 @@ public class User extends Account {
     private LocalDateTime vipSince;
     private List<String> favorites; // List of content IDs marked as favorites
     private String dateOfBirth;
-    private List<String> preferences; // List of tags for content recommendations
+    private List<String> tags; // Preferencias del usuario (ej: "rock", "jazz", "podcast")
 
 
     // Getters y setters
@@ -29,7 +29,7 @@ public class User extends Account {
     public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
     public List<String> getFavorites() { return favorites; }
     public void setFavorites(List<String> favorites) { this.favorites = favorites; }
-    public List<String> getPreferences() { return preferences; }
-    public void setPreferences(List<String> preferences) { this.preferences = preferences; }
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags = tags; }
 
 }

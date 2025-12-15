@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "axios";
 import './Validate3FA.css';
 
 const Validate3FA = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const history = useHistory();
   const email = location.state?.email || "";
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
@@ -75,11 +75,11 @@ const Validate3FA = () => {
 
       // Redirigir según el rol
       if (data.role === "admin") {
-        navigate("/adminDashboard");
+        history.push("/adminDashboard");
       } else if (data.role === "creator") {
-        navigate("/creator");
+        history.push("/creator");
       } else {
-        navigate("/usuario");
+        history.push("/usuario");
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error || "Código incorrecto. Inténtalo de nuevo.";
@@ -201,7 +201,7 @@ const Validate3FA = () => {
             <button 
               type="button" 
               className="validate3fa-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>

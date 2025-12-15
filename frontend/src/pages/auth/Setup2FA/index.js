@@ -1,34 +1,56 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "axios";
 import './Setup2FA.css';
 
 const Setup2FA = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const history = useHistory();
   const email = location.state?.email || '';
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
+  // Verificar que se recibió el email, si no redirigir al registro
+  useEffect(() => {
+    if (!email || email.trim() === '') {
+      console.error('❌ No se recibió el email para setup 2FA');
+      setError('No se pudo obtener el email. Volviendo al registro...');
+      setTimeout(() => {
+        history.push('/registro');
+      }, 2000);
+    } else {
+      console.log('✅ Email recibido para setup 2FA:', email);
+    }
+  }, [email, history]);
+
   const handleSetup2FA = async () => {
+    if (!email || email.trim() === '') {
+      setError("No se pudo obtener el correo electrónico. Por favor, regístrate nuevamente.");
+      return;
+    }
+
     setIsButtonDisabled(true);
+    console.log('🔐 Solicitando setup 2FA para email:', email);
+    
     try {
       const response = await axios.get("/api/auth/2fa/setup", {
         params: { email },
       });
+      console.log('✅ Setup 2FA exitoso:', response.data);
       setQrCodeUrl(response.data.qrCodeUrl);
       setSecretKey(response.data.secretKey);
       setError("");
     } catch (err) {
-      setError("Error al configurar 2FA. Verifica el correo electrónico.");
+      console.error('❌ Error en setup 2FA:', err);
+      setError(err.response?.data?.error || "Error al configurar 2FA. Verifica el correo electrónico.");
       setIsButtonDisabled(false);
     }
   };
 
   const handleContinue = () => {
-    navigate('/login');
+    history.push('/login');
   };
 
   return (

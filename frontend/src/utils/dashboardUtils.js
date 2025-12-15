@@ -101,37 +101,47 @@ function LoadingSpinner() {
 // }
 
 // ============================================
-// 5. SERVICIO DE API (mock)
+// 5. SERVICIO DE API
 // ============================================
+
+import { Capacitor } from '@capacitor/core';
+
+// Función helper para construir URLs de API
+const buildApiUrl = (endpoint) => {
+    const baseURL = Capacitor.isNativePlatform()
+        ? 'http://10.0.2.2:8080'
+        : 'http://localhost:8080';
+    return `${baseURL}${endpoint}`;
+};
 
 const ContentService = {
     // Obtener todos los contenidos
     async getAll() {
-        const response = await fetch('/api/contenidos');
+        const response = await fetch(buildApiUrl('/api/contenidos'));
         return await response.json();
     },
 
     // Obtener por categoría
     async getByCategory(category) {
-        const response = await fetch(`/api/contenidos?categoria=${category}`);
+        const response = await fetch(buildApiUrl(`/api/contenidos?categoria=${category}`));
         return await response.json();
     },
 
     // Buscar contenidos
     async search(query) {
-        const response = await fetch(`/api/contenidos/search?q=${query}`);
+        const response = await fetch(buildApiUrl(`/api/contenidos/search?q=${query}`));
         return await response.json();
     },
 
     // Obtener contenido por ID
     async getById(id) {
-        const response = await fetch(`/api/contenidos/${id}`);
+        const response = await fetch(buildApiUrl(`/api/contenidos/${id}`));
         return await response.json();
     },
 
     // Añadir a Mi Lista
     async addToList(userId, contentId) {
-        const response = await fetch('/api/mi-lista', {
+        const response = await fetch(buildApiUrl('/api/mi-lista'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, contentId })

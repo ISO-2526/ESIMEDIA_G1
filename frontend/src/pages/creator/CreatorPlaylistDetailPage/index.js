@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import '../../../creator/CreatorDashboard.css';
 import '../../user/PlaylistDetailPage/PlaylistDetailPage.css';
 import CreatorTabs from '../../../creator/components/CreatorTabs';
@@ -8,7 +8,7 @@ import { useModal } from '../../../utils/useModal';
 
 function CreatorPlaylistDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showWarning, showConfirm } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
@@ -58,14 +58,14 @@ function CreatorPlaylistDetailPage() {
         setEditDescription(data.descripcion || '');
       } else if (response.status === 403) {
         showWarning('No tienes permiso para ver esta lista');
-        navigate('/creator/playlists');
+        history.push('/creator/playlists');
       } else {
         showError('Error al cargar la lista');
-        navigate('/creator/playlists');
+        history.push('/creator/playlists');
       }
     } catch (error) {
       console.error('Error:', error);
-      navigate('/creator/playlists');
+      history.push('/creator/playlists');
     } finally {
       setLoading(false);
     }
@@ -205,7 +205,7 @@ function CreatorPlaylistDetailPage() {
 
           if (response.ok) {
             showSuccess('Lista eliminada correctamente');
-            navigate('/creator/playlists');
+            history.push('/creator/playlists');
           } else {
             showError('Error al eliminar la lista');
           }
@@ -249,7 +249,7 @@ function CreatorPlaylistDetailPage() {
             <div>
               <button 
                 className="btn btn-neutral" 
-                onClick={() => navigate('/creator/playlists')}
+                onClick={() => history.push('/creator/playlists')}
                 style={{ marginBottom: '12px' }}
               >
                 <i className="fas fa-arrow-left"></i> Volver a Listas
@@ -290,7 +290,7 @@ function CreatorPlaylistDetailPage() {
             <p style={{ color: 'var(--creator-text-muted)', marginBottom: '24px' }}>
               Añade contenidos desde el catálogo haciendo clic en el botón "+" de cada contenido
             </p>
-            <button className="btn btn-primary" onClick={() => navigate('/creator')}>
+            <button className="btn btn-primary" onClick={() => history.push('/creator')}>
               <i className="fas fa-arrow-left"></i> Ir a Mis Contenidos
             </button>
           </div>

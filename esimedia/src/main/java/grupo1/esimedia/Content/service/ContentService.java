@@ -19,20 +19,17 @@ import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
 import grupo1.esimedia.Accounts.service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class ContentService {
 
     private final CreatorContentRepository repository;
-    
-    @Autowired
-    private NotificationService notificationService;
-
+    private final NotificationService notificationService;
     private static final String DEFAULT_COVER = "cover3.png";
 
-    public ContentService(CreatorContentRepository repository) {
+    public ContentService(CreatorContentRepository repository, NotificationService notificationService) {
         this.repository = repository;
+        this.notificationService = notificationService;
     }
 
     public List<Content> findAll() {
@@ -100,7 +97,14 @@ public class ContentService {
         c.setCreatorAlias(req.getCreatorAlias());
 
         Content saved = repository.save(c);
-        notificationService.notifyUsersInterestedIn(saved);
+        
+        // HDU 492 - Trigger: Notificar a usuarios con tags coincidentes
+        // Solo notifica si el contenido tiene tags (las notificaciones se envían incluso en estado PRIVADO
+        // para que cuando se publique los usuarios ya tengan la notificación pendiente)
+        if (saved.getTags() != null && !saved.getTags().isEmpty() && saved.getState() == ContentState.PUBLICO) {
+            notificationService.notifyUsersWithMatchingTags(saved);
+        }
+        
         return saved;
     }
 

@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
 import logo from '../../../resources/esimedialogo.png';
 import './SubscriptionPage.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
+import axios from '../../../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 
 function SubscriptionPage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState: notificationModal, closeModal: closeNotificationModal, showSuccess } = useModal();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [modalAction, setModalAction] = useState(''); // 'upgrade' o 'downgrade'
   const [scrolled, setScrolled] = useState(false);
   const [userProfile, setUserProfile] = useState({
-    picture: '/pfp/avatar1.png'
+    picture: '/pfp/avatar1.png',
+    vip: false
   });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
   
   // Datos de suscripción del usuario (simulados)
   const [subscriptionData, setSubscriptionData] = useState({
@@ -27,7 +41,7 @@ function SubscriptionPage() {
   });
 
   const handleLogout = async () => {
-    await logoutCsrf('/login', navigate);
+    await logoutCsrf('/', history);
   };
   
   React.useEffect(() => {
@@ -46,20 +60,15 @@ function SubscriptionPage() {
 
   const loadSubscriptionData = async () => {
     try {
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        const profileData = await response.json();
-        setSubscriptionData({
-          tipo: profileData.vip ? 'VIP' : 'NORMAL',
-          fechaInicioVIP: profileData.vipSince ? new Date(profileData.vipSince).toISOString().split('T')[0] : null,
-          beneficios: profileData.vip ? ['Acceso a contenido exclusivo'] : []
-        });
-      }
+      const profileData = response.data;
+      setSubscriptionData({
+        tipo: profileData.vip ? 'VIP' : 'NORMAL',
+        fechaInicioVIP: profileData.vipSince ? new Date(profileData.vipSince).toISOString().split('T')[0] : null,
+        beneficios: profileData.vip ? ['Acceso a contenido exclusivo'] : []
+      });
     } catch (error) {
       console.error('Error al cargar datos de suscripción:', error);
     }
@@ -67,31 +76,21 @@ function SubscriptionPage() {
 
   const loadUserProfile = async () => {
     try {
-      const email = localStorage.getItem('email');
-      
-      if (email) {
-        const response = await fetch('/api/users/profile', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'email': email
-          }
-        });
-
-        if (response.ok) {
-          const profileData = await response.json();
-          const updatedProfile = {
-            name: profileData.name,
-            surname: profileData.surname,
-            email: profileData.email,
-            alias: profileData.alias,
-            dateOfBirth: profileData.dateOfBirth,
-            picture: profileData.picture || '/pfp/avatar1.png'
-          };
-          setUserProfile(updatedProfile);
-        }
-      }
+      const response = await axios.get('/api/users/profile', {
+        withCredentials: true
+      });
+      const profileData = response.data;
+      const updatedProfile = {
+        name: profileData.name,
+        surname: profileData.surname,
+        email: profileData.email,
+        alias: profileData.alias,
+        dateOfBirth: profileData.dateOfBirth,
+        picture: getImageUrl(profileData.picture),
+        vip: profileData.vip || false
+      };
+      setUserProfile(updatedProfile);
+      console.log('🖼️ Profile picture URL (SubscriptionPage):', updatedProfile.picture);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }
@@ -112,44 +111,26 @@ function SubscriptionPage() {
     try {
       if (modalAction === 'upgrade') {
         // Upgrade to VIP
-        const response = await fetch('/api/users/vip/upgrade', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        await axios.post('/api/users/vip/upgrade', {}, {
+          withCredentials: true
         });
-
-        if (response.ok) {
-          setSubscriptionData({
-            ...subscriptionData,
-            tipo: 'VIP',
-            fechaInicioVIP: new Date().toISOString().split('T')[0]
-          });
-          showSuccess('¡Felicidades! Ahora eres un usuario VIP');
-        } else {
-          showSuccess('Error al actualizar tu suscripción. Por favor, intenta de nuevo.');
-        }
+        setSubscriptionData({
+          ...subscriptionData,
+          tipo: 'VIP',
+          fechaInicioVIP: new Date().toISOString().split('T')[0]
+        });
+        showSuccess('¡Felicidades! Ahora eres un usuario VIP');
       } else {
         // Downgrade to NORMAL and clean VIP content from playlists
-        const response = await fetch('/api/users/vip/downgrade', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        await axios.post('/api/users/vip/downgrade', {}, {
+          withCredentials: true
         });
-
-        if (response.ok) {
-          setSubscriptionData({
-            ...subscriptionData,
-            tipo: 'NORMAL',
-            fechaInicioVIP: null
-          });
-          showSuccess('Tu suscripción ha sido cancelada. Ahora eres un usuario normal');
-        } else {
-          showSuccess('Error al actualizar tu suscripción. Por favor, intenta de nuevo.');
-        }
+        setSubscriptionData({
+          ...subscriptionData,
+          tipo: 'NORMAL',
+          fechaInicioVIP: null
+        });
+        showSuccess('Tu suscripción ha sido cancelada. Ahora eres un usuario normal');
       }
     } catch (error) {
       console.error('Error updating subscription:', error);
@@ -175,11 +156,20 @@ function SubscriptionPage() {
       <div className="animated-bg"></div>
       
       {/* Header */}
+      {Capacitor.isNativePlatform() ? (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      ) : (
       <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
           <div className="header-left">
             <button 
-              onClick={() => navigate('/usuario')}
+              onClick={() => history.push('/usuario')}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
               aria-label="Ir a inicio"
             >
@@ -264,6 +254,7 @@ function SubscriptionPage() {
           </div>
         </div>
       </header>
+      )}
       
       <div className="subscription-container">
         <div className="subscription-box">

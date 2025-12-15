@@ -1,31 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
+import axios from '../api/axiosConfig';
 
 const ProtectedRouteAfterLogin = ({ children }) => {
   const [state, setState] = useState({ loading: true, role: null });
 
   useEffect(() => {
     let alive = true;
-    fetch('/api/auth/validate-token', { method: 'GET', credentials: 'include' })
-      .then(async (r) => {
+    axios.get('/api/auth/validate-token', { withCredentials: true })
+      .then((response) => {
         if (!alive) return;
-        if (r.ok) {
-          const data = await r.json();
-          setState({ loading: false, role: data?.role ?? data?.data?.role });
-        } else {
-          setState({ loading: false, role: null });
-        }
+        const data = response.data;
+        console.log('✅ ProtectedRouteAfterLogin - Token válido, role:', data?.role);
+        setState({ loading: false, role: data?.role ?? data?.data?.role });
       })
-      .catch(() => alive && setState({ loading: false, role: null }));
+      .catch((error) => {
+        console.log('⚠️ ProtectedRouteAfterLogin - No autenticado:', error.response?.status);
+        if (alive) setState({ loading: false, role: null });
+      });
     return () => { alive = false; };
   }, []);
 
   if (state.loading) return children;
   if (!state.role) return children;
-  if (state.role === "admin") return <Navigate to="/adminDashboard" replace />;
-  if (state.role === "creator") return <Navigate to="/creator" replace />;
-  if (state.role === "user") return <Navigate to="/usuario" replace />;
-  return <Navigate to="/" replace />;
+  if (state.role === "admin") return <Redirect to="/adminDashboard" />;
+  if (state.role === "creator") return <Redirect to="/creator" />;
+  if (state.role === "user") return <Redirect to="/usuario" />;
+  return <Redirect to="/" />;
 };
 
 export default ProtectedRouteAfterLogin;

@@ -592,6 +592,9 @@
 @media (max-width: 768px) {
   .navbar-premium {
     padding: 12px 20px;
+    /* Soporte para el notch en dispositivos móviles */
+    top: var(--safe-area-top);
+    padding-top: calc(12px + var(--safe-area-top));
   }
   
   .nav-slogan-landing {
@@ -599,7 +602,8 @@
   }
   
   .hero-premium {
-    padding: 100px 20px 60px;
+    /* Ajustar el padding superior para compensar el header con notch */
+    padding: calc(100px + var(--safe-area-top)) 20px 60px;
   }
   
   .hero-title-premium {

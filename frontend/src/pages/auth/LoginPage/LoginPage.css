@@ -341,3 +341,51 @@
     padding-right: 60px;
   }
 }
+
+/* ========================================
+   ESTILOS PARA IONIC (MÓVIL)
+   ======================================== */
+
+/* IonContent debe tener un fondo y permitir scroll */
+.login-page-content {
+  --background: linear-gradient(135deg, #121212 0%, #1a1a2e 50%, #0f0f0f 100%);
+  --padding-top: 20px;
+  --padding-bottom: 60px;
+  --padding-start: 15px;
+  --padding-end: 15px;
+}
+
+/* El contenedor wrapper dentro de IonContent */
+ion-content .animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+ion-content .login-wrapper {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  max-width: 100%;
+  min-height: auto;
+}
+
+/* Ocultar panel informativo en móvil para ahorrar espacio */
+ion-content .info-panel {
+  display: none;
+}
+
+ion-content .form-panel {
+  width: 100%;
+  max-width: none;
+  padding: 30px 20px;
+}
+
+/* Asegurar que los inputs tengan margen para el teclado */
+ion-content .form-field:last-of-type {
+  margin-bottom: 30px;
+}

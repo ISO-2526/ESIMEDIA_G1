@@ -1,35 +1,23 @@
 package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.Content;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.PublicContentRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contents")
-@CrossOrigin(origins = "http://localhost:3000")
 public class PublicContentController {
 
     private final PublicContentRepository contentRepository;
-    private final TokenRepository tokenRepository;
 
-    public PublicContentController(PublicContentRepository contentRepository, TokenRepository tokenRepository) {
+    public PublicContentController(PublicContentRepository contentRepository) {
         this.contentRepository = contentRepository;
-        this.tokenRepository = tokenRepository;
-    }
-
-    private Optional<Token> resolveValidToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) return Optional.empty();
-        Optional<Token> tok = tokenRepository.findById(tokenId);
-        if (tok.isEmpty()) return Optional.empty();
-        Token t = tok.get();
-        if (t.getExpiration() != null && t.getExpiration().isBefore(java.time.LocalDateTime.now())) return Optional.empty();
-        return Optional.of(t);
     }
 
     // Get all active contents
@@ -62,15 +50,12 @@ public class PublicContentController {
 
     // Create new content (for creators)
     @PostMapping
-    public ResponseEntity<Content> createContent(@RequestBody Content content,
-                                                 @CookieValue(value = "access_token", required = false) String tokenId) {
-        var tokenOpt = resolveValidToken(tokenId);
-        if (tokenOpt.isEmpty()) return ResponseEntity.status(401).build();
-        Token token = tokenOpt.get();
-        String role = token.getRole();
-        if (role == null || (!role.equals("creator") && !role.equals("admin"))) return ResponseEntity.status(403).build();
+    @PreAuthorize("hasRole('CREATOR')")
+    public ResponseEntity<Content> createContent(@RequestBody Content content) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
 
-        content.setCreatorEmail(token.getAccountId());
+        content.setCreatorEmail(email);
         content.setCreatedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
         content.setActive(true);
@@ -81,16 +66,13 @@ public class PublicContentController {
 
     // Update content
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('CREATOR')")
     public ResponseEntity<Content> updateContent(
             @PathVariable String id,
-            @RequestBody Content updates,
-            @CookieValue(value = "access_token", required = false) String tokenId) {
-        var tokenOpt = resolveValidToken(tokenId);
-        if (tokenOpt.isEmpty()) return ResponseEntity.status(401).build();
-        Token token = tokenOpt.get();
-        String userEmail = token.getAccountId();
-        String role = token.getRole();
-        
+            @RequestBody Content updates) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
         var contentOpt = contentRepository.findById(id);
         if (contentOpt.isEmpty()) {
             return ResponseEntity.status(404).build();
@@ -98,8 +80,8 @@ public class PublicContentController {
         
         Content content = contentOpt.get();
         
-        // Only creator or admin can update
-        if (!content.getCreatorEmail().equals(userEmail) && !"admin".equals(role)) {
+        // Only creator can update
+        if (!content.getCreatorEmail().equals(userEmail)) {
             return ResponseEntity.status(403).build();
         }
         
@@ -123,13 +105,11 @@ public class PublicContentController {
 
     // Delete content (soft delete)
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteContent(@PathVariable String id,
-                                                @CookieValue(value = "access_token", required = false) String tokenId) {
-        var tokenOpt = resolveValidToken(tokenId);
-        if (tokenOpt.isEmpty()) return ResponseEntity.status(401).build();
-        Token token = tokenOpt.get();
-        String userEmail = token.getAccountId();
-        String role = token.getRole();
+    @PreAuthorize("hasAnyRole('CREATOR')")
+    public ResponseEntity<String> deleteContent(@PathVariable String id
+                                                ) {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var contentOpt = contentRepository.findById(id);
         if (contentOpt.isEmpty()) {
@@ -138,8 +118,8 @@ public class PublicContentController {
         
         Content content = contentOpt.get();
         
-        // Only creator or admin can delete
-        if (!content.getCreatorEmail().equals(userEmail) && !"admin".equals(role)) {
+        // Only creator can delete
+        if (!content.getCreatorEmail().equals(userEmail)) {
             return ResponseEntity.status(403).build();
         }
         

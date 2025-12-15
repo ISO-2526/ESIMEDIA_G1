@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import MobileHeader from '../../../components/mobile/MobileHeader';
+import { handleLogout as logoutCsrf } from '../../../auth/logout';
 import ContentCard from '../../../components/ContentCard';
 import AudioPlayer from '../../../components/AudioPlayer';
 import VideoPlayer from '../../../components/VideoPlayer';
@@ -7,15 +10,44 @@ import './CreatorPlaylistViewPage.css';
 import CustomModal from '../../../components/CustomModal';
 import { useModal } from '../../../utils/useModal';
 import { createOverlayKeyboardHandlers, createDialogKeyboardHandlers } from '../../../utils/overlayAccessibility';
+import axios from '../../../api/axiosConfig';
 
 function CreatorPlaylistViewPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [playlist, setPlaylist] = useState(null);
   const [contents, setContents] = useState([]);
   const [allContents, setAllContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState({ picture: '/pfp/avatar1.png', vip: false });
+
+  // Función para obtener URL absoluta en Android
+  const getImageUrl = (path) => {
+    if (!path) return '/pfp/avatar1.png';
+    if (path.startsWith('http')) return path;
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
+
+  const handleLogout = async () => {
+    await logoutCsrf('/', history);
+  };
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await axios.get('/api/users/profile', { withCredentials: true });
+      setUserProfile({
+        picture: getImageUrl(response.data.picture),
+        vip: response.data.vip || false
+      });
+    } catch (error) {
+      console.error('Error al cargar el perfil del usuario:', error);
+    }
+  };
+
   const [sortBy, setSortBy] = useState('addedDate');
   const [selectedContent, setSelectedContent] = useState(null);
   const [isAudioPlayerOpen, setIsAudioPlayerOpen] = useState(false);
@@ -27,6 +59,7 @@ function CreatorPlaylistViewPage() {
     fetchAllContents();
     fetchPlaylistDetails();
     fetchFavorites();
+    loadUserProfile();
   }, [id]);
 
   useEffect(() => {
@@ -51,11 +84,8 @@ function CreatorPlaylistViewPage() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch('/api/users/favorites', { credentials: 'include' });
-      if (response.ok) {
-        const data = await response.json();
-        setFavorites(data);
-      }
+      const response = await axios.get('/api/users/favorites', { withCredentials: true });
+      setFavorites(response.data);
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
@@ -63,11 +93,8 @@ function CreatorPlaylistViewPage() {
 
   const fetchAllContents = async () => {
     try {
-      const response = await fetch('/api/public/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setAllContents(data);
-      }
+      const response = await axios.get('/api/public/contents');
+      setAllContents(response.data);
     } catch (error) {
       console.error('Error fetching all contents:', error);
     }
@@ -75,25 +102,22 @@ function CreatorPlaylistViewPage() {
 
   const fetchPlaylistDetails = async () => {
     try {
-      const response = await fetch(`/api/creator/playlists/public`);
-
-      if (response.ok) {
-        const data = await response.json();
-        const foundPlaylist = data.find(p => p.id === id);
-        
-        if (foundPlaylist && foundPlaylist.visible) {
-          setPlaylist(foundPlaylist);
-        } else {
-          showWarning('Esta lista no está disponible');
-          navigate('/usuario');
-        }
+      const response = await axios.get(`/api/creator/playlists/public`);
+      const data = response.data;
+      const foundPlaylist = data.find(p => p.id === id);
+      
+      if (foundPlaylist && foundPlaylist.visible) {
+        setPlaylist(foundPlaylist);
       } else {
-        showError('Error al cargar la lista');
-        navigate('/usuario');
+        showWarning('Esta lista no está disponible');
+        history.push('/usuario');
       }
     } catch (error) {
       console.error('Error:', error);
-      navigate('/usuario');
+      if (error.response?.status) {
+        showError('Error al cargar la lista');
+      }
+      history.push('/usuario');
     } finally {
       setLoading(false);
     }
@@ -149,31 +173,24 @@ function CreatorPlaylistViewPage() {
   };
 
   const removeFavorite = async (contentId) => {
-    const response = await fetch(`/api/users/favorites/${contentId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-
-    if (response.ok) {
+    try {
+      await axios.delete(`/api/users/favorites/${contentId}`, { withCredentials: true });
       setFavorites(favorites.filter(id => id !== contentId));
       showSuccess('Eliminado de favoritos');
-    } else {
+    } catch (error) {
       showError('Error al eliminar de favoritos');
     }
   };
 
   const addFavorite = async (contentId) => {
-    const response = await fetch('/api/users/favorites', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ contentId })
-    });
-
-    if (response.ok) {
+    try {
+      await axios.post('/api/users/favorites', 
+        { contentId }, 
+        { withCredentials: true }
+      );
       setFavorites([...favorites, contentId]);
       showSuccess('Añadido a favoritos');
-    } else {
+    } catch (error) {
       showError('Error al añadir a favoritos');
     }
   };
@@ -247,7 +264,16 @@ function CreatorPlaylistViewPage() {
 
   return (
     <div className="playlist-detail-page">
-      <button className="floating-back-button" onClick={() => navigate('/usuario')}>
+      {Capacitor.isNativePlatform() && (
+        <MobileHeader
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+          showSearch={false}
+          showFilters={false}
+          showNotifications={true}
+        />
+      )}
+      <button className="floating-back-button" onClick={() => history.push('/usuario')}>
         <i className="fas fa-arrow-left"></i>
       </button>
 

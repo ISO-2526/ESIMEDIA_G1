@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import CreatorTopBar from '../../../creator/components/CreatorTopBar';
 import CreatorTabs from '../../../creator/components/CreatorTabs';
 import { StatisticsService } from '../../../creator/StatisticsService';
@@ -10,7 +10,7 @@ import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 
 export default function CreatorStatisticsPage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showError } = useModal();
   const [creatorPhoto, setCreatorPhoto] = useState('/pfp/avatar1.png');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -116,7 +116,7 @@ export default function CreatorStatisticsPage() {
     }
   };
 
-  const handleLogout = () => logoutCsrf('/login', navigate);
+  const handleLogout = () => logoutCsrf('/login', history);
 
   return (
     <div className="dashboard-container" style={{ position: 'relative' }}>
@@ -126,8 +126,8 @@ export default function CreatorStatisticsPage() {
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen(m => !m)}
           onLogout={handleLogout}
-          onViewProfile={() => navigate('/creator/profile')}
-          onEditProfile={() => navigate('/creator/profile/edit')}
+          onViewProfile={() => history.push('/creator/profile')}
+          onEditProfile={() => history.push('/creator/profile/edit')}
         />
 
         <h2 className="section-title">Estadísticas</h2>

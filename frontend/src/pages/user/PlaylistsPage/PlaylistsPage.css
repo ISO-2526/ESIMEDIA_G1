@@ -125,6 +125,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
               0 0 0 1px rgba(255, 255, 255, 0.05);
   padding: 0 !important;
+  margin-right: 8px;
 }
 
 .playlists-page .back-button i {
@@ -144,12 +145,6 @@
 .playlists-page .back-button:hover i {
   color: #FAED5C;
 }
-
-.playlists-page .back-button {
-  margin-right: 8px;
-}
-
-
 
 .playlists-grid {
   position: relative;
@@ -437,6 +432,7 @@
 @media (max-width: 768px) {
   .playlists-page {
     padding: 20px;
+    padding-top: var(--mobile-content-padding-top);
   }
 
   .playlists-header {

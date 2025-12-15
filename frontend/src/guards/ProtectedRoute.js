@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import useSessionTimeout from '../utils/useSessionTimeout';
+import axios from '../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null mientras se valida el token
@@ -12,20 +13,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        const response = await fetch('/api/auth/validate-token', {
-          method: 'GET',
-          credentials: 'include', // <-- envía cookies
+        console.log('🔐 Validando token desde ProtectedRoute...');
+        const response = await axios.get('/api/auth/validate-token', {
+          withCredentials: true
         });
-        if (response.ok) {
-          const data = await response.json();
-          const role = data?.role ?? data?.data?.role;
-          setUserRole(role);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
+        console.log('✅ Token válido:', response.data);
+        const role = response.data?.role ?? response.data?.data?.role;
+        setUserRole(role);
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Error al validar el token:', error);
+        console.error('❌ Error al validar el token:', error);
+        console.log('Error status:', error.response?.status);
         setIsAuthenticated(false);
       }
     };
@@ -39,14 +37,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!isAuthenticated) {
     // Redirigir al inicio de sesión si no está autenticado
-    return <Navigate to="/login" replace />;
+    return <Redirect to="/login" />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     // Redirigir según el rol del usuario si no tiene acceso
-    if (userRole === 'admin') return <Navigate to="/adminDashboard" replace />;
-    if (userRole === 'creator') return <Navigate to="/creator" replace />;
-    if (userRole === 'user') return <Navigate to="/usuario" replace />;
+    if (userRole === 'admin') return <Redirect to="/adminDashboard" />;
+    if (userRole === 'creator') return <Redirect to="/creator" />;
+    if (userRole === 'user') return <Redirect to="/usuario" />;
   }
 
   // Renderizar el contenido protegido si está autenticado y tiene acceso

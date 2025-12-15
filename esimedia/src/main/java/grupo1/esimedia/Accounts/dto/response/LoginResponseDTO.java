@@ -6,6 +6,8 @@ public class LoginResponseDTO {
     private String alias;
     private String picture;
     private boolean thirdFactorEnabled;
+    // ⚠️ SECURITY WARNING: Token expuesto en body para soportar Mobile Emulator. Mantener Cookie para Web.
+    private String accessToken;
 
     public LoginResponseDTO() {}
 
@@ -47,5 +49,14 @@ public class LoginResponseDTO {
 
     public void setThirdFactorEnabled(boolean thirdFactorEnabled) {
         this.thirdFactorEnabled = thirdFactorEnabled;
+    }
+
+    // ⚠️ DEV ONLY: Getter/Setter para mobile emulator
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }

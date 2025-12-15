@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import CreatorTopBar from '../../../creator/components/CreatorTopBar';
 import CreatorTabs from '../../../creator/components/CreatorTabs';
 import ContentFilters from '../../../creator/components/ContentFilters';
@@ -12,7 +12,7 @@ import { useModal } from '../../../utils/useModal';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
 
 export default function ContentCreatorDashboard() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { modalState, closeModal, showSuccess, showError, showConfirm } = useModal();
   const [creatorPhoto, setCreatorPhoto] = useState('/pfp/avatar1.png');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -140,7 +140,7 @@ export default function ContentCreatorDashboard() {
     setShowForm(false);
   }
 
-  const handleLogout = () => logoutCsrf('/login', navigate);
+  const handleLogout = () => logoutCsrf('/login', history);
 
   // Add these helper functions before handleFormSubmit
   const uploadAudioFile = async (audioFile) => {
@@ -334,8 +334,8 @@ export default function ContentCreatorDashboard() {
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen(m => !m)}
           onLogout={handleLogout}
-          onViewProfile={() => navigate('/creator/profile')}
-          onEditProfile={() => navigate('/creator/profile/edit')}
+          onViewProfile={() => history.push('/creator/profile')}
+          onEditProfile={() => history.push('/creator/profile/edit')}
         />
 
         <h2 className="section-title">Panel del creador</h2>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import logo from '../resources/esimedialogo.png';
 import './ProfilePage.css';
 import CustomModal from '../components/CustomModal';
@@ -144,7 +144,7 @@ const DescriptionField = ({ isEditing, tempData, profileData, handleInputChange 
 
 
 function CreatorProfilePage() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const location = useLocation();
   const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -254,7 +254,7 @@ function CreatorProfilePage() {
     setTempData({...profileData});
     setPreviewImage(null);
     // Si venía de ?edit=1, quitar el parámetro
-    navigate('/creator/profile', { replace: true });
+    history.replace('/creator/profile');
   };
 
   const handleSave = async () => {
@@ -294,7 +294,7 @@ function CreatorProfilePage() {
       setProfileData(updatedData);
       setIsEditing(false);
       showSuccess('Perfil actualizado correctamente');
-      navigate('/creator/profile', { replace: true });
+      history.replace('/creator/profile');
     } catch (error) {
       console.error('Error al guardar los cambios:', error);
       showError('Ocurrió un error al guardar los cambios. Inténtalo de nuevo.');
@@ -318,7 +318,7 @@ function CreatorProfilePage() {
     setShowAvatarSelector(false);
   };
 
-  const handleLogout = () => logoutCsrf('/login', navigate);
+  const handleLogout = () => logoutCsrf('/login', history);
 
   if (loading) {
     return (
@@ -345,7 +345,7 @@ function CreatorProfilePage() {
         <div className="header-container">
           <div className="header-left">
             <button 
-              onClick={() => navigate('/creator')}
+              onClick={() => history.push('/creator')}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
               aria-label="Ir al panel de creador"
             >

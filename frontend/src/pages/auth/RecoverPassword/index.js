@@ -1,14 +1,14 @@
 //Pagina recuperar contraseña
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import api from '../../../api/axiosConfig';
+import { useHistory } from 'react-router-dom';
 import './RecoverPassword.css';
 
 function RecoverPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' o 'error'
-  const navigate = useNavigate();
+  const history = useHistory();
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +16,7 @@ function RecoverPassword() {
     
     
     try {
-      await axios.post('/api/auth/recover', { email });
+      await api.post('/api/auth/recover', { email });
     } catch (error) {
         // Simular delay de 2 segundos
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -76,7 +76,7 @@ function RecoverPassword() {
             <button 
               type="button" 
               className="recover-link-btn"
-              onClick={() => navigate('/login')}
+              onClick={() => history.push('/login')}
             >
               ← Volver al inicio de sesión
             </button>

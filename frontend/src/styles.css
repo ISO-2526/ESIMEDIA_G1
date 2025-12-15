@@ -74,7 +74,10 @@ body {
 .page-container {
   position: relative;
   min-height: 100vh;
+  height: auto;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--gradient-bg);
   display: flex;
   align-items: center;
@@ -441,3 +444,147 @@ body {
   }
 }
 
+/* ============================================
+   FIX GLOBAL: SCROLL & TECLADO EN IONIC
+   ============================================
+   SOLUCIÓN SIMPLE Y FUNCIONAL
+   ============================================ */
+
+/* 1. FORZAR ALTURA Y ESTRUCTURA EN ION-APP */
+ion-app {
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+ion-app ion-router-outlet {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  contain: none !important;
+}
+
+/* 2. CREAR EL SCROLL EN EL LUGAR CORRECTO - SELECTOR MÚLTIPLE */
+ion-router-outlet > *,
+ion-router-outlet > .ion-page,
+ion-app > ion-router-outlet > div,
+.ion-page {
+  height: 100% !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* 3. OCULTAR LA BARRA DE SCROLL COMPLETAMENTE */
+/* Webkit (Chrome, Safari, Edge) - Desktop y Móvil */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+ion-app ::-webkit-scrollbar,
+ion-app *::-webkit-scrollbar,
+ion-router-outlet ::-webkit-scrollbar,
+ion-router-outlet *::-webkit-scrollbar,
+.ion-page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Firefox y IE */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+ion-app,
+ion-app *,
+ion-router-outlet,
+ion-router-outlet *,
+.ion-page {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Media Query específico para móviles */
+@media only screen and (max-width: 768px) {
+  /* Forzar ocultación en TODOS los elementos con scroll */
+  *::-webkit-scrollbar,
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+  
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  /* Asegurar que body, html y root no muestren scroll */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+/* 4. NEUTRALIZAR .page-container */
+ion-router-outlet .page-container,
+.ion-page .page-container,
+ion-app .page-container {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+  display: block !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+  padding-bottom: 120px !important;
+}
+
+/* 5. NEUTRALIZAR TODAS LAS PÁGINAS Y DASHBOARDS */
+ion-app [class*="-dashboard"],
+ion-app [class*="-page"],
+ion-app [class*="page-"] {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  padding-bottom: 100px !important;
+}
+
+/* 6. NEUTRALIZAR CONTENEDORES Y WRAPPERS */
+ion-app .login-wrapper,
+ion-app .registro-wrapper,
+ion-app .form-panel,
+ion-app .info-panel,
+ion-app .content-wrapper,
+ion-app .main-content {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+}
+
+/* 7. FONDO ANIMADO */
+ion-app .animated-bg {
+  position: absolute !important;
+}
+
+/* 8. SCROLL AUTOMÁTICO PARA INPUTS CON TECLADO */
+ion-app input,
+ion-app textarea,
+ion-app select {
+  scroll-margin-bottom: 150px;
+}

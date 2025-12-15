@@ -2,12 +2,10 @@ package grupo1.esimedia.Accounts.controller;
 
 import grupo1.esimedia.Accounts.model.User;
 import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.model.Token;
 import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
 import grupo1.esimedia.Accounts.repository.AdminRepository;
 import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
 import grupo1.esimedia.Accounts.service.EmailService;
 import grupo1.esimedia.utils.PasswordUtils;
 import grupo1.esimedia.Accounts.dto.request.CreateUserRequestDTO;
@@ -20,11 +18,13 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.List;
 import java.time.LocalDateTime;
-import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.google.zxing.BarcodeFormat;
@@ -40,6 +40,23 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
+    private static final String ERROR = "error";
+
+    private static final String MESSAGE = "message";
+
+    private static final String ACTIVE =  "active";
+
+    private static final String FAVORITES = "favorites";
+
+    private static final String USUARIONOENCONTRADO = "Usuario no encontrado";
+
+    private static final String SURNAME = "surname";
+
+    private static final String ALIAS = "alias";
+
+    private static final String PICTURE = "picture";
+
     
     @Autowired
     private UserRepository userRepository;
@@ -59,8 +76,6 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private TokenRepository tokenRepository;
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequestDTO dto) {
@@ -81,8 +96,8 @@ public class UserController {
         
         if (!passwordErrors.isEmpty()) {
             return ResponseEntity.status(400).body(Map.of(
-                "error", "PASSWORD_WEAK",
-                "message", passwordErrors.get(0)
+                ERROR, "PASSWORD_WEAK",
+                MESSAGE, passwordErrors.get(0)
             ));
         }
 
@@ -95,9 +110,8 @@ public class UserController {
         user.setAlias(dto.getAlias());
         user.setDateOfBirth(dto.getDateOfBirth().toString());
         user.setVip(dto.isVip());
-        user.setVip(dto.isVip());
         user.setPicture(dto.getPicture());
-        user.setPreferences(dto.getPreferences());
+        user.setTags(dto.getTags()); // Preferencias del usuario (HDU 492)
 
         // Guardar el usuario en la base de datos
         User saved = userRepository.save(user);
@@ -108,6 +122,7 @@ public class UserController {
     }
 
     @GetMapping(path = "", produces = "application/json")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = userRepository.findAll().stream()
             .map(this::toUserResponseDTO)
@@ -116,26 +131,17 @@ public class UserController {
     }
 
     @GetMapping(path = "/{email:.+}", produces = "application/json")
-    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email, @CookieValue(value = "access_token", required = false) String tokenId) {
-        // permitir solo admin vía token cookie
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) {
-            return ResponseEntity.status(401).build();
-        }
-        var opt = userRepository.findById(email);
-        if (opt.isEmpty()) {
-            for (User u : userRepository.findAll()) {
-                if (u.getEmail() != null && u.getEmail().equalsIgnoreCase(email)) { opt = java.util.Optional.of(u); break; }
-            }
-        }
-        return opt.map(u -> ResponseEntity.ok(toUserResponseDTO(u))).orElse(ResponseEntity.status(404).build());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        var opt = findUserByEmail(email);
+        return opt.map(u -> ResponseEntity.ok(toUserResponseDTO(u)))
+                .orElse(ResponseEntity.status(404).build());
     }
 
     @PutMapping(path = "/{email:.+}/active", consumes = "application/json")
-    public ResponseEntity<?> setUserActive(@PathVariable String email, @RequestBody Map<String, Object> body, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) return ResponseEntity.status(401).build();
-        Object activeObj = body.get("active");
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> setUserActive(@PathVariable String email, @RequestBody Map<String, Object> body) {
+        Object activeObj = body.get(ACTIVE);
         if (activeObj == null) return ResponseEntity.badRequest().body("Missing 'active' field");
         final boolean active = (activeObj instanceof Boolean) ? (Boolean) activeObj : Boolean.parseBoolean(activeObj.toString());
         var opt = userRepository.findById(email);
@@ -152,11 +158,9 @@ public class UserController {
     }
 
     @PutMapping(path = "/{email:.+}", consumes = "application/json")
-    public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody Map<String, Object> body, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null || token.getRole() == null || !"admin".equals(token.getRole())) {
-            return ResponseEntity.status(401).build();
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody Map<String, Object> body) {
+
 
         var opt = findUserByEmail(email);
         
@@ -169,10 +173,10 @@ public class UserController {
 
     // Get user favorites
     @GetMapping(path = "/favorites", produces = "application/json")
-    public ResponseEntity<List<String>> getUserFavorites(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<String>> getUserFavorites() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -190,10 +194,11 @@ public class UserController {
 
     // Add content to favorites
     @PostMapping(path = "/favorites/{contentId}")
-    public ResponseEntity<?> addToFavorites(@PathVariable String contentId, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+        @PreAuthorize("hasRole('USER')")
+
+    public ResponseEntity<?> addToFavorites(@PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -203,7 +208,7 @@ public class UserController {
             newUser.setFavorites(new ArrayList<>());
             newUser.getFavorites().add(contentId);
             userRepository.save(newUser);
-            return ResponseEntity.ok(Map.of("message", "Added to favorites", "favorites", newUser.getFavorites()));
+            return ResponseEntity.ok(Map.of(MESSAGE, "Added to favorites", FAVORITES, newUser.getFavorites()));
         }
         
         User user = opt.get();
@@ -214,22 +219,22 @@ public class UserController {
         
         // Check if already in favorites
         if (favorites.contains(contentId)) {
-            return ResponseEntity.status(400).body(Map.of("error", "Content already in favorites"));
+            return ResponseEntity.status(400).body(Map.of(ERROR, "Content already in favorites"));
         }
         
         favorites.add(contentId);
         user.setFavorites(favorites);
         userRepository.save(user);
         
-        return ResponseEntity.ok(Map.of("message", "Added to favorites", "favorites", favorites));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Added to favorites", FAVORITES, favorites));
     }
 
     // Remove content from favorites
     @DeleteMapping(path = "/favorites/{contentId}")
-    public ResponseEntity<?> removeFromFavorites(@PathVariable String contentId, @CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(401).build();
-        String userEmail = token.getAccountId();
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> removeFromFavorites(@PathVariable String contentId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
         
         var opt = userRepository.findById(userEmail);
         if (opt.isEmpty()) {
@@ -246,7 +251,7 @@ public class UserController {
         user.setFavorites(favorites);
         userRepository.save(user);
         
-        return ResponseEntity.ok(Map.of("message", "Removed from favorites", "favorites", favorites));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Removed from favorites", FAVORITES, favorites));
     }
 
     //Reset password functionality(obsoleto)
@@ -278,40 +283,37 @@ public class UserController {
         emailService.sendEmail(user.getEmail(), "Password Reset", "Your password has been reset successfully.");
         userRepository.save(user);
 
-        return ResponseEntity.ok(Map.of("message", "Password reset"));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Password reset"));
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
         return ResponseEntity.ok(toUserResponseDTO(user));
     }
 
     @PutMapping("/editUser")
-    public ResponseEntity<?> editUser(@CookieValue(value = "access_token", required = false) String tokenId, @RequestBody User updatedUser) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> editUser(@RequestBody User updatedUser) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         // Actualizar los campos permitidos
         user.setName(updatedUser.getName());
         user.setSurname(updatedUser.getSurname());
         user.setAlias(updatedUser.getAlias());
-        user.setAlias(updatedUser.getAlias());
         user.setPicture(updatedUser.getPicture());
-        user.setPreferences(updatedUser.getPreferences());
+        user.setTags(updatedUser.getTags()); // Actualizar preferencias (HDU 492)
 
         userRepository.save(user);
         return ResponseEntity.ok(toUserResponseDTO(user));
@@ -321,20 +323,20 @@ public class UserController {
     public ResponseEntity<Map<String, String>> setupTwoFactorAuth(@RequestParam String email) {
         // Validar formato del correo electrónico
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Correo electrónico inválido"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR, "Correo electrónico inválido"));
         }
 
         // Buscar usuario
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(ERROR, USUARIONOENCONTRADO));
         }
 
         try {
             // Verificar si ya existe una clave secreta
             String existingSecretKey = user.getTwoFactorSecretKey();
             if (existingSecretKey != null && !existingSecretKey.isEmpty()) {
-                return ResponseEntity.ok(Map.of("message", "2FA ya está habilitado", "secretKey", existingSecretKey));
+                return ResponseEntity.ok(Map.of(MESSAGE, "2FA ya está habilitado", "secretKey", existingSecretKey));
             }
 
             // Generar nueva clave secreta
@@ -361,18 +363,11 @@ public class UserController {
             return ResponseEntity.ok(Map.of("qrCodeBase64", base64QrCode, "secretKey", key.getKey()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al generar el código QR: " + e.getMessage()));
+                .body(Map.of(ERROR, "Error al generar el código QR: " + e.getMessage()));
         }
     }
 
-    // Helpers y endpoints finales (asegurar que existen en el archivo)
-    private Token requireValidToken(String tokenId) {
-        if (tokenId == null || tokenId.isBlank()) return null;
-        Token token = tokenRepository.findById(tokenId).orElse(null);
-        if (token == null) return null;
-        if (token.getExpiration() == null || token.getExpiration().isBefore(LocalDateTime.now())) return null;
-        return token;
-    }
+
 
     private java.util.Optional<User> findUserByEmail(String email) {
         var opt = userRepository.findById(email);
@@ -390,17 +385,17 @@ public class UserController {
         if (body.containsKey("name") && body.get("name") instanceof String) {
             existing.setName(((String) body.get("name")).trim());
         }
-        if (body.containsKey("surname") && body.get("surname") instanceof String) {
-            existing.setSurname(((String) body.get("surname")).trim());
+        if (body.containsKey(SURNAME) && body.get(SURNAME) instanceof String) {
+            existing.setSurname(((String) body.get(SURNAME)).trim());
         }
-        if (body.containsKey("alias") && body.get("alias") instanceof String) {
-            existing.setAlias(((String) body.get("alias")).trim());
+        if (body.containsKey(ALIAS) && body.get(ALIAS) instanceof String) {
+            existing.setAlias(((String) body.get(ALIAS)).trim());
         }
-        if (body.containsKey("picture") && body.get("picture") instanceof String) {
-            existing.setPicture(((String) body.get("picture")).trim());
+        if (body.containsKey(PICTURE) && body.get(PICTURE) instanceof String) {
+            existing.setPicture(((String) body.get(PICTURE)).trim());
         }
-        if (body.containsKey("active")) {
-            updateActiveField(existing, body.get("active"));
+        if (body.containsKey(ACTIVE)) {
+            updateActiveField(existing, body.get(ACTIVE));
         }
     }
 
@@ -413,41 +408,49 @@ public class UserController {
     }
 
     @DeleteMapping("/{email:.+}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> deleteUser(@PathVariable String email) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = auth.getName();
+        
+        // Solo permitir si es el mismo usuario
+        if (!authenticatedEmail.equalsIgnoreCase(email)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(ERROR, "Solo puedes eliminar tu propia cuenta"));
+        }
+        
         var opt = findUserByEmail(email);
         return opt.map(existing -> {
             userRepository.delete(existing);
-            return ResponseEntity.ok().build();
-        }).orElse(ResponseEntity.status(404).build());
+            return ResponseEntity.ok(Map.of(MESSAGE, "Cuenta eliminada correctamente"));
+        }).orElse(ResponseEntity.status(404).body(Map.of(ERROR, USUARIONOENCONTRADO)));
     }
 
     @PostMapping("/vip/upgrade")
-    public ResponseEntity<?> upgradeToVip(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> upgradeToVip() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         user.setVip(true);
         user.setVipSince(LocalDateTime.now());
         userRepository.save(user);
 
-        return ResponseEntity.ok(Map.of("message", "Usuario actualizado a VIP", "vip", true));
+        return ResponseEntity.ok(Map.of(MESSAGE, "Usuario actualizado a VIP", "vip", true));
     }
 
     @PostMapping("/vip/downgrade")
-    public ResponseEntity<?> downgradeFromVip(@CookieValue(value = "access_token", required = false) String tokenId) {
-        Token token = requireValidToken(tokenId);
-        if (token == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autenticado");
-        String email = token.getAccountId();
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> downgradeFromVip() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
         User user = userRepository.findById(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(USUARIONOENCONTRADO);
         }
 
         user.setVip(false);
@@ -455,7 +458,7 @@ public class UserController {
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of(
-            "message", "Usuario actualizado a NORMAL. El contenido VIP permanecerá en tus listas pero no podrás acceder hasta que vuelvas a ser VIP", 
+            MESSAGE, "Usuario actualizado a NORMAL. El contenido VIP permanecerá en tus listas pero no podrás acceder hasta que vuelvas a ser VIP", 
             "vip", false
         ));
     }
@@ -489,7 +492,7 @@ public class UserController {
         if (user.getDateOfBirth() != null) {
             dto.setDateOfBirth(LocalDate.parse(user.getDateOfBirth()));
         }
-        dto.setPreferences(user.getPreferences());
+        dto.setTags(user.getTags()); // Preferencias del usuario (HDU 492)
         return dto;
     }
 }
