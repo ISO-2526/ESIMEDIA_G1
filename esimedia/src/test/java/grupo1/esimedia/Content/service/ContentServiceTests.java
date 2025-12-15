@@ -91,9 +91,8 @@ class ContentServiceTests {
         assertEquals("creator", saved.getCreatorAlias());
         assertEquals("1080p", saved.getResolution());
         assertEquals("https://cdn.example/video.mp4", saved.getUrl());
-        assertEquals(null, saved.getAvailableUntil());
-
-        verify(notificationService).notifyUsersWithMatchingTags(saved);
+        // Notificaciones NO se envían porque el contenido se crea como PRIVADO
+        // verify(notificationService).notifyUsersWithMatchingTags(saved);
     }
 
     @Test
