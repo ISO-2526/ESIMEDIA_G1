@@ -113,8 +113,6 @@ public class PasswordUtils {
                 log.info(SEPARADOR);
                 log.info("🔐 GENERACIÓN DE HASH DE CONTRASEÑA");
                 log.info(SEPARADOR);
-                log.info("📝 Contraseña original: '{}'", plainPassword);
-                log.info("📏 Longitud: {} caracteres", plainPassword.length());
             }
             
             // Pre-hash con SHA-256 + pepper
@@ -149,10 +147,6 @@ public class PasswordUtils {
                 log.info(SEPARADOR);
                 log.info("🔍 VERIFICACIÓN DETALLADA DE CONTRASEÑA");
                 log.info(SEPARADOR);
-                log.info("📥 INPUT DEL USUARIO:");
-                log.info("   Contraseña ingresada: '{}'", plainPassword);
-                log.info("   Longitud: {} caracteres", plainPassword.length());
-                log.info("");
                 log.info("💾 HASH ALMACENADO EN BD:");
                 log.info("   {}", hashedPassword);
                 log.info("   Longitud: {} caracteres", hashedPassword.length());
@@ -206,8 +200,6 @@ public class PasswordUtils {
         log.info(SEPARADOR);
         log.info("🔬 COMPARACIÓN DE HASHES");
         log.info(SEPARADOR);
-        log.info("Contraseña: '{}'", password);
-        log.info("");
         log.info("Hash 1: {}", hash1);
         log.info("Hash 2: {}", hash2);
         log.info("");

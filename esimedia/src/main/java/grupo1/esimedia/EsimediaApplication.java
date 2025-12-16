@@ -53,7 +53,7 @@ public class EsimediaApplication {
                 log.info("═══════════════════════════════════════════════════════");
                 log.info("✅ [BOOT] Admin por defecto creado exitosamente");
                 log.info("📧 Email: {}", email);
-                log.info("🔐 Contraseña: {} (almacenada con SHA-256 + bcrypt + pepper)", plainPassword);
+                log.info("🔐 Contraseña almacenada con SHA-256 + bcrypt + pepper");
                 log.info("👤 Nombre: {} {}", name, surname);
                 log.info("🏢 Departamento: {}", dept);
                 log.info("═══════════════════════════════════════════════════════");
