@@ -10,6 +10,7 @@ import AddToPlaylistModal from '../../../components/AddToPlaylistModal';
 import VipUpgradeModal from '../../../components/VipUpgradeModal';
 import CreatorPlaylistCard from '../../../components/CreatorPlaylistCard';
 import MobileHeader from '../../../components/mobile/MobileHeader'; // 📱 Componente móvil nativo
+import NotificationBell from '../../../components/NotificationBell/NotificationBell';
 import logo from '../../../resources/esimedialogo.png';
 import './UserDashboard.css';
 import { handleLogout as logoutCsrf } from '../../../auth/logout';
@@ -110,6 +111,9 @@ function DashboardHeader({
             />
             <i className="fas fa-search search-icon-dashboard"></i>
           </div>
+
+          {/* Campana de notificaciones */}
+          {userProfile?.email && <NotificationBell userId={userProfile.email} />}
 
           <div className="user-menu-container">
             <div
@@ -322,6 +326,7 @@ function UserDashboard() {
       };
       setUserProfile(updatedProfile);
       console.log('🖼️ Profile picture URL:', updatedProfile.picture);
+      console.log('📧 User email for notifications:', updatedProfile.email);
     } catch (error) {
       console.error('Error al cargar el perfil del usuario:', error);
     }

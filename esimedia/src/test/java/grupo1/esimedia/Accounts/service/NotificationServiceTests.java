@@ -17,17 +17,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import grupo1.esimedia.Accounts.model.Notification;
 import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.NotificationRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
+import grupo1.esimedia.model.UserNotification;
+import grupo1.esimedia.service.UserNotificationService;
 import grupo1.esimedia.Content.model.Content;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTests {
 
     @Mock
-    private NotificationRepository notificationRepository;
+    private UserNotificationService userNotificationService;
 
     @Mock
     private UserRepository userRepository;
@@ -55,7 +55,7 @@ class NotificationServiceTests {
         notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
-        verify(notificationRepository, times(1)).save(any(Notification.class));
+        verify(userNotificationService, times(1)).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -73,7 +73,7 @@ class NotificationServiceTests {
         notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -94,7 +94,7 @@ class NotificationServiceTests {
         notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -114,7 +114,7 @@ class NotificationServiceTests {
         notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -137,6 +137,6 @@ class NotificationServiceTests {
         notificationService.notifyUsersWithMatchingTags(content);
 
         // Assert
-        verify(notificationRepository, times(1)).save(any(Notification.class));
+        verify(userNotificationService, times(1)).createNotification(any(UserNotification.class));
     }
 }

@@ -5,6 +5,8 @@ import grupo1.esimedia.repository.UserNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,8 @@ import java.util.Optional;
  */
 @Service
 public class UserNotificationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserNotificationService.class);
 
     @Autowired
     private UserNotificationRepository userNotificationRepository;
@@ -51,7 +55,25 @@ public class UserNotificationService {
      * @return La notificación creada
      */
     public UserNotification createNotification(UserNotification userNotification) {
-        return userNotificationRepository.save(userNotification);
+        logger.info("🔵 [UserNotificationService] Guardando notificación:");
+        logger.info("   - UserId: {}", userNotification.getUserId());
+        logger.info("   - Title: {}", userNotification.getTitle());
+        logger.info("   - Type: {}", userNotification.getType());
+        logger.info("   - CreatedAt: {}", userNotification.getCreatedAt());
+        
+        try {
+            UserNotification saved = userNotificationRepository.save(userNotification);
+            logger.info("🟢 [UserNotificationService] Notificación guardada exitosamente con ID: {}", saved.getId());
+            
+            // Verificación inmediata
+            long count = userNotificationRepository.count();
+            logger.info("📊 Total de notificaciones en DB: {}", count);
+            
+            return saved;
+        } catch (Exception e) {
+            logger.error("🔴 [UserNotificationService] Error al guardar notificación: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**

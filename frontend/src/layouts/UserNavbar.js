@@ -1,11 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import './UserNavbar.css';
 import logo from './logo.svg';
+import NotificationBell from '../components/NotificationBell/NotificationBell';
 
 function UserNavbar({ username }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
   const history = useHistory();
+
+  // Obtener el email del usuario desde la sesión
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const response = await fetch('/api/auth/validate-token', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const email = data?.email || data?.data?.email;
+          console.log('[UserNavbar] Email del usuario:', email);
+          setUserEmail(email);
+        }
+      } catch (error) {
+        console.error('[UserNavbar] Error obteniendo email:', error);
+      }
+    };
+    
+    fetchUserEmail();
+  }, []);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -49,6 +72,8 @@ function UserNavbar({ username }) {
     }
   };
 
+  console.log('[UserNavbar] Rendering - userEmail:', userEmail);
+
   return (
     <nav className="user-navbar">
       <div className="navbar-logo">
@@ -59,58 +84,69 @@ function UserNavbar({ username }) {
         Bienvenido {username}
       </div>
 
-      <div className="navbar-user">
-        <div 
-          className="user-icon" 
-          onClick={toggleMenu}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); } }}
-          role="button"
-          tabIndex={0}
-          aria-label="Abrir menú de usuario"
-        >
-          <span>👤</span>
-        </div>
-        
-        {menuOpen && (
-          <div className="user-menu">
-            <div 
-              className="menu-item" 
-              onClick={handleDashboard}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDashboard(); } }}
-              role="button"
-              tabIndex={0}
-            >
-                <span>🏠</span> Inicio
-            </div>
-            <div 
-              className="menu-item" 
-              onClick={handleProfile}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleProfile(); } }}
-              role="button"
-              tabIndex={0}
-            >
-              <span>👤</span> Mi Perfil
-            </div>
-            <div 
-              className="menu-item" 
-              onClick={handleSubscription}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSubscription(); } }}
-              role="button"
-              tabIndex={0}
-            >
-              <span>💳</span> Suscripción
-            </div>
-            <div 
-              className="menu-item" 
-              onClick={handleLogout}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogout(); } }}
-              role="button"
-              tabIndex={0}
-            >
-              <span>🚪</span> Cerrar Sesión
-            </div>
-          </div>
+      <div className="navbar-actions">
+        {/* Campana de notificaciones */}
+        {console.log('[UserNavbar] ¿Renderizar campana?', !!userEmail)}
+        {userEmail ? (
+          <NotificationBell userId={userEmail} />
+        ) : (
+          <div style={{color: 'red'}}>⏳ Cargando notificaciones...</div>
         )}
+        
+        {/* Ícono de usuario */}
+        <div className="navbar-user">
+          <div 
+            className="user-icon" 
+            onClick={toggleMenu}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); } }}
+            role="button"
+            tabIndex={0}
+            aria-label="Abrir menú de usuario"
+          >
+            <span>👤</span>
+          </div>
+          
+          {menuOpen && (
+            <div className="user-menu">
+              <div 
+                className="menu-item" 
+                onClick={handleDashboard}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDashboard(); } }}
+                role="button"
+                tabIndex={0}
+              >
+                  <span>🏠</span> Inicio
+              </div>
+              <div 
+                className="menu-item" 
+                onClick={handleProfile}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleProfile(); } }}
+                role="button"
+                tabIndex={0}
+              >
+                <span>👤</span> Mi Perfil
+              </div>
+              <div 
+                className="menu-item" 
+                onClick={handleSubscription}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSubscription(); } }}
+                role="button"
+                tabIndex={0}
+              >
+                <span>💳</span> Suscripción
+              </div>
+              <div 
+                className="menu-item" 
+                onClick={handleLogout}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogout(); } }}
+                role="button"
+                tabIndex={0}
+              >
+                <span>🚪</span> Cerrar Sesión
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IonIcon, IonBadge } from '@ionic/react';
 import { notificationsOutline } from 'ionicons/icons';
+import { Capacitor } from '@capacitor/core';
 import './NotificationBell.css';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -14,15 +15,17 @@ const NotificationBell = ({ userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Debug: log del userId
-  useEffect(() => {
-    console.log('[NotificationBell] userId:', userId);
-  }, [userId]);
+  // Helper para construir URL según plataforma
+  const getApiUrl = (path) => {
+    if (Capacitor.isNativePlatform()) {
+      return `http://10.0.2.2:8080${path}`;
+    }
+    return path;
+  };
 
   // Cargar contador de notificaciones no leídas
   useEffect(() => {
     if (userId) {
-      console.log('[NotificationBell] Fetching unread count for userId:', userId);
       fetchUnreadCount();
       // Refrescar cada 30 segundos
       const interval = setInterval(fetchUnreadCount, 30000);
@@ -39,40 +42,32 @@ const NotificationBell = ({ userId }) => {
 
   const fetchUnreadCount = async () => {
     try {
-      const url = `/api/notifications/unread/count?userId=${userId}`;
-      console.log('[NotificationBell] GET', url);
+      const url = getApiUrl(`/api/notifications/unread/count?userId=${userId}`);
       const response = await fetch(url, {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('[NotificationBell] Unread count:', data.count);
         setUnreadCount(data.count);
-      } else {
-        console.error('[NotificationBell] Error response:', response.status);
       }
     } catch (error) {
-      console.error('[NotificationBell] Error fetching unread count:', error);
+      console.error('Error fetching unread count:', error);
     }
   };
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const url = `/api/notifications?userId=${userId}`;
-      console.log('[NotificationBell] GET', url);
+      const url = getApiUrl(`/api/notifications?userId=${userId}`);
       const response = await fetch(url, {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('[NotificationBell] Notifications:', data);
         setNotifications(data);
-      } else {
-        console.error('[NotificationBell] Error response:', response.status);
       }
     } catch (error) {
-      console.error('[NotificationBell] Error fetching notifications:', error);
+      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -80,7 +75,7 @@ const NotificationBell = ({ userId }) => {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+      const response = await fetch(getApiUrl(`/api/notifications/${notificationId}/read`), {
         method: 'PUT',
         credentials: 'include'
       });
@@ -95,7 +90,7 @@ const NotificationBell = ({ userId }) => {
 
   const handleDelete = async (notificationId) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
+      const response = await fetch(getApiUrl(`/api/notifications/${notificationId}`), {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -111,7 +106,7 @@ const NotificationBell = ({ userId }) => {
   const handleDeleteAll = async () => {
     if (window.confirm('¿Eliminar todas las notificaciones?')) {
       try {
-        const response = await fetch(`/api/notifications?userId=${userId}`, {
+        const response = await fetch(getApiUrl(`/api/notifications?userId=${userId}`), {
           method: 'DELETE',
           credentials: 'include'
         });

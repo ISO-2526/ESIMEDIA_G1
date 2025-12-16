@@ -90,7 +90,7 @@ public class ContentService {
         c.setCoverFileName(req.getCoverFileName() != null && !req.getCoverFileName().isBlank()
                 ? req.getCoverFileName()
                 : DEFAULT_COVER);
-        c.setState(ContentState.PRIVADO);
+        c.setState(ContentState.PUBLICO);
         c.setStateChangedAt(now);
         c.setCreatedAt(now);
         c.setUpdatedAt(now);
@@ -133,8 +133,17 @@ public class ContentService {
     private void applyStateUpdate(Content existing, UpdateContentRequestDTO req) {
         if (req.getState() != null && !req.getState().isBlank()
                 && !existing.getState().name().equalsIgnoreCase(req.getState())) {
-            existing.setState(ContentState.valueOf(req.getState().toUpperCase()));
+            ContentState newState = ContentState.valueOf(req.getState().toUpperCase());
+            ContentState oldState = existing.getState();
+            existing.setState(newState);
             existing.setStateChangedAt(Instant.now());
+            
+            // HDU 492 - Notificar cuando se publica contenido (PRIVADO -> PUBLICO)
+            if (oldState == ContentState.PRIVADO && newState == ContentState.PUBLICO) {
+                if (existing.getTags() != null && !existing.getTags().isEmpty()) {
+                    notificationService.notifyUsersWithMatchingTags(existing);
+                }
+            }
         }
     }
 

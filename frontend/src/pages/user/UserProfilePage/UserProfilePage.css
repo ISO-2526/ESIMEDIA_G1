@@ -133,7 +133,29 @@
 .header-right {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 20px;
+}
+
+/* Estilos para la campana de notificaciones en profile page */
+.profile-header .bell-button {
+  background: rgba(18, 18, 18, 0.65);
+  border: 1px solid rgba(79, 86, 186, 0.5);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 22px;
+}
+
+.profile-header .bell-button:hover {
+  background: rgba(79, 86, 186, 0.2);
+  border-color: #4F56BA;
+  box-shadow: 0 4px 15px rgba(79, 86, 186, 0.3);
+  transform: scale(1.05);
 }
 
 .user-menu-container {

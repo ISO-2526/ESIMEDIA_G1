@@ -1,9 +1,10 @@
 package grupo1.esimedia.Accounts.service;
 
-import grupo1.esimedia.Accounts.model.Notification;
 import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.NotificationRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
+import grupo1.esimedia.model.UserNotification;
+import grupo1.esimedia.service.UserNotificationService;
+import grupo1.esimedia.service.NotificationWithAntiSpamService;
 import grupo1.esimedia.Content.model.Content;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -25,12 +26,15 @@ public class NotificationService {
     
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
     
-    private final NotificationRepository notificationRepository;
+    private final UserNotificationService userNotificationService;
+    private final NotificationWithAntiSpamService notificationWithAntiSpamService;
     private final UserRepository userRepository;
     
-    public NotificationService(NotificationRepository notificationRepository, 
+    public NotificationService(UserNotificationService userNotificationService,
+                               NotificationWithAntiSpamService notificationWithAntiSpamService,
                                UserRepository userRepository) {
-        this.notificationRepository = notificationRepository;
+        this.userNotificationService = userNotificationService;
+        this.notificationWithAntiSpamService = notificationWithAntiSpamService;
         this.userRepository = userRepository;
     }
     
@@ -134,65 +138,60 @@ public class NotificationService {
     }
     
     /**
-     * Crea y guarda una notificación para el usuario
+     * Crea y guarda una notificación para el usuario con anti-spam
      */
     private void createNotification(User user, Content content, List<String> matchingTags) {
-        Notification notification = new Notification();
-        notification.setUserId(user.getEmail());
-        notification.setContentId(content.getId());
-        notification.setContentTitle(content.getTitle());
-        notification.setCreatorAlias(content.getCreatorAlias());
-        notification.setMatchingTags(matchingTags);
-        
-        // Generar mensaje amigable
         String tagsStr = String.join(", ", matchingTags);
-        notification.setMessage(String.format(
+        String message = String.format(
             "¡Nuevo contenido de '%s' que te puede interesar! Coincide con tus gustos: %s",
             content.getCreatorAlias(),
             tagsStr
-        ));
+        );
         
-        notificationRepository.save(notification);
-        logger.debug("Notificación creada para usuario {}: {}", user.getEmail(), notification.getMessage());
+        // Crear notificación con anti-spam
+        notificationWithAntiSpamService.createNotificationIfNotExists(
+            user.getEmail(),
+            content.getId(),
+            "📢 Nuevo contenido disponible",
+            message,
+            NotificationWithAntiSpamService.TYPE_CONTENT_PUBLISHED
+        );
+        
+        logger.debug("Notificación creada para usuario {}: {}", user.getEmail(), message);
     }
     
     /**
      * Obtiene las notificaciones de un usuario
      */
-    public List<Notification> getUserNotifications(String userId) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<UserNotification> getUserNotifications(String userId) {
+        return userNotificationService.getNotificationsByUserId(userId);
     }
     
     /**
      * Obtiene las notificaciones no leídas de un usuario
      */
-    public List<Notification> getUnreadNotifications(String userId) {
-        return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
+    public List<UserNotification> getUnreadNotifications(String userId) {
+        return userNotificationService.getUnreadNotifications(userId);
     }
     
     /**
      * Cuenta las notificaciones no leídas
      */
     public long countUnreadNotifications(String userId) {
-        return notificationRepository.countByUserIdAndReadFalse(userId);
+        return userNotificationService.getUnreadNotificationCount(userId);
     }
     
     /**
      * Marca una notificación como leída
      */
     public void markAsRead(String notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(notification -> {
-            notification.setRead(true);
-            notificationRepository.save(notification);
-        });
+        userNotificationService.markAsRead(notificationId);
     }
     
     /**
      * Marca todas las notificaciones de un usuario como leídas
      */
     public void markAllAsRead(String userId) {
-        List<Notification> unread = notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
-        unread.forEach(n -> n.setRead(true));
-        notificationRepository.saveAll(unread);
+        userNotificationService.markAllAsRead(userId);
     }
 }

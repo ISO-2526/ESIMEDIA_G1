@@ -2,18 +2,19 @@
 /* Los estilos generales están en NotificationBell.css */
 
 .notification-dropdown .notifications-list::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .notification-dropdown .notifications-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(18, 18, 18, 0.5);
+  border-radius: 4px;
 }
 
 .notification-dropdown .notifications-list::-webkit-scrollbar-thumb {
-  background: var(--ion-border-color, #ddd);
-  border-radius: 3px;
+  background: rgba(79, 86, 186, 0.4);
+  border-radius: 4px;
 }
 
 .notification-dropdown .notifications-list::-webkit-scrollbar-thumb:hover {
-  background: var(--ion-text-color-secondary, #999);
+  background: rgba(79, 86, 186, 0.6);
 }

@@ -1,6 +1,7 @@
 .notification-bell-container {
   position: relative;
   display: inline-block;
+  z-index: 10000;
 }
 
 .bell-button {
@@ -10,12 +11,14 @@
   font-size: 24px;
   padding: 8px;
   position: relative;
-  color: var(--ion-text-color, #333);
-  transition: transform 0.2s;
+  color: #F5F6F3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bell-button:hover {
-  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .notification-badge {
@@ -32,20 +35,48 @@
 }
 
 .notification-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: var(--ion-background-color, #fff);
-  border: 1px solid var(--ion-border-color, #e0e0e0);
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  position: fixed;
+  background: linear-gradient(135deg, rgba(31, 36, 66, 0.95) 0%, rgba(25, 29, 54, 0.98) 100%);
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(79, 86, 186, 0.3);
   width: 350px;
   max-height: 500px;
   display: flex;
   flex-direction: column;
-  z-index: 1000;
-  margin-top: 8px;
+  z-index: 10001;
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  top: 60px;
+  right: 20px;
   animation: slideDown 0.2s ease-out;
+}
+
+
+
+/* AHORA LA CAMPANA PERTENECE AL EMPTY STATE */
+.empty-state::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Usamos el ajuste visual que te di antes */
+  transform: translate(-45%, -50%); 
+  width: 180px;
+  height: 180px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="rgba(79, 86, 186, 0.12)" d="M256 32V51.2C329 66.03 384 130.6 384 208V226.8C384 273.9 401.3 319.2 432.5 354.4L439.9 362.7C448.3 372.2 450.4 385.6 445.2 397.1C440 408.6 428.6 416 416 416H32C19.4 416 7.971 408.6 2.809 397.1C-2.353 385.6-.2883 372.2 8.084 362.7L15.5 354.4C46.74 319.2 64 273.9 64 226.8V208C64 130.6 118.1 66.03 192 51.2V32C192 14.33 206.3 0 224 0C241.7 0 256 14.33 256 32H256zM224 512C207 512 190.7 505.3 178.7 493.3C166.7 481.3 160 464.1 160 448H288C288 464.1 281.3 481.3 269.3 493.3C257.3 505.3 240.1 512 224 512z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Aseguramos que el texto quede por encima de la campana */
+.empty-state p {
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideDown {
@@ -60,55 +91,68 @@
 }
 
 .dropdown-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--ion-border-color, #e0e0e0);
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(79, 86, 186, 0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .dropdown-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: #F5F6F3;
 }
 
 .delete-all-btn {
   background: none;
   border: none;
-  color: var(--ion-color-danger, #eb445a);
+  color: #eb445a;
   cursor: pointer;
   font-size: 12px;
   padding: 4px 8px;
   transition: opacity 0.2s;
+  border-radius: 4px;
 }
 
 .delete-all-btn:hover {
-  opacity: 0.7;
+  opacity: 0.8;
+  background: rgba(235, 68, 90, 0.1);
 }
 
 .dropdown-content {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 4px 0;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .loading {
-  padding: 16px;
+  padding: 24px 16px;
   text-align: center;
-  color: var(--ion-text-color-secondary, #666);
+  color: #999AC6;
   font-size: 14px;
 }
 
 .empty-state {
-  padding: 32px 16px;
+  padding: 48px 16px;
   text-align: center;
-  color: var(--ion-text-color-secondary, #999);
+  color: rgba(245, 246, 243, 0.6);
+  position: relative;
+  z-index: 1;
 }
 
 .empty-state p {
   margin: 0;
   font-size: 14px;
+  position: relative;
+  z-index: 1;
 }
 
 .notifications-list {
@@ -120,42 +164,58 @@
 .notification-item {
   display: flex;
   gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--ion-border-color, #f0f0f0);
-  transition: background-color 0.2s;
+  padding: 14px 18px;
+  border-bottom: none;
+  transition: all 0.2s;
+  background: transparent;
+  position: relative;
+}
+
+.notification-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: rgba(79, 86, 186, 0.1);
+}
+
+.notification-item:last-child::after {
+  display: none;
 }
 
 .notification-item:hover {
-  background-color: var(--ion-background-color-secondary, #f9f9f9);
+  background-color: rgba(79, 86, 186, 0.15);
 }
 
 .notification-item.unread {
-  background-color: var(--ion-background-color-secondary, #f9f9f9);
-  font-weight: 500;
+  background-color: rgba(79, 86, 186, 0.2);
+  border-left: 3px solid #6C75DD;
 }
 
 .notification-type-indicator {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   margin-top: 6px;
   flex-shrink: 0;
 }
 
 .notification-type-indicator.info {
-  background-color: var(--ion-color-primary, #3880ff);
+  background-color: #4F56BA;
 }
 
 .notification-type-indicator.warning {
-  background-color: var(--ion-color-warning, #ffc409);
+  background-color: #FAED5C;
 }
 
 .notification-type-indicator.danger {
-  background-color: var(--ion-color-danger, #eb445a);
+  background-color: #eb445a;
 }
 
 .notification-type-indicator.success {
-  background-color: var(--ion-color-success, #2dd36f);
+  background-color: #2dd36f;
 }
 
 .notification-content {
@@ -166,22 +226,22 @@
 .notification-title {
   font-size: 14px;
   font-weight: 600;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
   word-break: break-word;
-  color: var(--ion-text-color, #000);
+  color: #F5F6F3;
 }
 
 .notification-message {
-  font-size: 12px;
-  color: var(--ion-text-color-secondary, #666);
-  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #999AC6;
+  margin: 0 0 6px 0;
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .notification-time {
   font-size: 11px;
-  color: var(--ion-text-color-tertiary, #999);
+  color: rgba(153, 154, 198, 0.7);
   margin: 0;
 }
 
@@ -196,45 +256,58 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  transition: opacity 0.2s;
-  color: var(--ion-text-color-secondary, #666);
+  font-size: 18px;
+  transition: all 0.2s;
+  color: #999AC6;
+  border-radius: 4px;
 }
 
 .action-btn:hover {
-  opacity: 0.7;
+  background: rgba(79, 86, 186, 0.2);
 }
 
 .action-btn.mark-read {
-  color: var(--ion-color-success, #2dd36f);
+  color: #2dd36f;
+}
+
+.action-btn.mark-read:hover {
+  background: rgba(45, 211, 111, 0.15);
 }
 
 .action-btn.delete {
-  color: var(--ion-color-danger, #eb445a);
+  color: #eb445a;
+}
+
+.action-btn.delete:hover {
+  background: rgba(235, 68, 90, 0.15);
 }
 
 .dropdown-footer {
-  padding: 8px 16px;
-  border-top: 1px solid var(--ion-border-color, #e0e0e0);
+  padding: 12px 16px;
+  border-top: 1px solid rgba(79, 86, 186, 0.2);
   text-align: right;
+  background: rgba(18, 18, 18, 0.5);
 }
 
 .close-btn {
-  background: var(--ion-background-color, #f4f4f4);
-  border: 1px solid var(--ion-border-color, #e0e0e0);
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 12px;
+  background: rgba(79, 86, 186, 0.2);
+  border: 1px solid rgba(79, 86, 186, 0.3);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  color: #F5F6F3;
+  font-weight: 500;
 }
 
 .close-btn:hover {
-  background-color: var(--ion-background-color-secondary, #e9e9e9);
+  background: rgba(79, 86, 186, 0.3);
+  border-color: #4F56BA;
 }
 
 /* Responsive */

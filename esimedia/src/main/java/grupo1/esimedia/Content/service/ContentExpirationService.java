@@ -1,9 +1,9 @@
 package grupo1.esimedia.Content.service;
 
-import grupo1.esimedia.Accounts.model.Notification;
 import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.NotificationRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
+import grupo1.esimedia.model.UserNotification;
+import grupo1.esimedia.service.UserNotificationService;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.model.ExpirationAlert;
@@ -42,10 +42,10 @@ public class ContentExpirationService {
     private UserRepository userRepository;
     
     @Autowired
-    private NotificationRepository notificationRepository;
+    private UserNotificationService userNotificationService;
     
     @Autowired
-    private ExpirationAlertRepository expirationAlertRepository;
+    private grupo1.esimedia.service.NotificationWithAntiSpamService notificationWithAntiSpamService;
     
     /**
      * Task 515 y 516: Busca contenidos que caducan en exactamente 7 días
@@ -116,28 +116,38 @@ public class ContentExpirationService {
         List<User> allUsers = userRepository.findAll();
         int alertCount = 0;
         
+        logger.debug("Verificando {} usuarios para contenido '{}'", allUsers.size(), content.getTitle());
+        logger.debug("Contenido - VIP: {}, EdadMin: {}, Tags: {}", 
+            content.isVipOnly(), content.getEdadMinima(), content.getTags());
+        
         for (User user : allUsers) {
-            // Verificar si ya se envió alerta (anti-spam)
-            if (hasAlertBeenSent(content.getId(), user.getEmail(), ALERT_TYPE_EXPIRING_SOON)) {
-                continue;
-            }
-            
             // Aplicar filtros de acceso
             if (!canUserAccessContent(user, content)) {
+                logger.debug("Usuario {} - NO cumple filtros de acceso", user.getEmail());
                 continue;
             }
             
-            // Crear notificación
-            createExpirationNotification(user, content);
+            logger.info("✅ Usuario {} - Cumple todos los filtros, enviando notificación", user.getEmail());
             
-            // Registrar que se envió la alerta (anti-spam)
-            recordAlert(content.getId(), user.getEmail(), ALERT_TYPE_EXPIRING_SOON);
+            // Crear notificación con anti-spam
+            boolean created = notificationWithAntiSpamService.createNotificationIfNotExists(
+                user.getEmail(),
+                content.getId(),
+                "⏰ Contenido próximo a caducar",
+                String.format("El contenido '%s' caducará en %d días. ¡No te lo pierdas!",
+                    content.getTitle(), DAYS_BEFORE_EXPIRATION),
+                grupo1.esimedia.service.NotificationWithAntiSpamService.TYPE_CONTENT_EXPIRING
+            );
             
-            alertCount++;
+            if (created) {
+                alertCount++;
+            }
         }
         
         if (alertCount > 0) {
             logger.info("Contenido '{}': {} alertas enviadas", content.getTitle(), alertCount);
+        } else {
+            logger.warn("⚠️ Contenido '{}': Ningún usuario cumplió los filtros", content.getTitle());
         }
         
         return alertCount;
@@ -148,8 +158,12 @@ public class ContentExpirationService {
      * Filtros: VIP (Premium) y Edad mínima.
      */
     private boolean canUserAccessContent(User user, Content content) {
+        logger.debug("  Usuario {} - VIP: {}, Edad: {}, Tags: {}", 
+            user.getEmail(), user.isVip(), calculateAge(user.getDateOfBirth()), user.getTags());
+        
         // Filtro 1: Contenido VIP solo para usuarios VIP
         if (content.isVipOnly() && !user.isVip()) {
+            logger.debug("    ❌ Rechazado: Contenido VIP pero usuario no es VIP");
             return false;
         }
         
@@ -157,10 +171,36 @@ public class ContentExpirationService {
         if (content.getEdadMinima() != null && content.getEdadMinima() > 0) {
             int userAge = calculateAge(user.getDateOfBirth());
             if (userAge < content.getEdadMinima()) {
+                logger.debug("    ❌ Rechazado: Edad {} < Edad mínima {}", userAge, content.getEdadMinima());
                 return false;
             }
         }
         
+        // Filtro 3: Tags coincidentes
+        if (user.getTags() == null || user.getTags().isEmpty()) {
+            logger.debug("    ❌ Rechazado: Usuario sin tags");
+            return false;
+        }
+        
+        boolean hasMatchingTag = false;
+        if (content.getTags() != null) {
+            for (String contentTag : content.getTags()) {
+                for (String userTag : user.getTags()) {
+                    if (contentTag.equalsIgnoreCase(userTag)) {
+                        hasMatchingTag = true;
+                        break;
+                    }
+                }
+                if (hasMatchingTag) break;
+            }
+        }
+        
+        if (!hasMatchingTag) {
+            logger.debug("    ❌ Rechazado: Sin tags coincidentes");
+            return false;
+        }
+        
+        logger.debug("    ✅ Usuario cumple todos los filtros");
         return true;
     }
     
@@ -178,39 +218,5 @@ public class ContentExpirationService {
             logger.warn("Error al parsear fecha de nacimiento: {}", dateOfBirth);
             return 0;
         }
-    }
-    
-    /**
-     * Verifica si ya se envió una alerta (anti-spam)
-     */
-    private boolean hasAlertBeenSent(String contentId, String userId, String alertType) {
-        return expirationAlertRepository
-            .findByContentIdAndUserIdAndAlertType(contentId, userId, alertType)
-            .isPresent();
-    }
-    
-    /**
-     * Registra que se envió una alerta
-     */
-    private void recordAlert(String contentId, String userId, String alertType) {
-        ExpirationAlert alert = new ExpirationAlert(contentId, userId, LocalDate.now(), alertType);
-        expirationAlertRepository.save(alert);
-    }
-    
-    /**
-     * Crea una notificación de caducidad próxima
-     */
-    private void createExpirationNotification(User user, Content content) {
-        Notification notification = new Notification();
-        notification.setUserId(user.getEmail());
-        notification.setContentId(content.getId());
-        notification.setContentTitle(content.getTitle());
-        notification.setCreatorAlias(content.getCreatorAlias());
-        notification.setMessage(String.format(
-            "⏰ El contenido '%s' caducará en %d días. ¡No te lo pierdas!",
-            content.getTitle(), DAYS_BEFORE_EXPIRATION));
-        notification.setRead(false);
-        
-        notificationRepository.save(notification);
     }
 }

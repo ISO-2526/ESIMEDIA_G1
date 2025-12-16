@@ -18,10 +18,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import grupo1.esimedia.Accounts.model.Notification;
 import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.NotificationRepository;
 import grupo1.esimedia.Accounts.repository.UserRepository;
+import grupo1.esimedia.model.UserNotification;
+import grupo1.esimedia.service.UserNotificationService;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
 import grupo1.esimedia.Content.model.ExpirationAlert;
@@ -41,7 +41,7 @@ class ContentExpirationServiceTests {
     private UserRepository userRepository;
 
     @Mock
-    private NotificationRepository notificationRepository;
+    private UserNotificationService userNotificationService;
 
     @Mock
     private ExpirationAlertRepository expirationAlertRepository;
@@ -111,7 +111,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert
-        verify(notificationRepository, times(1)).save(any(Notification.class));
+        verify(userNotificationService, times(1)).createNotification(any(UserNotification.class));
         verify(expirationAlertRepository, times(1)).save(any(ExpirationAlert.class));
     }
 
@@ -126,7 +126,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     // ========== Task 516: Tests para filtros de acceso ==========
@@ -143,7 +143,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert: No debe enviar notificación porque el usuario no es VIP
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -160,7 +160,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert: Debe enviar notificación porque el usuario es VIP y adulto
-        verify(notificationRepository, times(1)).save(any(Notification.class));
+        verify(userNotificationService, times(1)).createNotification(any(UserNotification.class));
     }
 
     @Test
@@ -183,7 +183,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert: No debe enviar notificación porque el usuario es menor de 18
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
     }
 
     // ========== Task 516: Tests para anti-spam ==========
@@ -205,7 +205,7 @@ class ContentExpirationServiceTests {
         service.checkAndAlertExpiringContent();
 
         // Assert: No debe enviar notificación ni guardar alerta (anti-spam)
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(userNotificationService, never()).createNotification(any(UserNotification.class));
         verify(expirationAlertRepository, never()).save(any(ExpirationAlert.class));
     }
 

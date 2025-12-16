@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import MobileHeader from '../../../components/mobile/MobileHeader';
+import NotificationBell from '../../../components/NotificationBell/NotificationBell';
 import logo from '../../../resources/esimedialogo.png';
 import './UserProfilePage.css';
 import CustomModal from '../../../components/CustomModal';
@@ -125,7 +126,7 @@ const activateOrDeactivate3FA = async ({ email, activate }) => {
 };
 
 /* ---------- Subcomponentes para reducir JSX dentro de UserProfilePage ---------- */
-const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout }) => (
+const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, logout, userEmail }) => (
   <header className={`profile-header ${scrolled ? 'scrolled' : ''}`}>
     <div className="header-container">
       <div className="header-left">
@@ -143,6 +144,9 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
         <Link to="/suscripcion">Suscripción</Link>
       </nav>
       <div className="header-right">
+        {/* Campana de notificaciones */}
+        {userEmail && <NotificationBell userId={userEmail} />}
+        
         <div className="user-menu-container">
           <div
             className="user-avatar-profile"
@@ -495,6 +499,7 @@ function UserProfilePage() {
           scrolled={scrolled}
           picture={profileData.picture}
           vip={userProfile.vip}
+          userEmail={profileData.email}
           onToggleMenu={() => setShowUserMenu(s => !s)}
           showUserMenu={showUserMenu}
           logout={() => logoutWithCookies('/', history)}

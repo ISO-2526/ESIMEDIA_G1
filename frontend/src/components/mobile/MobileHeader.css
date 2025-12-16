@@ -181,6 +181,42 @@
   color: rgba(245, 246, 243, 0.9);
 }
 
+/* NotificationBell en móvil */
+.mobile-notification-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mobile-notification-container .notification-bell-container {
+  display: inline-flex;
+}
+
+.mobile-notification-container .bell-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(245, 246, 243, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 24px;
+  padding: 0;
+}
+
+.mobile-notification-container .bell-button:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.95);
+}
+
+.mobile-notification-container .notification-badge {
+  top: 2px;
+  right: 2px;
+}
+
 /* Avatar */
 .avatar-button {
   background: transparent !important;

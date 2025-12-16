@@ -16,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import MobileFilterModal from './MobileFilterModal';
+import NotificationBell from '../NotificationBell/NotificationBell';
 import logo from '../../resources/esimedialogo.png';
 import './MobileHeader.css';
 
@@ -151,20 +152,19 @@ const MobileHeader = ({
             </button>
           )}
 
-          {/* Notificaciones - solo si showNotificationsProp es true y búsqueda no está activa */}
-          {showNotificationsProp && !showSearch && (
-            <button 
-              id="notifications-menu-trigger"
-              className="mobile-icon-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsNotificationsOpen(!isNotificationsOpen);
-                setIsMenuOpen(false);
-                setIsFilterOpen(false);
-              }}
-            >
-              <IonIcon icon={notificationsOutline} />
-            </button>
+          {/* Notificaciones - usando NotificationBell component */}
+          {console.log('[MobileHeader] showNotificationsProp:', showNotificationsProp, 'showSearch:', showSearch, 'userProfile?.email:', userProfile?.email)}
+          {showNotificationsProp && !showSearch && userProfile?.email ? (
+            <div className="mobile-notification-container">
+              <NotificationBell userId={userProfile.email} />
+            </div>
+          ) : (
+            console.log('[MobileHeader] ❌ NotificationBell NO renderizado - Condiciones:', {
+              showNotificationsProp,
+              showSearch,
+              hasEmail: !!userProfile?.email,
+              email: userProfile?.email
+            })
           )}
 
           {/* Avatar con menú - se oculta cuando búsqueda está activa */}
