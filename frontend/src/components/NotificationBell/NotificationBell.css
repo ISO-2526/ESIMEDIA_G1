@@ -194,6 +194,10 @@
   border-left: 3px solid #6C75DD;
 }
 
+.notification-item.clickable .notification-content:hover {
+  opacity: 0.8;
+}
+
 .notification-type-indicator {
   width: 6px;
   height: 6px;

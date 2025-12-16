@@ -50,6 +50,7 @@ public class NotificationWithAntiSpamService {
         
         // Crear notificación
         UserNotification notification = new UserNotification(userId, title, message, userNotifType);
+        notification.setContentId(contentId); // Asignar contentId para navegación directa
         
         try {
             UserNotification saved = userNotificationRepository.save(notification);

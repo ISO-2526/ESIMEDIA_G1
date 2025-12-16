@@ -1,6 +1,8 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { trash, checkmark } from 'ionicons/icons';
+import axios from '../../api/axiosConfig';
+import { transformContent } from '../../utils/contentUtils';
 import './NotificationDropdown.css';
 
 /**
@@ -45,6 +47,40 @@ const NotificationDropdown = ({
     return date.toLocaleDateString('es-ES');
   };
 
+  const handleNotificationClick = async (notification) => {
+    // Si la notificación tiene contentId, cargar y mostrar el contenido
+    if (notification.contentId) {
+      try {
+        // Marcar como leída si no lo está (pero no bloquear la reproducción)
+        if (!notification.read) {
+          onMarkAsRead(notification.id);
+        }
+        
+        // Cargar el contenido completo desde el backend usando axios
+        const response = await axios.get(`/api/public/contents/${notification.contentId}`);
+        const rawContent = response.data;
+        
+        // Transformar el contenido al formato esperado por el player
+        const content = transformContent(rawContent);
+        
+        console.log('[NotificationDropdown] Content loaded:', content);
+        console.log('[NotificationDropdown] Dispatching event...');
+        
+        // Disparar evento personalizado para que el dashboard lo capture
+        window.dispatchEvent(new CustomEvent('playContentFromNotification', { 
+          detail: { content } 
+        }));
+        
+        console.log('[NotificationDropdown] Event dispatched');
+        
+        // Cerrar dropdown
+        onClose();
+      } catch (error) {
+        console.error('Error al cargar contenido:', error);
+      }
+    }
+  };
+
   return (
     <div className="notification-dropdown">
       <div className="dropdown-header">
@@ -74,10 +110,14 @@ const NotificationDropdown = ({
             {notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.contentId ? 'clickable' : ''}`}
               >
                 <div className={`notification-type-indicator ${getNotificationTypeColor(notification.type)}`} />
-                <div className="notification-content">
+                <div 
+                  className="notification-content"
+                  onClick={() => handleNotificationClick(notification)}
+                  style={{ cursor: notification.contentId ? 'pointer' : 'default' }}
+                >
                   <div className="notification-title">{notification.title}</div>
                   <div className="notification-message">{notification.message}</div>
                   <div className="notification-time">{formatDate(notification.createdAt)}</div>

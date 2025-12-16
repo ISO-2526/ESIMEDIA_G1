@@ -46,33 +46,23 @@ public class NotificationService {
      */
     public void notifyUsersWithMatchingTags(Content content) {
         if (content == null || content.getTags() == null || content.getTags().isEmpty()) {
-            logger.debug("Contenido sin tags, no se envían notificaciones");
             return;
         }
         
-        List<String> contentTags = content.getTags();
-        logger.info("Buscando usuarios con tags coincidentes: {}", contentTags);
-        
-        // Obtener todos los usuarios
-        List<User> allUsers = userRepository.findAll();
+        // OPTIMIZACIÓN: Obtener solo usuarios que tengan al menos un tag coincidente
+        // En lugar de traer TODOS los usuarios y filtrar en memoria
+        List<User> candidateUsers = userRepository.findByTagsIn(content.getTags());
         
         int notificationsCreated = 0;
-        for (User user : allUsers) {
-            // Verificar si el usuario tiene tags
+        for (User user : candidateUsers) {
+            // Verificar si el usuario tiene tags (aunque ya deberían tenerlos por la query)
             if (user.getTags() == null || user.getTags().isEmpty()) {
                 continue;
             }
             
-            // Encontrar tags coincidentes
-            List<String> matchingTags = findMatchingTags(user.getTags(), contentTags);
-            if (matchingTags.isEmpty()) {
-                continue;
-            }
-            
-            // Aplicar filtros de seguridad
-            if (!canUserAccess(user, content)) {
-                logger.debug("Usuario {} no cumple filtros de seguridad para contenido {}", 
-                             user.getEmail(), content.getId());
+            // Aplicar todos los filtros de acceso (incluyendo tags coincidentes)
+            List<String> matchingTags = canUserAccess(user, content);
+            if (matchingTags == null || matchingTags.isEmpty()) {
                 continue;
             }
             
@@ -80,9 +70,6 @@ public class NotificationService {
             createNotification(user, content, matchingTags);
             notificationsCreated++;
         }
-        
-        logger.info("Se crearon {} notificaciones para el contenido '{}'", 
-                    notificationsCreated, content.getTitle());
     }
     
     /**
@@ -97,27 +84,31 @@ public class NotificationService {
     
     /**
      * Verifica si el usuario puede acceder al contenido según filtros de seguridad.
-     * Tarea 507: Filtros de seguridad (Rol, Edad, Suscripción VIP)
+     * Tarea 507: Filtros de seguridad (Rol, Edad, Suscripción VIP, Tags)
+     * @return Lista de tags coincidentes si el usuario puede acceder, null o lista vacía si no
      */
-    private boolean canUserAccess(User user, Content content) {
+    private List<String> canUserAccess(User user, Content content) {
         // Filtro 1: Contenido VIP solo para usuarios VIP
         if (content.isVipOnly() && !user.isVip()) {
-            logger.debug("Contenido VIP, usuario {} no es VIP", user.getEmail());
-            return false;
+            return null;
         }
         
         // Filtro 2: Edad mínima
         if (content.getEdadMinima() != null && content.getEdadMinima() > 0) {
             int userAge = calculateAge(user.getDateOfBirth());
             if (userAge < content.getEdadMinima()) {
-                logger.debug("Usuario {} tiene {} años, contenido requiere {} años", 
-                             user.getEmail(), userAge, content.getEdadMinima());
-                return false;
+                return null;
             }
         }
         
+        // Filtro 3: Tags coincidentes
+        List<String> matchingTags = findMatchingTags(user.getTags(), content.getTags());
+        if (matchingTags.isEmpty()) {
+            return null;
+        }
+        
         // El usuario cumple todos los filtros
-        return true;
+        return matchingTags;
     }
     
     /**
@@ -132,7 +123,6 @@ public class NotificationService {
             LocalDate birthDate = LocalDate.parse(dateOfBirth);
             return Period.between(birthDate, LocalDate.now()).getYears();
         } catch (DateTimeParseException e) {
-            logger.warn("No se pudo parsear fecha de nacimiento: {}", dateOfBirth);
             return 0;
         }
     }
@@ -156,8 +146,6 @@ public class NotificationService {
             message,
             NotificationWithAntiSpamService.TYPE_CONTENT_PUBLISHED
         );
-        
-        logger.debug("Notificación creada para usuario {}: {}", user.getEmail(), message);
     }
     
     /**

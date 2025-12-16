@@ -36,6 +36,8 @@ public class UserNotification {
     @Indexed
     private Boolean read; // Si la notificación ha sido leída
 
+    private String contentId; // ID del contenido relacionado (opcional, para navegación directa)
+
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt; // Fecha cuando se marcó como leída
@@ -122,6 +124,14 @@ public class UserNotification {
         this.readAt = readAt;
     }
 
+    public String getContentId() {
+        return contentId;
+    }
+
+    public void setContentId(String contentId) {
+        this.contentId = contentId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -144,6 +154,7 @@ public class UserNotification {
                 ", message='" + message + '\'' +
                 ", type='" + type + '\'' +
                 ", read=" + read +
+                ", contentId='" + contentId + '\'' +
                 ", createdAt=" + createdAt +
                 ", readAt=" + readAt +
                 '}';

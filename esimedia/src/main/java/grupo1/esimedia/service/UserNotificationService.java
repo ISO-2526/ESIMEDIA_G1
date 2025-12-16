@@ -55,23 +55,11 @@ public class UserNotificationService {
      * @return La notificación creada
      */
     public UserNotification createNotification(UserNotification userNotification) {
-        logger.info("🔵 [UserNotificationService] Guardando notificación:");
-        logger.info("   - UserId: {}", userNotification.getUserId());
-        logger.info("   - Title: {}", userNotification.getTitle());
-        logger.info("   - Type: {}", userNotification.getType());
-        logger.info("   - CreatedAt: {}", userNotification.getCreatedAt());
-        
         try {
             UserNotification saved = userNotificationRepository.save(userNotification);
-            logger.info("🟢 [UserNotificationService] Notificación guardada exitosamente con ID: {}", saved.getId());
-            
-            // Verificación inmediata
-            long count = userNotificationRepository.count();
-            logger.info("📊 Total de notificaciones en DB: {}", count);
-            
             return saved;
         } catch (Exception e) {
-            logger.error("🔴 [UserNotificationService] Error al guardar notificación: {}", e.getMessage(), e);
+            logger.error("Error al guardar notificación: {}", e.getMessage(), e);
             throw e;
         }
     }
