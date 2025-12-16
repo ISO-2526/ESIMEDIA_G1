@@ -8,7 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import grupo1.esimedia.config.PasswordSecurityConfig;
+import com.esimedia.config.PasswordSecurityConfig;
+import com.esimedia.security.LoginAttemptService;
 
 class LoginAttemptServiceTest {
 

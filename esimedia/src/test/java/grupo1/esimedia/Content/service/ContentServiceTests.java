@@ -25,13 +25,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import grupo1.esimedia.accounts.model.ContentType;
-import grupo1.esimedia.accounts.service.NotificationService;
-import grupo1.esimedia.content.dto.CreateContentRequestDTO;
-import grupo1.esimedia.content.dto.UpdateContentRequestDTO;
-import grupo1.esimedia.content.model.Content;
-import grupo1.esimedia.content.model.ContentState;
-import grupo1.esimedia.content.repository.CreatorContentRepository;
+import com.esimedia.accounts.model.ContentType;
+import com.esimedia.accounts.service.NotificationService;
+import com.esimedia.content.dto.CreateContentRequestDTO;
+import com.esimedia.content.dto.UpdateContentRequestDTO;
+import com.esimedia.content.model.Content;
+import com.esimedia.content.model.ContentState;
+import com.esimedia.content.repository.CreatorContentRepository;
+import com.esimedia.content.service.ContentService;
 
 @ExtendWith(MockitoExtension.class)
 class ContentServiceTests {

@@ -35,17 +35,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.esimedia.accounts.model.Department;
+import com.esimedia.accounts.model.Token;
+import com.esimedia.accounts.model.User;
+import com.esimedia.accounts.repository.AdminRepository;
+import com.esimedia.accounts.repository.ContentCreatorRepository;
+import com.esimedia.accounts.repository.TokenRepository;
+import com.esimedia.accounts.repository.UserRepository;
+import com.esimedia.accounts.service.EmailService;
+import com.esimedia.utils.HaveIBeenPwnedService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import grupo1.esimedia.accounts.model.Department;
-import grupo1.esimedia.accounts.model.Token;
-import grupo1.esimedia.accounts.model.User;
-import grupo1.esimedia.accounts.repository.AdminRepository;
-import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.accounts.repository.TokenRepository;
-import grupo1.esimedia.accounts.repository.UserRepository;
-import grupo1.esimedia.accounts.service.EmailService;
-import grupo1.esimedia.utils.HaveIBeenPwnedService;
 
 @SpringBootTest
 @AutoConfigureMockMvc

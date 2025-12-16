@@ -42,26 +42,26 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.esimedia.accounts.controller.AuthController;
+import com.esimedia.accounts.model.Admin;
+import com.esimedia.accounts.model.ContentCreator;
+import com.esimedia.accounts.model.ContentType;
+import com.esimedia.accounts.model.Department;
+import com.esimedia.accounts.model.Specialty;
+import com.esimedia.accounts.model.Token;
+import com.esimedia.accounts.model.User;
+import com.esimedia.accounts.repository.AdminRepository;
+import com.esimedia.accounts.repository.ContentCreatorRepository;
+import com.esimedia.accounts.repository.TokenRepository;
+import com.esimedia.accounts.repository.UserRepository;
+import com.esimedia.accounts.service.EmailService;
+import com.esimedia.accounts.service.ThreeFactorAuthService;
+import com.esimedia.accounts.service.TwoFactorAuthService;
+import com.esimedia.security.LoginAttemptService;
+import com.esimedia.security.RateLimitService;
+import com.esimedia.utils.HaveIBeenPwnedService;
+import com.esimedia.utils.PasswordUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import grupo1.esimedia.accounts.model.Admin;
-import grupo1.esimedia.accounts.model.ContentCreator;
-import grupo1.esimedia.accounts.model.ContentType;
-import grupo1.esimedia.accounts.model.Department;
-import grupo1.esimedia.accounts.model.Specialty;
-import grupo1.esimedia.accounts.model.Token;
-import grupo1.esimedia.accounts.model.User;
-import grupo1.esimedia.accounts.repository.AdminRepository;
-import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.accounts.repository.TokenRepository;
-import grupo1.esimedia.accounts.repository.UserRepository;
-import grupo1.esimedia.accounts.service.EmailService;
-import grupo1.esimedia.accounts.service.ThreeFactorAuthService;
-import grupo1.esimedia.accounts.service.TwoFactorAuthService;
-import grupo1.esimedia.security.LoginAttemptService;
-import grupo1.esimedia.security.RateLimitService;
-import grupo1.esimedia.utils.PasswordUtils;
-import grupo1.esimedia.utils.HaveIBeenPwnedService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
