@@ -21,6 +21,12 @@ import java.util.stream.Collectors; // ✅ Importar Collectors para simplificar 
 @RestControllerAdvice // ✅ CAMBIO CLAVE: Combina @ControllerAdvice y @ResponseBody
 public class GlobalExceptionHandler {
 
+    private static final String ERROR = "error";
+    private static final String TIMESTAMP = "timestamp";
+    private static final String MESSAGE = "message";
+    private static final String PATH = "path";
+    private static final String STATUS = "status";
+
     // --- Manejo de Excepciones de Negocio (Validación de DTOs) ---
 
     /**
@@ -45,9 +51,9 @@ public class GlobalExceptionHandler {
                 : "Error de validación desconocido";
         
         Map<String, Object> response = new HashMap<>();
-        response.put("error", firstError);
+        response.put(ERROR, firstError);
         response.put("fields", fieldErrors);
-        response.put("timestamp", LocalDateTime.now());
+        response.put(TIMESTAMP, LocalDateTime.now());
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -60,11 +66,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", ex.getStatusCode().value());
-        body.put("error", ex.getReason());
-        body.put("message", ex.getReason());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, ex.getStatusCode().value());
+        body.put(ERROR, ex.getReason());
+        body.put(MESSAGE, ex.getReason());
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
         
         return new ResponseEntity<>(body, ex.getStatusCode());
     }
@@ -75,11 +81,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Invalid Argument");
-        body.put("message", ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        body.put(ERROR, "Invalid Argument");
+        body.put(MESSAGE, ex.getMessage());
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
         
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
@@ -92,11 +98,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", ex.getClass().getSimpleName());
-        body.put("message", "Internal server error occurred: " + ex.getMessage());
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        body.put(ERROR, ex.getClass().getSimpleName());
+        body.put(MESSAGE, "Internal server error occurred: " + ex.getMessage());
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }

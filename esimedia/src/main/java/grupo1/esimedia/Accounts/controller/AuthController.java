@@ -67,13 +67,6 @@ public class AuthController {
 
     private static final String ADMIN = "admin";
 
-    private static final String NOLASTPASSWORDCHANGEDAT = "Usuario {} no tiene 'lastPasswordChangeAt'. Forzando reseteo.";
-
-    private static final String RECUPERARCONTRASENA = "Error con la contraseña, debe recuperarla";
-
-    private static final String CONTRASENAEXPIRADA = "Contraseña expirada para el usuario {}";
-
-    private static final String CONTRASENA30DIAS = "La contraseña debe cambiarse cada 30 días";
 
     private static final String CREATOR = "creator";
 
@@ -81,10 +74,6 @@ public class AuthController {
 
     private static final String TOKENEXPIRADO = "El token ha expirado";
 
-    private static final String NOREUTILIZARCONTRASENANTIGUA = "Usuario {} intentó reutilizar una contraseña antigua.";
-
-    private static final String NOREUTILIZARCONTRASENA = "No puedes reutilizar una de tus últimas 5 contraseñas.";
-    
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
     private final EmailService emailService;
@@ -223,7 +212,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, ADMIN);
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), "admin", admin.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(admin.getEmail(), ADMIN, admin.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(admin.isThirdFactorEnabled(), admin.getEmail(), ADMIN);
@@ -248,7 +237,7 @@ public class AuthController {
             return invalidCredentialsResponse(email, clientIp, CREATOR);
         }
 
-        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), "creator", creator.getTwoFactorSecretKey(), loginRequest, clientIp);
+        ResponseEntity<?> twoFa = enforceTwoFactorIfNeeded(creator.getEmail(), CREATOR, creator.getTwoFactorSecretKey(), loginRequest, clientIp);
         if (twoFa != null) return twoFa;
 
         ResponseEntity<?> threeFa = enforceThirdFactorIfEnabled(creator.isThirdFactorEnabled(), creator.getEmail(), CREATOR);

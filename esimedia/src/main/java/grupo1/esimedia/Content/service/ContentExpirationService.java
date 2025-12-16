@@ -2,22 +2,19 @@ package grupo1.esimedia.Content.service;
 
 import grupo1.esimedia.Accounts.model.User;
 import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.model.UserNotification;
-import grupo1.esimedia.service.UserNotificationService;
 import grupo1.esimedia.Content.model.Content;
 import grupo1.esimedia.Content.model.ContentState;
-import grupo1.esimedia.Content.model.ExpirationAlert;
 import grupo1.esimedia.Content.repository.CreatorContentRepository;
-import grupo1.esimedia.Content.repository.ExpirationAlertRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Servicio para gestionar la caducidad de contenidos (HDU 493)
@@ -30,9 +27,7 @@ import java.util.List;
 @Service
 public class ContentExpirationService {
     
-    private static final Logger logger = LoggerFactory.getLogger(ContentExpirationService.class);
-    private static final String ALERT_TYPE_EXPIRING_SOON = "EXPIRING_SOON";
-    private static final String ALERT_TYPE_EXPIRED = "EXPIRED";
+
     private static final int DAYS_BEFORE_EXPIRATION = 7;
     
     @Autowired
@@ -41,8 +36,7 @@ public class ContentExpirationService {
     @Autowired
     private UserRepository userRepository;
     
-    @Autowired
-    private UserNotificationService userNotificationService;
+
     
     @Autowired
     private grupo1.esimedia.service.NotificationWithAntiSpamService notificationWithAntiSpamService;
@@ -135,39 +129,37 @@ public class ContentExpirationService {
     private boolean canUserAccessContent(User user, Content content) {
         // Filtro 1: Contenido VIP solo para usuarios VIP
         if (content.isVipOnly() && !user.isVip()) {
-            return false;
+            return false; // Denegar acceso
         }
         
         // Filtro 2: Edad mínima
         if (content.getEdadMinima() != null && content.getEdadMinima() > 0) {
             int userAge = calculateAge(user.getDateOfBirth());
             if (userAge < content.getEdadMinima()) {
-                return false;
+                return false; // Denegar si es menor de edad
             }
         }
         
-        // Filtro 3: Tags coincidentes
-        if (user.getTags() == null || user.getTags().isEmpty()) {
-            return false;
+        // Filtro 3: Tags coincidentes (Refactorizado con Streams)
+        // La lógica original requiere que el usuario tenga tags Y que al menos uno coincida
+        List<String> userTags = Optional.ofNullable(user.getTags()).orElse(Collections.emptyList());
+        List<String> contentTags = Optional.ofNullable(content.getTags()).orElse(Collections.emptyList());
+
+        // Si el usuario no tiene tags, la lógica original deniega el acceso.
+        if (userTags.isEmpty()) {
+            return false; 
         }
-        
-        boolean hasMatchingTag = false;
-        if (content.getTags() != null) {
-            for (String contentTag : content.getTags()) {
-                for (String userTag : user.getTags()) {
-                    if (contentTag.equalsIgnoreCase(userTag)) {
-                        hasMatchingTag = true;
-                        break;
-                    }
-                }
-                if (hasMatchingTag) break;
-            }
-        }
+
+        // Usamos Streams para encontrar cualquier coincidencia (más eficiente que bucles anidados)
+        boolean hasMatchingTag = contentTags.stream()
+            .anyMatch(contentTag -> userTags.stream()
+                .anyMatch(userTag -> contentTag.equalsIgnoreCase(userTag)));
         
         if (!hasMatchingTag) {
-            return false;
+            return false; // Denegar si no hay tags coincidentes
         }
         
+        // Si ha pasado todos los filtros, es accesible.
         return true;
     }
     
