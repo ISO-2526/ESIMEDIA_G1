@@ -65,6 +65,9 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             
             .requestMatchers("/health", "/actuator/**").permitAll()
             
+            // Endpoints de notificaciones (requieren autenticación pero permiten acceso autenticado)
+            .requestMatchers("/api/notifications/**").authenticated()
+            
             // Todos los demás endpoints requieren autenticación
             .anyRequest().authenticated()
         )

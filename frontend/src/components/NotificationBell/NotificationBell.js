@@ -15,11 +15,12 @@ const NotificationBell = ({ userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Helper para construir URL según plataforma
+  // Helper para construir URL según plataforma  
   const getApiUrl = (path) => {
     if (Capacitor.isNativePlatform()) {
       return `http://10.0.2.2:8080${path}`;
     }
+    // Web: usar ruta relativa para que funcione con el proxy
     return path;
   };
 
@@ -43,8 +44,12 @@ const NotificationBell = ({ userId }) => {
   const fetchUnreadCount = async () => {
     try {
       const url = getApiUrl(`/api/notifications/unread/count?userId=${userId}`);
+      const token = localStorage.getItem('access_token');
       const response = await fetch(url, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {}
       });
       if (response.ok) {
         const data = await response.json();
@@ -59,8 +64,12 @@ const NotificationBell = ({ userId }) => {
     setLoading(true);
     try {
       const url = getApiUrl(`/api/notifications?userId=${userId}`);
+      const token = localStorage.getItem('access_token');
       const response = await fetch(url, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {}
       });
       if (response.ok) {
         const data = await response.json();
@@ -75,9 +84,13 @@ const NotificationBell = ({ userId }) => {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(getApiUrl(`/api/notifications/${notificationId}/read`), {
         method: 'PUT',
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {}
       });
       if (response.ok) {
         fetchUnreadCount();
@@ -90,9 +103,13 @@ const NotificationBell = ({ userId }) => {
 
   const handleDelete = async (notificationId) => {
     try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(getApiUrl(`/api/notifications/${notificationId}`), {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {}
       });
       if (response.ok) {
         fetchUnreadCount();
@@ -106,9 +123,13 @@ const NotificationBell = ({ userId }) => {
   const handleDeleteAll = async () => {
     if (window.confirm('¿Eliminar todas las notificaciones?')) {
       try {
+        const token = localStorage.getItem('access_token');
         const response = await fetch(getApiUrl(`/api/notifications?userId=${userId}`), {
           method: 'DELETE',
-          credentials: 'include'
+          credentials: 'include',
+          headers: token ? {
+            'Authorization': `Bearer ${token}`
+          } : {}
         });
         if (response.ok) {
           setUnreadCount(0);
