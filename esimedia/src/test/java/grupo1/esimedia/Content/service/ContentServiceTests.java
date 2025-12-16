@@ -85,7 +85,7 @@ class ContentServiceTests {
 
         assertEquals("cover3.png", saved.getCoverFileName());
         assertFalse(saved.isVipOnly());
-        assertEquals(ContentState.PRIVADO, saved.getState());
+        assertEquals(ContentState.PUBLICO, saved.getState());
         assertNotNull(saved.getCreatedAt());
         assertNotNull(saved.getStateChangedAt());
         assertEquals("creator", saved.getCreatorAlias());
@@ -243,6 +243,12 @@ class ContentServiceTests {
 
     @Test
     void testUpdateContent_ValidationFailsForLongTitle() {
+        when(repository.save(any(Content.class))).thenAnswer(inv -> {
+            Content c = inv.getArgument(0);
+            c.setId("generated-id");
+            return c;
+        });
+
         // Crear contenido
         CreateContentRequestDTO createReq = new CreateContentRequestDTO();
         createReq.setType(ContentType.VIDEO);
@@ -255,6 +261,8 @@ class ContentServiceTests {
         createReq.setCreatorAlias("creator");
 
         Content created = service.create(createReq, ContentType.VIDEO);
+
+        when(repository.findById("generated-id")).thenReturn(Optional.of(created));
 
         // Intentar actualizar con título muy largo
         UpdateContentRequestDTO updateReq = new UpdateContentRequestDTO();

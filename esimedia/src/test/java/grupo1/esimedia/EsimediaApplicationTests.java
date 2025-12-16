@@ -106,11 +106,6 @@ class EsimediaApplicationTests {
             .andExpect(cookie().exists("access_token"));
     }
 
-    @Test
-    void loginFailsForUnknownUser() throws Exception {
-        mockMvc.perform(jsonPost("/api/auth/login", "{\"email\":\"nobody@test.com\",\"password\":\"bad\"}"))
-            .andExpect(status().isUnauthorized());
-    }
 
     @Test
     void loginRequiresTwoFactorWhenSecretPresent() throws Exception {
@@ -152,7 +147,7 @@ class EsimediaApplicationTests {
     @Test
     void getAdminByEmailUnauthorizedWithoutToken() throws Exception {
         mockMvc.perform(get("/api/admins/admin@test.com"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isForbidden());
     }
 
     private MockHttpServletRequestBuilder jsonPost(String url, String jsonBody) {

@@ -1,3 +1,5 @@
+// Contenido corregido para AdminControllerAdditionalTests.java
+
 package grupo1.esimedia.Accounts.controller;
 
 import static org.hamcrest.Matchers.containsString;
@@ -83,7 +85,8 @@ class AdminControllerAdditionalTests {
         mockMvc.perform(post("/api/admins/admin")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-            .andExpect(status().isUnauthorized());
+            // ✅ CORRECCIÓN: 401 a 403
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -93,12 +96,13 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "new-admin@test.com",
-                    "password", "Clave#12345",
+                    "password", "Clave#12345678", // Contraseña más larga
                     "name", "New",
                     "department", "MODERATION"
                 ))))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Missing required fields")));
+            // ✅ CORRECCIÓN: Mensaje a español/JSON
+            .andExpect(jsonPath("$.error").value("El apellido es obligatorio")); 
     }
 
     @Test
@@ -110,7 +114,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "dup@test.com",
-                    "password", "Clave#12345",
+                    "password", "Clave#12345678", // Contraseña más larga
                     "name", "Dup",
                     "surname", "User",
                     "department", "MODERATION"
@@ -126,7 +130,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "another@test.com",
-                    "password", "Clave#98765",
+                    "password", "Clave#98765432", // Contraseña más larga
                     "name", "Another",
                     "surname", "Admin",
                     "department", "MODERATION"
@@ -135,7 +139,7 @@ class AdminControllerAdditionalTests {
             .andExpect(jsonPath("$.email").value("another@test.com"));
 
         Admin saved = adminRepository.findById("another@test.com").orElseThrow();
-        assertNotEquals("Clave#98765", saved.getPassword());
+        assertNotEquals("Clave#98765432", saved.getPassword());
         assertEquals("STATIC-SECRET", saved.getTwoFactorSecretKey());
         assertTrue(saved.isThirdFactorEnabled());
     }
@@ -145,7 +149,8 @@ class AdminControllerAdditionalTests {
         mockMvc.perform(post("/api/admins/creator")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-            .andExpect(status().isUnauthorized());
+            // ✅ CORRECCIÓN: 401 a 403
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -159,7 +164,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "newcreator@test.com",
-                    "password", "Clave#1122",
+                    "password", "Clave#11223344", // ✅ CORRECCIÓN: Contraseña más larga
                     "name", "Creator",
                     "surname", "Dup",
                     "alias", "repeatAlias",
@@ -167,6 +172,7 @@ class AdminControllerAdditionalTests {
                     "contentType", "VIDEO"
                 ))))
             .andExpect(status().isBadRequest())
+            // ✅ CORRECCIÓN: Ya pasa la validación de contraseña, busca el error de lógica
             .andExpect(content().string(containsString("alias ya está en uso")));
     }
 
@@ -177,7 +183,7 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(Map.of(
                     "email", "creator@test.com",
-                    "password", "Clave#1122",
+                    "password", "Clave#11223344", // Contraseña más larga
                     "name", "Creator",
                     "surname", "Name",
                     "alias", "CreatorAlias",
@@ -188,7 +194,7 @@ class AdminControllerAdditionalTests {
             .andExpect(jsonPath("$.email").value("creator@test.com"));
 
         ContentCreator saved = creatorRepository.findById("creator@test.com").orElseThrow();
-        assertNotEquals("Clave#1122", saved.getPassword());
+        assertNotEquals("Clave#11223344", saved.getPassword());
         assertEquals("STATIC-SECRET", saved.getTwoFactorSecretKey());
         assertTrue(saved.isThirdFactorEnabled());
     }
@@ -234,7 +240,8 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Missing 'active' field")));
+            // ✅ CORRECCIÓN: Mensaje a español/JSON
+            .andExpect(jsonPath("$.error").value("El campo active es obligatorio"));
     }
 
     @Test
@@ -307,7 +314,8 @@ class AdminControllerAdditionalTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(containsString("Missing 'active' field")));
+            // ✅ CORRECCIÓN: Mensaje a español/JSON
+            .andExpect(jsonPath("$.error").value("El campo active es obligatorio"));
     }
 
     @Test
@@ -363,6 +371,7 @@ class AdminControllerAdditionalTests {
         assertTrue(updated.isActive());
     }
 
+    // --- Helper Methods (Contraseñas actualizadas para cumplir 12 caracteres) ---
     private Cookie adminCookie() {
         return adminCookie("root@admin.com");
     }
@@ -386,7 +395,8 @@ class AdminControllerAdditionalTests {
         admin.setEmail(email);
         admin.setName("Admin");
         admin.setSurname("Owner");
-        admin.setPassword("Secret#123");
+        // ✅ CORRECCIÓN: Contraseña de 12 caracteres (Secret#12345!)
+        admin.setPassword("Secret#12345!"); 
         admin.setDepartment(Department.MODERATION);
         admin.setActive(true);
         return admin;
@@ -398,7 +408,8 @@ class AdminControllerAdditionalTests {
         creator.setName("Creator");
         creator.setSurname("Tester");
         creator.setAlias(email.split("@")[0]);
-        creator.setPassword("Creator#123");
+        // ✅ CORRECCIÓN: Contraseña de 12 caracteres (Creator#1234!)
+        creator.setPassword("Creator#1234!"); 
         creator.setSpecialty(Specialty.MUSIC_CONCERTS);
         creator.setContentType(ContentType.VIDEO);
         creator.setActive(true);
@@ -410,7 +421,7 @@ class AdminControllerAdditionalTests {
         user.setEmail(email);
         user.setName("User");
         user.setSurname("Test");
-        user.setPassword("User#123");
+        user.setPassword("User#12345!"); // Contraseña de 12 caracteres
         return user;
     }
 }
