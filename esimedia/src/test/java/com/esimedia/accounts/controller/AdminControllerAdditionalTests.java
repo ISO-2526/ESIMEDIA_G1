@@ -1,6 +1,6 @@
 // Contenido corregido para AdminControllerAdditionalTests.java
 
-package grupo1.esimedia.accounts.controller;
+package com.esimedia.accounts.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;

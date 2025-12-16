@@ -1,4 +1,4 @@
-package grupo1.esimedia.content.service;
+package com.esimedia.content.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

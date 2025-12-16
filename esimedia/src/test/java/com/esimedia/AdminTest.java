@@ -1,4 +1,4 @@
-package grupo1.esimedia;
+package com.esimedia;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

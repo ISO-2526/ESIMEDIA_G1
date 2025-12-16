@@ -1,4 +1,4 @@
-package grupo1.esimedia;
+package com.esimedia;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
