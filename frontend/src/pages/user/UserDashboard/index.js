@@ -556,7 +556,7 @@ function UserDashboard() {
       <main className="dashboard-main">
         <CreatorPlaylistsSlider
           creatorPlaylists={creatorPlaylists}
-          navigate={history}
+          navigate={history.push}
         />
 
         <ContentLayout
