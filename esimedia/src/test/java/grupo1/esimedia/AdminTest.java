@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 
-import grupo1.esimedia.Accounts.model.Admin;
-import grupo1.esimedia.Accounts.model.Department;
+import com.esimedia.accounts.model.Admin;
+import com.esimedia.accounts.model.Department;
 
 class AdminTest {
 

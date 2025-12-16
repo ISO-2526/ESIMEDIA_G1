@@ -1,4 +1,4 @@
-package grupo1.esimedia.Content.service;
+package grupo1.esimedia.content.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,13 +25,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
-import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
-import grupo1.esimedia.Accounts.service.NotificationService;
+import com.esimedia.accounts.model.ContentType;
+import com.esimedia.accounts.service.NotificationService;
+import com.esimedia.content.dto.CreateContentRequestDTO;
+import com.esimedia.content.dto.UpdateContentRequestDTO;
+import com.esimedia.content.model.Content;
+import com.esimedia.content.model.ContentState;
+import com.esimedia.content.repository.CreatorContentRepository;
+import com.esimedia.content.service.ContentService;
 
 @ExtendWith(MockitoExtension.class)
 class ContentServiceTests {

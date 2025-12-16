@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -17,7 +17,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -43,26 +42,26 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.esimedia.accounts.controller.AuthController;
+import com.esimedia.accounts.model.Admin;
+import com.esimedia.accounts.model.ContentCreator;
+import com.esimedia.accounts.model.ContentType;
+import com.esimedia.accounts.model.Department;
+import com.esimedia.accounts.model.Specialty;
+import com.esimedia.accounts.model.Token;
+import com.esimedia.accounts.model.User;
+import com.esimedia.accounts.repository.AdminRepository;
+import com.esimedia.accounts.repository.ContentCreatorRepository;
+import com.esimedia.accounts.repository.TokenRepository;
+import com.esimedia.accounts.repository.UserRepository;
+import com.esimedia.accounts.service.EmailService;
+import com.esimedia.accounts.service.ThreeFactorAuthService;
+import com.esimedia.accounts.service.TwoFactorAuthService;
+import com.esimedia.security.LoginAttemptService;
+import com.esimedia.security.RateLimitService;
+import com.esimedia.utils.HaveIBeenPwnedService;
+import com.esimedia.utils.PasswordUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import grupo1.esimedia.Accounts.model.Admin;
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Accounts.model.Department;
-import grupo1.esimedia.Accounts.model.Specialty;
-import grupo1.esimedia.Accounts.repository.AdminRepository;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
-import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.Accounts.service.EmailService;
-import grupo1.esimedia.Accounts.service.ThreeFactorAuthService;
-import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
-import grupo1.esimedia.security.LoginAttemptService;
-import grupo1.esimedia.security.RateLimitService;
-import grupo1.esimedia.utils.PasswordUtils;
-import grupo1.esimedia.utils.HaveIBeenPwnedService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
