@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const AccountEditForm = ({
   detail,
@@ -97,6 +98,29 @@ const AccountEditForm = ({
       </div>
     </form>
   );
+};
+
+AccountEditForm.propTypes = {
+  detail: PropTypes.shape({
+    type: PropTypes.string.isRequired,
+    data: PropTypes.shape({
+      email: PropTypes.string.isRequired,
+      vip: PropTypes.bool
+    }).isRequired
+  }).isRequired,
+  editData: PropTypes.shape({
+    name: PropTypes.string,
+    nombre: PropTypes.string,
+    surname: PropTypes.string,
+    apellidos: PropTypes.string,
+    department: PropTypes.string,
+    picture: PropTypes.string,
+    active: PropTypes.bool,
+    isActive: PropTypes.bool
+  }).isRequired,
+  setEditData: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired
 };
 
 export default AccountEditForm;

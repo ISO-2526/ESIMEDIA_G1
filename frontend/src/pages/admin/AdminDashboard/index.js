@@ -25,7 +25,7 @@ function AdminDashboard() {
 
   const contentsPanel = useContentPanel({ enabled: tab === 'content' });
 
-  const handleLogout = async () => { await logoutCsrf('/login', history); };
+  const handleLogout = async () => { await logoutCsrf(history, '/login'); };
 
   const {
     accounts,

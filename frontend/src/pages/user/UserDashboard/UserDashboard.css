@@ -1023,17 +1023,17 @@
   /* Asegurar que el contenedor derecho no corte el avatar */
   .header-right {
     overflow: visible;
+    flex-wrap: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
   }
   
   /* Asegurar que el contenedor del menú de usuario no se corte */
   .user-menu-container {
     overflow: visible;
     position: relative;
-  }
-  
-  .header-right {
-    gap: 8px;
-    flex-wrap: nowrap;
   }
   
   /* 🚫 Ocultar navegación secundaria en móvil */

@@ -123,7 +123,8 @@ ContentLayout.propTypes = {
   onContentClick: PropTypes.func,
   onShowInfo: PropTypes.func,
   searchQuery: PropTypes.string,
-  onAddToPlaylist: PropTypes.func
+  onAddToPlaylist: PropTypes.func,
+  isUserVip: PropTypes.bool
 };
 
 export default ContentLayout;

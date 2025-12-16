@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
 import './UserNavbar.css';
 import logo from './logo.svg';
@@ -151,5 +152,9 @@ function UserNavbar({ username }) {
     </nav>
   );
 }
+
+UserNavbar.propTypes = {
+  username: PropTypes.string.isRequired
+};
 
 export default UserNavbar;

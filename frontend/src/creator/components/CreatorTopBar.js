@@ -2,10 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './CreatorTopBar.css';
 import { handleLogout as logoutCsrf } from '../../auth/logout';
+import { useHistory } from 'react-router-dom';
 
 export default function CreatorTopBar({ photoUrl, menuOpen, onToggleMenu, onLogout, onViewProfile, onEditProfile }) {
+  const history = useHistory();
   // si se quiere forzar el nuevo logout desde aquí:
-  const doLogout = () => logoutCsrf('/login');
+  const doLogout = () => logoutCsrf(history, '/login');
   return (
     <div className="creator-user-menu-container">
       <div 

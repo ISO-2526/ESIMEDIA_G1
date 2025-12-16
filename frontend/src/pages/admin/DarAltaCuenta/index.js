@@ -57,10 +57,8 @@ function DarAltaCuenta() {
       if (!form.name || !form.surname || !form.email || !form.password || !form.department || !form.picture) {
         return 'Missing required admin fields';
       }
-    } else {
-      if (!form.name || !form.surname || !form.email || !form.password || !form.alias || !form.specialty || !form.contentType || !form.picture) {
-        return 'Missing required content creator fields';
-      }
+    } else if (!form.name || !form.surname || !form.email || !form.password || !form.alias || !form.specialty || !form.contentType || !form.picture) {
+      return 'Missing required content creator fields';
     }
     return null;
   };
@@ -154,10 +152,10 @@ function DarAltaCuenta() {
 
   // Extract nested ternary operation into a function
   const getStatusClassName = () => {
-    if (status && (status.includes('Error') || status.includes('Missing'))) {
+    if (status?.includes('Error') || status?.includes('Missing')) {
       return 'dar-alta-status error';
     }
-    if (status && status.includes('Saving')) {
+    if (status?.includes('Saving')) {
       return 'dar-alta-status loading';
     }
     if (status) {

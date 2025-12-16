@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -207,3 +208,11 @@ export default function ViewsChart({ data, loading }) {
     </div>
   );
 }
+
+ViewsChart.propTypes = {
+  data: PropTypes.shape({
+    labels: PropTypes.array,
+    values: PropTypes.array
+  }),
+  loading: PropTypes.bool.isRequired
+};

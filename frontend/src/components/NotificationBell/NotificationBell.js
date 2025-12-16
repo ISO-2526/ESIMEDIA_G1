@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { IonIcon, IonBadge } from '@ionic/react';
 import { notificationsOutline } from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
@@ -175,6 +176,10 @@ const NotificationBell = ({ userId }) => {
       )}
     </div>
   );
+};
+
+NotificationBell.propTypes = {
+  userId: PropTypes.number.isRequired
 };
 
 export default NotificationBell;

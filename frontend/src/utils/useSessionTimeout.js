@@ -27,7 +27,7 @@ export default function useSessionTimeout(enabled = true) {
       if (expired.current) return;
       expired.current = true;
       // Sin modal/confirmaciones
-      logoutCsrf('/login', history);
+      logoutCsrf(history, '/login');
     };
 
     const startIdle = () => {

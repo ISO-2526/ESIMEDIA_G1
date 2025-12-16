@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './ContentCard.css';
 import ViewCounter from './ViewCounter';
 
@@ -21,7 +22,7 @@ function ContentCard({ content, onContentClick, onAddToPlaylist, onRemove, showR
   return (
     <div 
       className="content-card" 
-      onClick={() => onContentClick && onContentClick(content)}
+      onClick={() => onContentClick?.(content)}
       onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onContentClick) { e.preventDefault(); onContentClick(content); } }}
       role="button"
       tabIndex={0}
@@ -86,5 +87,24 @@ function ContentCard({ content, onContentClick, onAddToPlaylist, onRemove, showR
     </div>
   );
 }
+
+ContentCard.propTypes = {
+  content: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    titulo: PropTypes.string.isRequired,
+    imagen: PropTypes.string,
+    type: PropTypes.string.isRequired,
+    categoria: PropTypes.string,
+    year: PropTypes.number,
+    duration: PropTypes.number,
+    ratingStars: PropTypes.number
+  }).isRequired,
+  onContentClick: PropTypes.func,
+  onAddToPlaylist: PropTypes.func,
+  onRemove: PropTypes.func,
+  showRemove: PropTypes.bool,
+  isUserVip: PropTypes.bool,
+  isVipContent: PropTypes.bool
+};
 
 export default ContentCard;

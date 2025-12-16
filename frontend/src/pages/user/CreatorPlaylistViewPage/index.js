@@ -33,7 +33,7 @@ function CreatorPlaylistViewPage() {
   };
 
   const handleLogout = async () => {
-    await logoutCsrf('/', history);
+    await logoutCsrf(history, '/');
   };
 
   const loadUserProfile = async () => {
@@ -390,7 +390,6 @@ function CreatorPlaylistViewPage() {
             onKeyUp={infoDialogHandlers.onDialogKeyUp}
             role="dialog"
             aria-modal="true"
-            tabIndex={0}
           >
             <button className="modal-close" onClick={handleCloseInfo}>
               <i className="fas fa-times"></i>

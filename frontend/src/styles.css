@@ -496,12 +496,6 @@ ion-router-outlet *::-webkit-scrollbar,
   background: transparent !important;
 }
 
-/* Firefox y IE */
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
 ion-app,
 ion-app *,
 ion-router-outlet,

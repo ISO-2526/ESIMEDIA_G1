@@ -289,3 +289,20 @@ function RowActions({
     </div>
   );
 }
+
+RowActions.propTypes = {
+  c: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    type: PropTypes.string.isRequired,
+    state: PropTypes.string.isRequired
+  }).isRequired,
+  onAddToPlaylist: PropTypes.func,
+  creatorContentType: PropTypes.string,
+  isMenuOpen: PropTypes.bool.isRequired,
+  toggleMenu: PropTypes.func.isRequired,
+  closeMenu: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onPublish: PropTypes.func.isRequired,
+  onUnpublish: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
+};

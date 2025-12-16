@@ -12,7 +12,7 @@ import axios from '../../../api/axiosConfig';
 function PlaylistsPage() {
   const history = useHistory();
   const location = useLocation();
-  const { modalState, closeModal, showSuccess, showError, showWarning } = useModal();
+  const { modalState, closeModal, showSuccess, showError } = useModal();
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -31,7 +31,7 @@ function PlaylistsPage() {
   };
 
   const handleLogout = async () => {
-    await logoutCsrf('/', history);
+    await logoutCsrf(history, '/');
   };
 
   useEffect(() => {

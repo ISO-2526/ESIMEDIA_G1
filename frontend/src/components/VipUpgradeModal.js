@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './VipUpgradeModal.css';
 
 function VipUpgradeModal({ isOpen, onClose, onConfirm, contentTitle }) {
@@ -40,5 +41,12 @@ function VipUpgradeModal({ isOpen, onClose, onConfirm, contentTitle }) {
     </div>
   );
 }
+
+VipUpgradeModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  contentTitle: PropTypes.string
+};
 
 export default VipUpgradeModal;

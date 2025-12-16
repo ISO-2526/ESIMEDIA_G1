@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import './CreatorPlaylistCard.css';
 import axios from '../api/axiosConfig';
 
@@ -13,7 +14,7 @@ const buildContentIndex = (contents) => {
 
 const coverForItem = (item, contentIndex) => {
   const content = contentIndex.get(item.contentId);
-  return content && content.coverFileName
+  return content?.coverFileName
     ? `/cover/${content.coverFileName}`
     : DEFAULT_COVER;
 };
@@ -116,5 +117,15 @@ function CreatorPlaylistCard({ playlist, onClick }) {
     </div>
   );
 }
+
+CreatorPlaylistCard.propTypes = {
+  playlist: PropTypes.shape({
+    nombre: PropTypes.string.isRequired,
+    descripcion: PropTypes.string,
+    items: PropTypes.arrayOf(PropTypes.object),
+    creatorAlias: PropTypes.string
+  }).isRequired,
+  onClick: PropTypes.func.isRequired
+};
 
 export default CreatorPlaylistCard;

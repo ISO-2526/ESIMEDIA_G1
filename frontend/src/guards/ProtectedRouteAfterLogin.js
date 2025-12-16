@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Redirect } from 'react-router-dom';
 import axios from '../api/axiosConfig';
 
@@ -27,6 +28,10 @@ const ProtectedRouteAfterLogin = ({ children }) => {
   if (state.role === "creator") return <Redirect to="/creator" />;
   if (state.role === "user") return <Redirect to="/usuario" />;
   return <Redirect to="/" />;
+};
+
+ProtectedRouteAfterLogin.propTypes = {
+  children: PropTypes.node.isRequired
 };
 
 export default ProtectedRouteAfterLogin;

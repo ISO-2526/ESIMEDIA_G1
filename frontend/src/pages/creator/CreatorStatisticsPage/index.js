@@ -116,7 +116,7 @@ export default function CreatorStatisticsPage() {
     }
   };
 
-  const handleLogout = () => logoutCsrf('/login', history);
+  const handleLogout = () => logoutCsrf(history, '/login');
 
   return (
     <div className="dashboard-container" style={{ position: 'relative' }}>

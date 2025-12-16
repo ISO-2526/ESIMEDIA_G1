@@ -8,7 +8,7 @@ import { validatePasswordStrength } from '../../../utils/passwordDictionary';
 import TagSelector from '../../../components/TagSelector'; // HDU 492
 
 function RegistroPage() {
-  const { modalState, closeModal, showSuccess, showError, showInfo } = useModal();
+  const { modalState, closeModal, showError, showInfo } = useModal();
   const imagenes = [
     '/pfp/avatar1.png',
     '/pfp/avatar2.png',
@@ -40,8 +40,6 @@ function RegistroPage() {
   const [repeatError, setRepeatError] = useState('');
   const [ageError, setAgeError] = useState('');
   const [showAvatars, setShowAvatars] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
   const history = useHistory(); // Hook para redirección
 
@@ -161,7 +159,7 @@ function RegistroPage() {
 
     try {
       // HDU 492 - Usar axios (api) en lugar de fetch para compatibilidad con móvil
-      const response = await api.post('/api/users', user);
+      await api.post('/api/users', user);
 
       // Axios envía respuesta directamente, no necesita .ok
       history.push({

@@ -140,7 +140,7 @@ export default function ContentCreatorDashboard() {
     setShowForm(false);
   }
 
-  const handleLogout = () => logoutCsrf('/login', history);
+  const handleLogout = () => logoutCsrf(history, '/login');
 
   // Add these helper functions before handleFormSubmit
   const uploadAudioFile = async (audioFile) => {

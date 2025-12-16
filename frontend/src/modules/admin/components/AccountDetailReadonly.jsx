@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Field = ({ label, value }) => (
   <div className="admin-detail-field">
@@ -78,6 +79,18 @@ const AccountDetailReadonly = ({ detail }) => {
       </div>
     </div>
   );
+};
+
+Field.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.any
+};
+
+AccountDetailReadonly.propTypes = {
+  detail: PropTypes.shape({
+    type: PropTypes.string.isRequired,
+    data: PropTypes.object
+  })
 };
 
 export default AccountDetailReadonly;
