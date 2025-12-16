@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import './AddToPlaylistModal.css';
 import CustomModal from './CustomModal';
 import { useModal } from '../utils/useModal';
@@ -136,7 +137,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
     const search = searchTerm.toLowerCase();
     return playlists.filter(playlist => 
       playlist.nombre.toLowerCase().includes(search) ||
-      (playlist.descripcion && playlist.descripcion.toLowerCase().includes(search))
+      playlist.descripcion?.toLowerCase().includes(search)
     );
   };
 
@@ -184,7 +185,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
                 className="new-playlist-btn favoritos-create-btn"
                 onClick={createFavoritosPlaylist}
               >
-                <i className="fas fa-heart"></i>
+                <i className="fas fa-heart"></i>{' '}
                 Crear lista de Favoritos
               </button>
             )}
@@ -195,7 +196,7 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
                 className="new-playlist-btn"
                 onClick={() => setShowCreateForm(true)}
               >
-                <i className="fas fa-plus"></i>
+                <i className="fas fa-plus"></i>{' '}
                 Nueva lista
               </button>
             )}
@@ -294,5 +295,14 @@ function AddToPlaylistModal({ isOpen, onClose, content }) {
     </>
   );
 }
+
+AddToPlaylistModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  content: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    titulo: PropTypes.string.isRequired
+  }).isRequired
+};
 
 export default AddToPlaylistModal;

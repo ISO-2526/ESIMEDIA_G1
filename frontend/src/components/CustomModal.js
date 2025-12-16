@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './CustomModal.css';
 
 /**
@@ -90,5 +91,16 @@ function CustomModal({
     </div>
   );
 }
+
+CustomModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func,
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(['info', 'success', 'error', 'warning', 'confirm']),
+  confirmText: PropTypes.string,
+  cancelText: PropTypes.string
+};
 
 export default CustomModal;

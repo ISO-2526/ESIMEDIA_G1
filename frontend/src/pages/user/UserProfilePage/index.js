@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import MobileHeader from '../../../components/mobile/MobileHeader';
@@ -43,6 +44,16 @@ const AvatarSelector = ({ showAvatarSelector, previewImage, tempData, availableA
       </div>
     </div>
   );
+};
+
+AvatarSelector.propTypes = {
+  showAvatarSelector: PropTypes.bool.isRequired,
+  previewImage: PropTypes.string,
+  tempData: PropTypes.shape({
+    picture: PropTypes.string
+  }).isRequired,
+  availableAvatars: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAvatarSelect: PropTypes.func.isRequired
 };
 
 // Helper: obtiene sesión desde cookie (email, role)
@@ -206,6 +217,16 @@ const ProfileHeader = ({ scrolled, picture, vip, onToggleMenu, showUserMenu, log
   </header>
 );
 
+ProfileHeader.propTypes = {
+  scrolled: PropTypes.bool.isRequired,
+  picture: PropTypes.string,
+  vip: PropTypes.bool,
+  onToggleMenu: PropTypes.func.isRequired,
+  showUserMenu: PropTypes.bool.isRequired,
+  logout: PropTypes.func.isRequired,
+  userEmail: PropTypes.string
+};
+
 const ProfilePhotoSection = ({
   isEditing,
   previewImage,
@@ -249,6 +270,19 @@ const ProfilePhotoSection = ({
   </div>
 );
 
+ProfilePhotoSection.propTypes = {
+  isEditing: PropTypes.bool.isRequired,
+  previewImage: PropTypes.string,
+  profilePicture: PropTypes.string,
+  showAvatarSelector: PropTypes.bool.isRequired,
+  onToggleSelector: PropTypes.func.isRequired,
+  availableAvatars: PropTypes.arrayOf(PropTypes.string).isRequired,
+  tempData: PropTypes.shape({
+    picture: PropTypes.string
+  }).isRequired,
+  handleAvatarSelect: PropTypes.func.isRequired
+};
+
 const THIRD_FACTOR_TOGGLE_ID = 'third-factor-toggle';
 
 const Security3FASection = ({
@@ -260,7 +294,7 @@ const Security3FASection = ({
   <div className="form-row security-row">
     <div className="security-header">
       <label className="security-label" htmlFor={THIRD_FACTOR_TOGGLE_ID}>
-        <span className="security-icon">🔐</span>
+        <span className="security-icon">🔐</span>{' '}
         Autenticación de Tercer Factor (3FA)
       </label>
       <p className="security-description">
@@ -297,6 +331,13 @@ const Security3FASection = ({
   </div>
 );
 
+Security3FASection.propTypes = {
+  isEditing: PropTypes.bool.isRequired,
+  thirdFactorEnabled: PropTypes.bool.isRequired,
+  statusMessage: PropTypes.string,
+  handleToggle3FA: PropTypes.func.isRequired
+};
+
 const ProfileActions = ({ isEditing, onEdit, onDelete, onSave, onCancel }) => (
   <div className="profile-actions">
     {!isEditing ? (
@@ -313,7 +354,13 @@ const ProfileActions = ({ isEditing, onEdit, onDelete, onSave, onCancel }) => (
   </div>
 );
 
-
+ProfileActions.propTypes = {
+  isEditing: PropTypes.bool.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired
+};
 
 /* ---------- Refactor de UserProfilePage (reducción complejidad) ---------- */
 function UserProfilePage() {

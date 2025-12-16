@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import logo from '../resources/esimedialogo.png';
 import './ProfilePage.css';
@@ -23,6 +24,12 @@ const UserMenu = ({ showUserMenu, setShowUserMenu, handleLogout }) => (
     </div>
   )
 );
+
+UserMenu.propTypes = {
+  showUserMenu: PropTypes.bool.isRequired,
+  setShowUserMenu: PropTypes.func.isRequired,
+  handleLogout: PropTypes.func.isRequired
+};
 
 // Componente para el selector de avatar
 const AvatarSelector = ({ showAvatarSelector, availableAvatars, previewImage, tempData, handleAvatarSelect }) => (
@@ -52,6 +59,16 @@ const AvatarSelector = ({ showAvatarSelector, availableAvatars, previewImage, te
     </div>
   )
 );
+
+AvatarSelector.propTypes = {
+  showAvatarSelector: PropTypes.bool.isRequired,
+  availableAvatars: PropTypes.arrayOf(PropTypes.string).isRequired,
+  previewImage: PropTypes.string,
+  tempData: PropTypes.shape({
+    picture: PropTypes.string
+  }).isRequired,
+  handleAvatarSelect: PropTypes.func.isRequired
+};
 
 // Componente para la foto de perfil
 const ProfilePhoto = ({ previewImage, profileData, isEditing, showAvatarSelector, setShowAvatarSelector, availableAvatars, tempData, handleAvatarSelect }) => (
@@ -90,6 +107,21 @@ const ProfilePhoto = ({ previewImage, profileData, isEditing, showAvatarSelector
   </div>
 );
 
+ProfilePhoto.propTypes = {
+  previewImage: PropTypes.string,
+  profileData: PropTypes.shape({
+    picture: PropTypes.string
+  }).isRequired,
+  isEditing: PropTypes.bool.isRequired,
+  showAvatarSelector: PropTypes.bool.isRequired,
+  setShowAvatarSelector: PropTypes.func.isRequired,
+  availableAvatars: PropTypes.arrayOf(PropTypes.string).isRequired,
+  tempData: PropTypes.shape({
+    picture: PropTypes.string
+  }).isRequired,
+  handleAvatarSelect: PropTypes.func.isRequired
+};
+
 // Componente para un campo de formulario
 const FormField = ({ label, name, value, isEditing, onChange, readonly = false, type = 'text', maxLength, placeholder, pattern }) => (
   <div className="form-row">
@@ -109,6 +141,19 @@ const FormField = ({ label, name, value, isEditing, onChange, readonly = false, 
     )}
   </div>
 );
+
+FormField.propTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  isEditing: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  readonly: PropTypes.bool,
+  type: PropTypes.string,
+  maxLength: PropTypes.number,
+  placeholder: PropTypes.string,
+  pattern: PropTypes.string
+};
 
 // Componente para el campo de descripción
 const DescriptionField = ({ isEditing, tempData, profileData, handleInputChange }) => (
@@ -141,7 +186,16 @@ const DescriptionField = ({ isEditing, tempData, profileData, handleInputChange 
   </div>
 );
 
-
+DescriptionField.propTypes = {
+  isEditing: PropTypes.bool.isRequired,
+  tempData: PropTypes.shape({
+    description: PropTypes.string
+  }).isRequired,
+  profileData: PropTypes.shape({
+    description: PropTypes.string
+  }).isRequired,
+  handleInputChange: PropTypes.func.isRequired
+};
 
 function CreatorProfilePage() {
   const history = useHistory();

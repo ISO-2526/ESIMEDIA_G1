@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './PlaylistCard.css';
 
 function PlaylistCard({ playlist, onClick }) {
@@ -68,5 +69,16 @@ function PlaylistCard({ playlist, onClick }) {
     </div>
   );
 }
+
+PlaylistCard.propTypes = {
+  playlist: PropTypes.shape({
+    nombre: PropTypes.string.isRequired,
+    descripcion: PropTypes.string,
+    items: PropTypes.arrayOf(PropTypes.object),
+    isPermanent: PropTypes.bool,
+    createdAt: PropTypes.string
+  }).isRequired,
+  onClick: PropTypes.func.isRequired
+};
 
 export default PlaylistCard;

@@ -1023,7 +1023,6 @@
   /* Asegurar que el contenedor derecho no corte el avatar */
   .header-right {
     overflow: visible;
-    gap: 8px;
     flex-wrap: nowrap;
     display: flex;
     align-items: center;

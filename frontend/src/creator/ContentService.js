@@ -22,7 +22,7 @@ export const ContentService = {
     });
     if (!res.ok) {
       let msg = 'Error al crear contenido';
-      try { const j = await res.json(); if (j && j.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
+      try { const j = await res.json(); if (j?.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
       throw new Error(msg);
     }
     return res.json();
@@ -37,7 +37,7 @@ export const ContentService = {
     });
     if (!res.ok) {
       let msg = 'Error al actualizar contenido';
-      try { const j = await res.json(); if (j && j.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
+      try { const j = await res.json(); if (j?.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
       throw new Error(msg);
     }
     return res.json();
@@ -47,7 +47,7 @@ export const ContentService = {
     const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE', credentials: 'include' });
     if (!res.ok) {
       let msg = 'Error al eliminar contenido';
-      try { const j = await res.json(); if (j && j.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
+      try { const j = await res.json(); if (j?.message) msg = j.message; } catch (e) { try { const t = await res.text(); if (t) msg = t; } catch (_) { } }
       throw new Error(msg);
     }
   },
