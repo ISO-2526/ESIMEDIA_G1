@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.dto;
+package grupo1.esimedia.accounts.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,9 +1,10 @@
-package grupo1.esimedia.Accounts.service;
+package grupo1.esimedia.accounts.service;
 
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.repository.CreatorContentRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

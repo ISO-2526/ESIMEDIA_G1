@@ -1,11 +1,12 @@
-package grupo1.esimedia.Accounts.service;
+package grupo1.esimedia.accounts.service;
 
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.UserRepository;
 import grupo1.esimedia.model.UserNotification;
 import grupo1.esimedia.service.UserNotificationService;
 import grupo1.esimedia.service.NotificationWithAntiSpamService;
-import grupo1.esimedia.Content.model.Content;
+import grupo1.esimedia.accounts.model.User;
+import grupo1.esimedia.accounts.repository.UserRepository;
+import grupo1.esimedia.content.model.Content;
+
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import java.util.stream.Collectors;
 @Service
 public class NotificationService {
     
-    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
     
     private final UserNotificationService userNotificationService;
     private final NotificationWithAntiSpamService notificationWithAntiSpamService;

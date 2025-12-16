@@ -1,9 +1,8 @@
-package grupo1.esimedia.Content.repository;
+package grupo1.esimedia.content.repository;
 
-import grupo1.esimedia.Content.model.ExpirationAlert;
+import grupo1.esimedia.content.model.ExpirationAlert;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDate;
 import java.util.Optional;
 
 /**

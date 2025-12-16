@@ -1,6 +1,6 @@
 // Contenido corregido para AdminControllerAdditionalTests.java
 
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -32,18 +32,18 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import grupo1.esimedia.Accounts.model.Admin;
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Accounts.model.Department;
-import grupo1.esimedia.Accounts.model.Specialty;
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.AdminRepository;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
-import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
+import grupo1.esimedia.accounts.model.Admin;
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.model.ContentType;
+import grupo1.esimedia.accounts.model.Department;
+import grupo1.esimedia.accounts.model.Specialty;
+import grupo1.esimedia.accounts.model.Token;
+import grupo1.esimedia.accounts.model.User;
+import grupo1.esimedia.accounts.repository.AdminRepository;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.accounts.repository.TokenRepository;
+import grupo1.esimedia.accounts.repository.UserRepository;
+import grupo1.esimedia.accounts.service.TwoFactorAuthService;
 import jakarta.servlet.http.Cookie;
 
 @SpringBootTest

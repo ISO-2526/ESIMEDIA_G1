@@ -1,10 +1,10 @@
-package grupo1.esimedia.Content.service;
+package grupo1.esimedia.content.service;
 
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.model.ContentState;
+import grupo1.esimedia.content.repository.CreatorContentRepository;
+import grupo1.esimedia.accounts.model.User;
+import grupo1.esimedia.accounts.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

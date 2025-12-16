@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.model;
+package grupo1.esimedia.accounts.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

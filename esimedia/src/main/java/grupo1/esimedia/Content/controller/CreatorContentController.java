@@ -1,13 +1,12 @@
-package grupo1.esimedia.Content.controller;
+package grupo1.esimedia.content.controller;
 
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.model.Content;
-
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Content.service.ContentService;
-import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
-import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.service.ContentService;
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.model.ContentType;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.content.dto.CreateContentRequestDTO;
+import grupo1.esimedia.content.dto.UpdateContentRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

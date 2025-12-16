@@ -1,7 +1,8 @@
-package grupo1.esimedia.Accounts.repository;
+package grupo1.esimedia.accounts.repository;
 
-import grupo1.esimedia.Accounts.model.Admin;
 import org.springframework.data.mongodb.repository.MongoRepository;
+
+import grupo1.esimedia.accounts.model.Admin;
 
 public interface AdminRepository extends MongoRepository<Admin, String> {
 

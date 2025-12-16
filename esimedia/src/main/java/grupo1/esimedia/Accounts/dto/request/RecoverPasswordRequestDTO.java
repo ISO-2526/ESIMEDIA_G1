@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.dto.request;
+package grupo1.esimedia.accounts.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

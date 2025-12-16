@@ -1,7 +1,7 @@
 package grupo1.esimedia.service;
 
-import grupo1.esimedia.Content.model.NotificationAntiSpam;
-import grupo1.esimedia.Content.repository.NotificationAntiSpamRepository;
+import grupo1.esimedia.content.model.NotificationAntiSpam;
+import grupo1.esimedia.content.repository.NotificationAntiSpamRepository;
 import grupo1.esimedia.model.UserNotification;
 import grupo1.esimedia.repository.UserNotificationRepository;
 import org.slf4j.Logger;

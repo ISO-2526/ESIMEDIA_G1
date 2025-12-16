@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.dto.response;
+package grupo1.esimedia.accounts.dto.response;
 
 import java.time.LocalDate;
 import java.util.List;

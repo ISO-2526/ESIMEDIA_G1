@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.model;
+package grupo1.esimedia.accounts.model;
 
 public enum Department {
     CUSTOMER_SUPPORT,

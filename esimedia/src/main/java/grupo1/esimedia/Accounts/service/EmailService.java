@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.service;
+package grupo1.esimedia.accounts.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;

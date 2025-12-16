@@ -1,1 +1,1 @@
-package grupo1.esimedia.Accounts.dto;
+package grupo1.esimedia.accounts.dto;

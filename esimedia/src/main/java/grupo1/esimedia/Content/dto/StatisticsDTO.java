@@ -1,4 +1,4 @@
-package grupo1.esimedia.Content.dto;
+package grupo1.esimedia.content.dto;
 
 /**
  * DTOs para estadísticas

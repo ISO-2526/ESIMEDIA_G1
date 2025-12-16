@@ -1,8 +1,8 @@
-package grupo1.esimedia.Content.dto;
+package grupo1.esimedia.content.dto;
 
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.model.ContentState;
+import grupo1.esimedia.accounts.model.ContentType;
 
 import java.time.Instant;
 import java.time.LocalDate;

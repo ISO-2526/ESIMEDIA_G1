@@ -1,7 +1,7 @@
-package grupo1.esimedia.Content.repository;
+package grupo1.esimedia.content.repository;
 
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.model.ContentState;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDate;

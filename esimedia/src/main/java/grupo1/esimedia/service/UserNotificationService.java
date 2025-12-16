@@ -4,7 +4,6 @@ import grupo1.esimedia.model.UserNotification;
 import grupo1.esimedia.repository.UserNotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

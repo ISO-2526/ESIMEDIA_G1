@@ -1,15 +1,15 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.AdminRepository;
-import grupo1.esimedia.Accounts.repository.PlaylistRepository;
-import grupo1.esimedia.Accounts.service.EmailService;
+import grupo1.esimedia.accounts.dto.request.CreateUserRequestDTO;
+import grupo1.esimedia.accounts.dto.response.UserResponseDTO;
+import grupo1.esimedia.accounts.model.Playlist;
+import grupo1.esimedia.accounts.model.User;
+import grupo1.esimedia.accounts.repository.AdminRepository;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.accounts.repository.PlaylistRepository;
+import grupo1.esimedia.accounts.repository.UserRepository;
+import grupo1.esimedia.accounts.service.EmailService;
 import grupo1.esimedia.utils.PasswordUtils;
-import grupo1.esimedia.Accounts.dto.request.CreateUserRequestDTO;
-import grupo1.esimedia.Accounts.dto.response.UserResponseDTO;
 import jakarta.validation.Valid;
 
 import java.io.ByteArrayOutputStream;

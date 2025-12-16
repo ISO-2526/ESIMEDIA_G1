@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -18,15 +18,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import grupo1.esimedia.Accounts.dto.request.CreateAdminRequestDTO;
-import grupo1.esimedia.Accounts.dto.request.CreateCreatorRequestDTO;
-import grupo1.esimedia.Accounts.dto.request.SetActiveRequestDTO;
-import grupo1.esimedia.Accounts.model.Admin;
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.repository.AdminRepository;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.UserRepository;
-import grupo1.esimedia.Accounts.service.TwoFactorAuthService;
+import grupo1.esimedia.accounts.dto.request.CreateAdminRequestDTO;
+import grupo1.esimedia.accounts.dto.request.CreateCreatorRequestDTO;
+import grupo1.esimedia.accounts.dto.request.SetActiveRequestDTO;
+import grupo1.esimedia.accounts.model.Admin;
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.repository.AdminRepository;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.accounts.repository.UserRepository;
+import grupo1.esimedia.accounts.service.TwoFactorAuthService;
 import grupo1.esimedia.utils.PasswordUtils;
 
 @RestController
@@ -273,7 +273,7 @@ public class AdminController {
 		}
 		if (body.containsKey(DEPARTMENT) && body.get(DEPARTMENT) instanceof String) {
 			try {
-				var dep = grupo1.esimedia.Accounts.model.Department.valueOf(((String) body.get(DEPARTMENT)).trim());
+				var dep = grupo1.esimedia.accounts.model.Department.valueOf(((String) body.get(DEPARTMENT)).trim());
 				existing.setDepartment(dep);
 			} catch (IllegalArgumentException ignored) {
                 

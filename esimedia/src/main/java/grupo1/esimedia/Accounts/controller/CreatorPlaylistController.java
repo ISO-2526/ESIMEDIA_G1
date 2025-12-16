@@ -1,14 +1,15 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.model.Playlist;
-import grupo1.esimedia.Accounts.repository.ContentCreatorRepository;
-import grupo1.esimedia.Accounts.repository.PlaylistRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.model.Playlist;
+import grupo1.esimedia.accounts.repository.ContentCreatorRepository;
+import grupo1.esimedia.accounts.repository.PlaylistRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

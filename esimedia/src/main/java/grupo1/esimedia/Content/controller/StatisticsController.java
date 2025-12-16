@@ -1,7 +1,7 @@
-package grupo1.esimedia.Content.controller;
+package grupo1.esimedia.content.controller;
 
-import grupo1.esimedia.Content.dto.StatisticsDTO;
-import grupo1.esimedia.Content.service.StatisticsService;
+import grupo1.esimedia.content.dto.StatisticsDTO;
+import grupo1.esimedia.content.service.StatisticsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

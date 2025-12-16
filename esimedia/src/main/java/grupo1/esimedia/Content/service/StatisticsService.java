@@ -1,9 +1,9 @@
-package grupo1.esimedia.Content.service;
+package grupo1.esimedia.content.service;
 
-import grupo1.esimedia.Accounts.repository.TokenRepository;
-import grupo1.esimedia.Content.dto.StatisticsDTO;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.content.dto.StatisticsDTO;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.repository.CreatorContentRepository;
+import grupo1.esimedia.accounts.repository.TokenRepository;
 import grupo1.esimedia.model.Rating;
 import grupo1.esimedia.repository.RatingRepository;
 import org.springframework.stereotype.Service;

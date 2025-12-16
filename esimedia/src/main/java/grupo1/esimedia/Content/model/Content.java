@@ -1,12 +1,14 @@
-package grupo1.esimedia.Content.model;
+package grupo1.esimedia.content.model;
 
-import grupo1.esimedia.Accounts.model.ContentType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import grupo1.esimedia.accounts.model.ContentType;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

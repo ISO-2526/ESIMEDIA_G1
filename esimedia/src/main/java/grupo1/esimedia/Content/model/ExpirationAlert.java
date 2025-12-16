@@ -1,4 +1,4 @@
-package grupo1.esimedia.Content.model;
+package grupo1.esimedia.content.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

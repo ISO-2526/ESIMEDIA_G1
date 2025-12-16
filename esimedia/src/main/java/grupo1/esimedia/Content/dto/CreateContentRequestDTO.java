@@ -1,8 +1,9 @@
-package grupo1.esimedia.Content.dto;
+package grupo1.esimedia.content.dto;
 
-import grupo1.esimedia.Accounts.model.ContentType;
 import jakarta.validation.constraints.*;
 import java.util.List;
+
+import grupo1.esimedia.accounts.model.ContentType;
 
 public class CreateContentRequestDTO {
     @NotNull(message = "El tipo de contenido es obligatorio")

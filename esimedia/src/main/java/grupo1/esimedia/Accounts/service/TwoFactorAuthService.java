@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.service;
+package grupo1.esimedia.accounts.service;
 
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;

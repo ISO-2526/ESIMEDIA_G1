@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.dto.response;
+package grupo1.esimedia.accounts.dto.response;
 
 import java.util.Map;
 

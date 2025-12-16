@@ -1,6 +1,6 @@
 package grupo1.esimedia.controller;
 
-import grupo1.esimedia.Content.service.ContentService;
+import grupo1.esimedia.content.service.ContentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +24,7 @@ public class ViewCountController {
     private static final String ERROR = "error";
 
     /**
-     * Registra una reproducción de contenido (incrementa contador en Content).
+     * Registra una reproducción de contenido (incrementa contador en content).
      * POST /api/views/{contentId}
      */
     @PostMapping("/{contentId}")

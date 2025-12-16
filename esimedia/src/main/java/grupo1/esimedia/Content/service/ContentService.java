@@ -1,4 +1,4 @@
-package grupo1.esimedia.Content.service;
+package grupo1.esimedia.content.service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,13 +12,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import grupo1.esimedia.Accounts.model.ContentType;
-import grupo1.esimedia.Content.dto.CreateContentRequestDTO;
-import grupo1.esimedia.Content.dto.UpdateContentRequestDTO;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
-import grupo1.esimedia.Accounts.service.NotificationService;
+import grupo1.esimedia.content.dto.CreateContentRequestDTO;
+import grupo1.esimedia.content.dto.UpdateContentRequestDTO;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.model.ContentState;
+import grupo1.esimedia.content.repository.CreatorContentRepository;
+import grupo1.esimedia.accounts.model.ContentType;
+import grupo1.esimedia.accounts.service.NotificationService;
 
 @Service
 public class ContentService {

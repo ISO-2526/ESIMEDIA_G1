@@ -1,8 +1,9 @@
-package grupo1.esimedia.Accounts.controller;
+package grupo1.esimedia.accounts.controller;
 
-import grupo1.esimedia.Accounts.model.ContentCreator;
-import grupo1.esimedia.Accounts.service.ContentCreatorService;
-import grupo1.esimedia.Content.model.Content;
+import grupo1.esimedia.accounts.model.ContentCreator;
+import grupo1.esimedia.accounts.service.ContentCreatorService;
+import grupo1.esimedia.content.model.Content;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.service;
+package grupo1.esimedia.accounts.service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import grupo1.esimedia.Accounts.model.EmailVerificationCode;
-import grupo1.esimedia.Accounts.repository.VerificationCodeRepository;
+import grupo1.esimedia.accounts.model.EmailVerificationCode;
+import grupo1.esimedia.accounts.repository.VerificationCodeRepository;
 
 @Service
 public class ThreeFactorAuthService {

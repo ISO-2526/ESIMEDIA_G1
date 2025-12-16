@@ -12,8 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import grupo1.esimedia.Accounts.model.Token;
-import grupo1.esimedia.Accounts.repository.TokenRepository;
+import grupo1.esimedia.accounts.model.Token;
+import grupo1.esimedia.accounts.repository.TokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

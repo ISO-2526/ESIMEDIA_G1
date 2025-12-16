@@ -1,9 +1,11 @@
-package grupo1.esimedia.Content.controller;
+package grupo1.esimedia.content.controller;
 
-import grupo1.esimedia.Content.dto.ContentWithRating;
-import grupo1.esimedia.Content.model.Content;
-import grupo1.esimedia.Content.model.ContentState;
-import grupo1.esimedia.Content.repository.CreatorContentRepository;
+import grupo1.esimedia.content.dto.ContentWithRating;
+import grupo1.esimedia.content.model.Content;
+import grupo1.esimedia.content.model.ContentState;
+import grupo1.esimedia.content.repository.CreatorContentRepository;
+import grupo1.esimedia.accounts.model.User;
+import grupo1.esimedia.accounts.repository.UserRepository;
 import grupo1.esimedia.service.RatingService;
 
 import org.springframework.http.HttpStatus;
@@ -12,9 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import grupo1.esimedia.Accounts.model.User;
-import grupo1.esimedia.Accounts.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.Period;

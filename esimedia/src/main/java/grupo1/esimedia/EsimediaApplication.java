@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 
-import grupo1.esimedia.Accounts.repository.AdminRepository;
-import grupo1.esimedia.Accounts.model.Admin;
-import grupo1.esimedia.Accounts.model.Department;
+import grupo1.esimedia.accounts.model.Admin;
+import grupo1.esimedia.accounts.model.Department;
+import grupo1.esimedia.accounts.repository.AdminRepository;
 import grupo1.esimedia.utils.PasswordUtils;
 
 import org.slf4j.Logger;

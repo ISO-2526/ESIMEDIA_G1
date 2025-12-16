@@ -1,4 +1,4 @@
-package grupo1.esimedia.Accounts.config;
+package grupo1.esimedia.accounts.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

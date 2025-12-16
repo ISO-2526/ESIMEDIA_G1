@@ -1,8 +1,9 @@
-package grupo1.esimedia.Accounts.repository;
+package grupo1.esimedia.accounts.repository;
 
-import grupo1.esimedia.Accounts.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+
+import grupo1.esimedia.accounts.model.User;
 
 import java.util.List;
 
