@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './TagSelector.css';
 import { TAGS } from '../creator/components/constants'; // Usar mismos tags que contenido
 
@@ -24,11 +25,9 @@ function TagSelector({ selectedTags = [], onChange, maxTags = 10 }) {
         if (currentTags.includes(tag)) {
             // Quitar tag
             onChange(currentTags.filter(t => t !== tag));
-        } else {
+        } else if (currentTags.length < maxTags) {
             // Añadir tag si no supera el máximo
-            if (currentTags.length < maxTags) {
-                onChange([...currentTags, tag]);
-            }
+            onChange([...currentTags, tag]);
         }
     };
 
@@ -87,5 +86,11 @@ function TagSelector({ selectedTags = [], onChange, maxTags = 10 }) {
         </div>
     );
 }
+
+TagSelector.propTypes = {
+    selectedTags: PropTypes.arrayOf(PropTypes.string),
+    onChange: PropTypes.func.isRequired,
+    maxTags: PropTypes.number
+};
 
 export default TagSelector;

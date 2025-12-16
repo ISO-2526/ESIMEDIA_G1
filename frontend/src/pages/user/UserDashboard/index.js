@@ -405,7 +405,7 @@ function UserDashboard() {
   };
 
   // REEMPLAZO: logout unificado
-  const handleLogout = () => logoutCsrf('/', history);
+  const handleLogout = () => logoutCsrf(history, '/');
 
   // Separar contenido por tipo
   const getAudioContent = () => {
@@ -503,6 +503,7 @@ function UserDashboard() {
           height: '100vh', color: '#fff', fontSize: '1.5rem'
         }}>
           <i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i>
+          {' '}
           Cargando contenidos...
         </div>
       </div>

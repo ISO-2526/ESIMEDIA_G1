@@ -13,7 +13,7 @@ const buildContentIndex = (contents) => {
 
 const coverForItem = (item, contentIndex) => {
   const content = contentIndex.get(item.contentId);
-  return content && content.coverFileName
+  return content?.coverFileName
     ? `/cover/${content.coverFileName}`
     : DEFAULT_COVER;
 };

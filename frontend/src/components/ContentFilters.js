@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import './ContentFilters.css';
 
 const TAGS = [
@@ -321,5 +322,10 @@ function ContentFilters({ onFiltersChange, activeFiltersCount = 0 }) {
     </div>
   );
 }
+
+ContentFilters.propTypes = {
+  onFiltersChange: PropTypes.func.isRequired,
+  activeFiltersCount: PropTypes.number
+};
 
 export default ContentFilters;

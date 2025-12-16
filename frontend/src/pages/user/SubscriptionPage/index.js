@@ -41,7 +41,7 @@ function SubscriptionPage() {
   });
 
   const handleLogout = async () => {
-    await logoutCsrf('/', history);
+    await logoutCsrf(history, '/');
   };
   
   React.useEffect(() => {
@@ -281,7 +281,6 @@ function SubscriptionPage() {
                 </div>
                 
                 {subscriptionData.tipo === 'VIP' && (
-                  <>
                     <div className="status-item">
                       <label htmlFor="vip-since-date">Miembro VIP desde:</label>
                       <div className="status-value" id="vip-since-date">
@@ -292,7 +291,6 @@ function SubscriptionPage() {
                         </span>
                       </div>
                     </div>
-                  </>
                 )}
               </div>
             </div>
@@ -342,6 +340,7 @@ function SubscriptionPage() {
                   onClick={handleDowngrade}
                 >
                   <i className="fas fa-arrow-down"></i>
+                  {' '}
                   Cancelar suscripción VIP
                 </button>
               ) : (
@@ -350,6 +349,7 @@ function SubscriptionPage() {
                   onClick={handleUpgrade}
                 >
                   <i className="fas fa-crown"></i>
+                  {' '}
                   Hacerse VIP ahora
                 </button>
               )}

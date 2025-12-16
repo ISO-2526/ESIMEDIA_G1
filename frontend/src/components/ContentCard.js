@@ -21,7 +21,7 @@ function ContentCard({ content, onContentClick, onAddToPlaylist, onRemove, showR
   return (
     <div 
       className="content-card" 
-      onClick={() => onContentClick && onContentClick(content)}
+      onClick={() => onContentClick?.(content)}
       onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onContentClick) { e.preventDefault(); onContentClick(content); } }}
       role="button"
       tabIndex={0}

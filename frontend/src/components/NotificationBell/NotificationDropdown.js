@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { IonIcon } from '@ionic/react';
 import { trash, checkmark } from 'ionicons/icons';
 import axios from '../../api/axiosConfig';
@@ -113,15 +114,16 @@ const NotificationDropdown = ({
                 className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.contentId ? 'clickable' : ''}`}
               >
                 <div className={`notification-type-indicator ${getNotificationTypeColor(notification.type)}`} />
-                <div 
+                <button 
                   className="notification-content"
                   onClick={() => handleNotificationClick(notification)}
                   style={{ cursor: notification.contentId ? 'pointer' : 'default' }}
+                  disabled={!notification.contentId}
                 >
                   <div className="notification-title">{notification.title}</div>
                   <div className="notification-message">{notification.message}</div>
                   <div className="notification-time">{formatDate(notification.createdAt)}</div>
-                </div>
+                </button>
                 <div className="notification-actions">
                   {!notification.read && (
                     <button
@@ -153,6 +155,23 @@ const NotificationDropdown = ({
       </div>
     </div>
   );
+};
+
+NotificationDropdown.propTypes = {
+  notifications: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    message: PropTypes.string.isRequired,
+    read: PropTypes.bool.isRequired,
+    contentId: PropTypes.number,
+    type: PropTypes.string.isRequired,
+    createdAt: PropTypes.string.isRequired
+  })).isRequired,
+  loading: PropTypes.bool.isRequired,
+  onMarkAsRead: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onDeleteAll: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired
 };
 
 export default NotificationDropdown;

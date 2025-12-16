@@ -19,9 +19,6 @@ function CreatorPlaylistDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // No usamos localStorage para el usuario; backend valida por cookie
-  const currentUser = null;
-
   useEffect(() => {
     fetchAllContents();
     fetchPlaylistDetails();

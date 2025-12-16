@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { 
   IonIcon,
   IonPopover
@@ -335,6 +336,22 @@ const MobileHeader = ({
       )}
     </div>
   );
+};
+
+MobileHeader.propTypes = {
+  userProfile: PropTypes.shape({
+    picture: PropTypes.string,
+    email: PropTypes.string,
+    vip: PropTypes.bool
+  }),
+  searchQuery: PropTypes.string,
+  setSearchQuery: PropTypes.func,
+  handleLogout: PropTypes.func.isRequired,
+  currentFilters: PropTypes.object,
+  onFiltersChange: PropTypes.func,
+  showSearch: PropTypes.bool,
+  showFilters: PropTypes.bool,
+  showNotifications: PropTypes.bool
 };
 
 export default MobileHeader;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Redirect } from 'react-router-dom';
 import useSessionTimeout from '../utils/useSessionTimeout';
 import axios from '../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
@@ -49,6 +50,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Renderizar el contenido protegido si está autenticado y tiene acceso
   return children;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired
 };
 
 export default ProtectedRoute;

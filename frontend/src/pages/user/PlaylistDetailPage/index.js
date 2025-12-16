@@ -35,7 +35,7 @@ function PlaylistDetailPage() {
   };
 
   const handleLogout = async () => {
-    await logoutCsrf('/', history);
+    await logoutCsrf(history, '/');
   };
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');

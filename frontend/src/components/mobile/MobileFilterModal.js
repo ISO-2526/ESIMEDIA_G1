@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   IonPopover,
   IonIcon
@@ -74,6 +75,19 @@ const MobileFilterModal = ({ isOpen, onClose, currentFilters, onApplyFilters }) 
       </div>
     </IonPopover>
   );
+};
+
+MobileFilterModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  currentFilters: PropTypes.shape({
+    sortBy: PropTypes.string.isRequired,
+    categories: PropTypes.array,
+    yearRange: PropTypes.object,
+    durationRange: PropTypes.object,
+    minRating: PropTypes.number
+  }).isRequired,
+  onApplyFilters: PropTypes.func.isRequired
 };
 
 export default MobileFilterModal;

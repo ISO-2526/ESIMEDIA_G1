@@ -72,8 +72,6 @@ function RatingStats({ contentId, showDistribution = false, refreshKey = 0 }) {
       return null;
     }
 
-    const maxCount = Math.max(...Object.values(distribution));
-
     return (
       <div className="rating-distribution">
         <h4 className="distribution-title">Distribución de valoraciones</h4>

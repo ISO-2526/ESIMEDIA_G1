@@ -318,7 +318,7 @@ function CreatorProfilePage() {
     setShowAvatarSelector(false);
   };
 
-  const handleLogout = () => logoutCsrf('/login', history);
+  const handleLogout = () => logoutCsrf(history, '/login');
 
   if (loading) {
     return (

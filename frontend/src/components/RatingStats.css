@@ -189,7 +189,3 @@
     transform: translateY(0);
   }
 }
-
-.rating-stats-container {
-  animation: fadeInStats 0.4s ease-out;
-}

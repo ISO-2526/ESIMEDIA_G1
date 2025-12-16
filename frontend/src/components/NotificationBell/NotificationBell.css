@@ -148,13 +148,6 @@
   z-index: 1;
 }
 
-.empty-state p {
-  margin: 0;
-  font-size: 14px;
-  position: relative;
-  z-index: 1;
-}
-
 .notifications-list {
   list-style: none;
   padding: 0;
@@ -225,6 +218,12 @@
 .notification-content {
   flex: 1;
   min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
 }
 
 .notification-title {

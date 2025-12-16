@@ -1,6 +1,6 @@
 import axios from '../api/axiosConfig';
 
-export const handleLogout = async (redirect = '/', navigateFn) => {
+export const handleLogout = async (navigateFn, redirect = '/') => {
   const getCsrf = () =>
     document.cookie.split('; ').find(s => s.startsWith('csrf_token='))?.split('=')[1];
 

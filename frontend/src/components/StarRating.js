@@ -17,11 +17,9 @@ function StarRating({ contentId, contentType = 'video', initialRating = 0, onCha
   const loadUserRating = async () => {
     try {
       const userRating = await RatingService.getUserRating(contentId, contentType);
-      if (userRating && userRating.rating) {
+      if (userRating?.rating) {
         setRating(userRating.rating);
-        if (onChange) {
-          onChange(userRating.rating);
-        }
+        onChange?.(userRating.rating);
       }
     } catch (error) {
       console.error('Error al cargar valoración:', error);

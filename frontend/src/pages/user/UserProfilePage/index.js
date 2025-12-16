@@ -271,7 +271,7 @@ const Security3FASection = ({
       {isEditing ? (
         <>
           <div className="toggle-container">
-            <label className="toggle-switch" htmlFor={THIRD_FACTOR_TOGGLE_ID}>
+            <label htmlFor={THIRD_FACTOR_TOGGLE_ID} className="toggle-switch">
               <input
                 id={THIRD_FACTOR_TOGGLE_ID}
                 type="checkbox"
@@ -537,7 +537,7 @@ function UserProfilePage() {
 
             {/* HDU 492 - Sección Mis Gustos */}
             <div className="form-row tags-section">
-              <label>Mis Gustos</label>
+              <label htmlFor="tags-section">Mis Gustos</label>
               {isEditing ? (
                 <TagSelector
                   selectedTags={tempData.tags || []}

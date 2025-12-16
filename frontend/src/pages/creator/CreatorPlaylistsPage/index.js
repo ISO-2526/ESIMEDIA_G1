@@ -33,7 +33,7 @@ function CreatorPlaylistsPage() {
     }
   };
 
-  const handleLogout = () => logoutCsrf('/login', history);
+  const handleLogout = () => logoutCsrf(history, '/login');
 
   useEffect(() => {
     loadCreatorPhoto();
