@@ -53,23 +53,15 @@ public class ContentExpirationService {
      */
     public void checkAndAlertExpiringContent() {
         LocalDate expirationDate = LocalDate.now().plusDays(DAYS_BEFORE_EXPIRATION);
-        logger.info("═══════════════════════════════════════════════════════");
-        logger.info("HDU 493 - Buscando contenidos que caducan el: {}", expirationDate);
         
         // Buscar contenidos públicos que caducan exactamente en 7 días
         List<Content> expiringContent = contentRepository.findByAvailableUntilAndState(
             expirationDate, ContentState.PUBLICO);
         
-        logger.info("Encontrados {} contenidos que caducan en {} días", 
-            expiringContent.size(), DAYS_BEFORE_EXPIRATION);
-        
         int alertsSent = 0;
         for (Content content : expiringContent) {
             alertsSent += alertUsersAboutExpiring(content);
         }
-        
-        logger.info("Total alertas enviadas: {}", alertsSent);
-        logger.info("═══════════════════════════════════════════════════════");
     }
     
     /**
@@ -78,14 +70,10 @@ public class ContentExpirationService {
      */
     public void processExpiredContent() {
         LocalDate today = LocalDate.now();
-        logger.info("═══════════════════════════════════════════════════════");
-        logger.info("HDU 493 - Procesando contenidos vencidos (fecha <= {})", today);
         
         // Buscar contenidos públicos con fecha de caducidad pasada o igual a hoy
         List<Content> expiredContent = contentRepository.findByAvailableUntilBeforeAndState(
             today.plusDays(1), ContentState.PUBLICO); // plusDays(1) para incluir hoy
-        
-        logger.info("Encontrados {} contenidos vencidos", expiredContent.size());
         
         int hidden = 0;
         for (Content content : expiredContent) {
@@ -96,15 +84,9 @@ public class ContentExpirationService {
                 content.setState(ContentState.PRIVADO);
                 content.setStateChangedAt(Instant.now());
                 contentRepository.save(content);
-                
-                logger.info("Contenido '{}' (ID: {}) ocultado - caducó el {}", 
-                    content.getTitle(), content.getId(), content.getAvailableUntil());
                 hidden++;
             }
         }
-        
-        logger.info("Total contenidos ocultados: {}", hidden);
-        logger.info("═══════════════════════════════════════════════════════");
     }
     
     /**
@@ -113,21 +95,20 @@ public class ContentExpirationService {
      * Implementa anti-spam: solo 1 alerta por contenido/usuario.
      */
     private int alertUsersAboutExpiring(Content content) {
-        List<User> allUsers = userRepository.findAll();
+        // OPTIMIZACIÓN: Obtener solo usuarios que tengan al menos un tag coincidente
+        // En lugar de traer TODOS los usuarios y filtrar en memoria
+        if (content.getTags() == null || content.getTags().isEmpty()) {
+            return 0; // Sin tags, no se puede filtrar usuarios relevantes
+        }
+        
+        List<User> candidateUsers = userRepository.findByTagsIn(content.getTags());
         int alertCount = 0;
         
-        logger.debug("Verificando {} usuarios para contenido '{}'", allUsers.size(), content.getTitle());
-        logger.debug("Contenido - VIP: {}, EdadMin: {}, Tags: {}", 
-            content.isVipOnly(), content.getEdadMinima(), content.getTags());
-        
-        for (User user : allUsers) {
-            // Aplicar filtros de acceso
+        for (User user : candidateUsers) {
+            // Aplicar filtros de acceso (VIP y Edad)
             if (!canUserAccessContent(user, content)) {
-                logger.debug("Usuario {} - NO cumple filtros de acceso", user.getEmail());
                 continue;
             }
-            
-            logger.info("✅ Usuario {} - Cumple todos los filtros, enviando notificación", user.getEmail());
             
             // Crear notificación con anti-spam
             boolean created = notificationWithAntiSpamService.createNotificationIfNotExists(
@@ -144,12 +125,6 @@ public class ContentExpirationService {
             }
         }
         
-        if (alertCount > 0) {
-            logger.info("Contenido '{}': {} alertas enviadas", content.getTitle(), alertCount);
-        } else {
-            logger.warn("⚠️ Contenido '{}': Ningún usuario cumplió los filtros", content.getTitle());
-        }
-        
         return alertCount;
     }
     
@@ -158,12 +133,8 @@ public class ContentExpirationService {
      * Filtros: VIP (Premium) y Edad mínima.
      */
     private boolean canUserAccessContent(User user, Content content) {
-        logger.debug("  Usuario {} - VIP: {}, Edad: {}, Tags: {}", 
-            user.getEmail(), user.isVip(), calculateAge(user.getDateOfBirth()), user.getTags());
-        
         // Filtro 1: Contenido VIP solo para usuarios VIP
         if (content.isVipOnly() && !user.isVip()) {
-            logger.debug("    ❌ Rechazado: Contenido VIP pero usuario no es VIP");
             return false;
         }
         
@@ -171,14 +142,12 @@ public class ContentExpirationService {
         if (content.getEdadMinima() != null && content.getEdadMinima() > 0) {
             int userAge = calculateAge(user.getDateOfBirth());
             if (userAge < content.getEdadMinima()) {
-                logger.debug("    ❌ Rechazado: Edad {} < Edad mínima {}", userAge, content.getEdadMinima());
                 return false;
             }
         }
         
         // Filtro 3: Tags coincidentes
         if (user.getTags() == null || user.getTags().isEmpty()) {
-            logger.debug("    ❌ Rechazado: Usuario sin tags");
             return false;
         }
         
@@ -196,11 +165,9 @@ public class ContentExpirationService {
         }
         
         if (!hasMatchingTag) {
-            logger.debug("    ❌ Rechazado: Sin tags coincidentes");
             return false;
         }
         
-        logger.debug("    ✅ Usuario cumple todos los filtros");
         return true;
     }
     
@@ -215,7 +182,6 @@ public class ContentExpirationService {
             LocalDate birthDate = LocalDate.parse(dateOfBirth);
             return Period.between(birthDate, LocalDate.now()).getYears();
         } catch (Exception e) {
-            logger.warn("Error al parsear fecha de nacimiento: {}", dateOfBirth);
             return 0;
         }
     }
