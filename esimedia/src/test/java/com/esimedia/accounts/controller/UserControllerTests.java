@@ -35,7 +35,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.esimedia.accounts.model.Department;
 import com.esimedia.accounts.model.Token;
 import com.esimedia.accounts.model.User;
 import com.esimedia.accounts.repository.AdminRepository;

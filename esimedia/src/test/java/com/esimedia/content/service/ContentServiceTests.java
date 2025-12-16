@@ -32,7 +32,6 @@ import com.esimedia.content.dto.UpdateContentRequestDTO;
 import com.esimedia.content.model.Content;
 import com.esimedia.content.model.ContentState;
 import com.esimedia.content.repository.CreatorContentRepository;
-import com.esimedia.content.service.ContentService;
 
 @ExtendWith(MockitoExtension.class)
 class ContentServiceTests {

@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.esimedia.security.RateLimitService;
-
 class RateLimitServiceTest {
 
     private RateLimitService service;

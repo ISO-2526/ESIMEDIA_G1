@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.esimedia.config.PasswordSecurityConfig;
-import com.esimedia.security.LoginAttemptService;
 
 class LoginAttemptServiceTest {
 

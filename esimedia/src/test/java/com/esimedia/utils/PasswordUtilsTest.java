@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.esimedia.config.PasswordSecurityConfig;
-import com.esimedia.utils.HaveIBeenPwnedService;
-import com.esimedia.utils.PasswordUtils;
 
 class PasswordUtilsTest {
 

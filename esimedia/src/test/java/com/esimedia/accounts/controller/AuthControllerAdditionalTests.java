@@ -42,7 +42,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.esimedia.accounts.controller.AuthController;
 import com.esimedia.accounts.model.Admin;
 import com.esimedia.accounts.model.ContentCreator;
 import com.esimedia.accounts.model.ContentType;
