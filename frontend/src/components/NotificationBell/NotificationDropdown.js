@@ -52,6 +52,7 @@ const NotificationDropdown = ({
     // Si la notificación tiene contentId, cargar y mostrar el contenido
     if (notification.contentId) {
       try {
+        
         // Marcar como leída si no lo está (pero no bloquear la reproducción)
         if (!notification.read) {
           onMarkAsRead(notification.id);
@@ -64,21 +65,25 @@ const NotificationDropdown = ({
         // Transformar el contenido al formato esperado por el player
         const content = transformContent(rawContent);
         
-        console.log('[NotificationDropdown] Content loaded:', content);
-        console.log('[NotificationDropdown] Dispatching event...');
-        
         // Disparar evento personalizado para que el dashboard lo capture
         window.dispatchEvent(new CustomEvent('playContentFromNotification', { 
-          detail: { content } 
+          detail: { content },
+          bubbles: true,
+          cancelable: true
         }));
         
-        console.log('[NotificationDropdown] Event dispatched');
+        // 🔧 IMPORTANTE: En móvil, agregar un pequeño delay antes de cerrar
+        // para asegurar que el evento se procese
+        setTimeout(() => {
+          onClose();
+        }, 100);
         
-        // Cerrar dropdown
-        onClose();
       } catch (error) {
-        console.error('Error al cargar contenido:', error);
+        console.error('[NotificationDropdown] Error al cargar contenido:', error);
+        console.error('[NotificationDropdown] Error stack:', error.stack);
       }
+    } else {
+      console.log('[NotificationDropdown] Notification has no contentId');
     }
   };
 

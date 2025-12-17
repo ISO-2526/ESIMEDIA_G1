@@ -3,11 +3,13 @@ package com.esimedia.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-// ✅ Reemplazado @ControllerAdvice por @RestControllerAdvice
 import org.springframework.web.bind.annotation.RestControllerAdvice; 
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.server.ResponseStatusException; // ✅ Importar ResponseStatusException (es común en APIs)
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -89,19 +91,70 @@ public class GlobalExceptionHandler {
         
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
+
+    /**
+     * Maneja errores 404 - Recurso no encontrado.
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFoundException(NoHandlerFoundException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.NOT_FOUND.value());
+        body.put(ERROR, "Not Found");
+        body.put(MESSAGE, "El recurso solicitado no existe");
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Maneja errores 403 - Acceso denegado.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.FORBIDDEN.value());
+        body.put(ERROR, "Forbidden");
+        body.put(MESSAGE, "No tienes permisos para acceder a este recurso");
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+    /**
+     * Maneja errores 401 - No autenticado.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.UNAUTHORIZED.value());
+        body.put(ERROR, "Unauthorized");
+        body.put(MESSAGE, "Credenciales inválidas o sesión expirada");
+        body.put(PATH, request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
     
     // --- Manejo de Excepciones Genéricas (Fallback) ---
 
     /**
      * Maneja excepciones genéricas no capturadas (Fallback).
+     * NO expone detalles técnicos ni stack traces por seguridad.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex, WebRequest request) {
+        // IMPORTANTE: Loguear el error completo internamente para debugging
+        System.err.println("[ERROR INTERNO] " + ex.getClass().getName() + ": " + ex.getMessage());
+        ex.printStackTrace(); // Solo en logs del servidor, NO en la respuesta
+        
+        // Respuesta segura sin detalles técnicos
         Map<String, Object> body = new HashMap<>();
         body.put(TIMESTAMP, LocalDateTime.now());
         body.put(STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put(ERROR, ex.getClass().getSimpleName());
-        body.put(MESSAGE, "Internal server error occurred: " + ex.getMessage());
+        body.put(ERROR, "Internal Server Error");
+        body.put(MESSAGE, "Ha ocurrido un error interno. Por favor, contacta con soporte.");
         body.put(PATH, request.getDescription(false).replace("uri=", ""));
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);

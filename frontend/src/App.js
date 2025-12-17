@@ -38,6 +38,7 @@ import DarAltaCuenta from './pages/admin/DarAltaCuenta';
 
 // General Pages
 import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/errors/NotFoundPage';
 
 // Guards
 import ProtectedRoute from './guards/ProtectedRoute';
@@ -120,6 +121,9 @@ function App() {
                 <CreatorPlaylistViewPage />
               </ProtectedRoute>
             )} />
+            
+            {/* Ruta 404 - Debe estar al final */}
+            <Route component={NotFoundPage} />
           </IonRouterOutlet>
         </IonReactRouter>
       </IonApp>
@@ -230,6 +234,9 @@ function App() {
               <DarAltaCuenta />
             </ProtectedRoute>
           )} />
+          
+          {/* Ruta 404 - Debe estar al final */}
+          <Route component={NotFoundPage} />
         </Switch>
       </Router>
     );

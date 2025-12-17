@@ -457,35 +457,28 @@ function UserDashboard() {
   // Listener para reproducir contenido desde notificaciones
   useEffect(() => {
     const handlePlayFromNotification = (event) => {
-      console.log('[UserDashboard] Event received:', event);
-      const { content } = event.detail;
-      console.log('[UserDashboard] Content from event:', content);
+      const { content } = event.detail || {};
       
       if (content) {
         // Verificar filtros VIP y media antes de reproducir
         if (isVipBlocked(content, userProfile.vip)) {
-          console.log('[UserDashboard] Content is VIP blocked');
           setSelectedVipContent(content);
           setShowVipModal(true);
           return;
         }
         const mediaError = missingMediaMessage(content);
         if (mediaError) {
-          console.log('[UserDashboard] Media error:', mediaError);
           showNotification(mediaError, 'warning');
           return;
         }
-        console.log('[UserDashboard] Setting playing video:', content);
         setPlayingVideo(content);
       }
     };
     
-    console.log('[UserDashboard] Adding event listener');
-    window.addEventListener('playContentFromNotification', handlePlayFromNotification);
+    window.addEventListener('playContentFromNotification', handlePlayFromNotification, true);
     
     return () => {
-      console.log('[UserDashboard] Removing event listener');
-      window.removeEventListener('playContentFromNotification', handlePlayFromNotification);
+      window.removeEventListener('playContentFromNotification', handlePlayFromNotification, true);
     };
   }, [userProfile.vip, showNotification]);
 

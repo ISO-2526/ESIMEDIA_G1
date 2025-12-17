@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Redirect } from 'react-router-dom';
 import useSessionTimeout from '../utils/useSessionTimeout';
 import axios from '../api/axiosConfig'; // ✅ Usar axios con CapacitorHttp
+import ForbiddenPage from '../pages/errors/ForbiddenPage';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null mientras se valida el token
@@ -42,10 +43,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    // Redirigir según el rol del usuario si no tiene acceso
-    if (userRole === 'admin') return <Redirect to="/adminDashboard" />;
-    if (userRole === 'creator') return <Redirect to="/creator" />;
-    if (userRole === 'user') return <Redirect to="/usuario" />;
+    // Mostrar página 403 si el usuario autenticado no tiene los permisos necesarios
+    console.warn(`⚠️ Acceso denegado: Usuario con rol '${userRole}' intentó acceder a ruta que requiere ${allowedRoles.join(' o ')}`);
+    return <ForbiddenPage />;
   }
 
   // Renderizar el contenido protegido si está autenticado y tiene acceso
